@@ -18,6 +18,7 @@ public:
     bool Add(GLShader);
     void Remove(GLShader);
     void Bind(const char*, GLuint);
+    void Bind(const char*, GLuint, GLuint);
 
 };
 

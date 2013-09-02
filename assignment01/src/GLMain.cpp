@@ -2,21 +2,71 @@
 #include <QApplication>
 #include <QWidget>
 #include <iostream>
+#include <chrono>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
+
+#include <GLPrint.hpp>
 #include "GLMain.hpp"
 
-GLMain::GLMain(QWidget *parent) : QGLApp(parent){}
+GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
 
 void GLMain::initializeGL()
 {
+    
     QGLApp::initializeGL();
 
-    //Geometry done
-    //this defines a triangle, feel free to change it
-    // each row is first the position of the vertex then the color
-    Vertex geometry[] = { {{0.0, 0.9, 0.0}, {1.0, 0.0, 0.0}},
-                          {{-0.9, -0.9, 0.0}, {0.0, 1.0, 0.0}},
-                          {{0.9, -0.9, 0.0}, {0.0, 0.0, 1.0}}};
+    //Geometry (le sigh) 
+    Vertex geometry[] = { {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+                          {{-1.0, -1.0, 1.0}, {0.0, 0.0, 1.0}},
+                          {{-1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}},
+
+                          {{1.0, 1.0, -1.0}, {1.0, 1.0, 0.0}},
+                          {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+                          {{-1.0, 1.0, -1.0}, {0.0, 1.0, 0.0}},
+                          
+                          {{1.0, -1.0, 1.0}, {1.0, 0.0, 1.0}},
+                          {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+                          {{1.0, -1.0, -1.0}, {1.0, 0.0, 0.0}},
+                          
+                          {{1.0, 1.0, -1.0}, {1.0, 1.0, 0.0}},
+                          {{1.0, -1.0, -1.0}, {1.0, 0.0, 0.0}},
+                          {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+
+                          {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+                          {{-1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}},
+                          {{-1.0, 1.0, -1.0}, {0.0, 1.0, 0.0}},
+
+                          {{1.0, -1.0, 1.0}, {1.0, 0.0, 1.0}},
+                          {{-1.0, -1.0, 1.0}, {0.0, 0.0, 1.0}},
+                          {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
+
+                          {{-1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}},
+                          {{-1.0, -1.0, 1.0}, {0.0, 0.0, 1.0}},
+                          {{1.0, -1.0, 1.0}, {1.0, 0.0, 1.0}},
+                          
+                          {{1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}},
+                          {{1.0, -1.0, -1.0}, {1.0, 0.0, 0.0}},
+                          {{1.0, 1.0, -1.0}, {1.0, 1.0, 0.0}},
+
+                          {{1.0, -1.0, -1.0}, {1.0, 0.0, 0.0}},
+                          {{1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}},
+                          {{1.0, -1.0, 1.0}, {1.0, 0.0, 1.0}},
+
+                          {{1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}},
+                          {{1.0, 1.0, -1.0}, {1.0, 1.0, 0.0}},
+                          {{-1.0, 1.0, -1.0}, {0.0, 1.0, 0.0}},
+
+                          {{1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}},
+                          {{-1.0, 1.0, -1.0}, {0.0, 1.0, 0.0}},
+                          {{-1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}},
+
+                          {{1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}},
+                          {{-1.0, 1.0, 1.0}, {0.0, 1.0, 1.0}},
+                          {{1.0, -1.0, 1.0}, {1.0, 0.0, 1.0}}
+                        };
 
     // Create a Vertex Buffer object to store this vertex info on the GPU
     glGenBuffers(1, &vbo_geometry);
@@ -38,18 +88,52 @@ void GLMain::initializeGL()
     program->Bind("v_position", this->V_POSITION);
     program->Bind("v_color", this->V_COLOR);
 
+    //--Init the view and projection matrices
+    view = glm::lookAt( glm::vec3(0.0, 8.0, -16.0), //Eye Position
+                        glm::vec3(0.0, 0.0, 0.0), //Focus point
+                        glm::vec3(0.0, 1.0, 0.0)); //Positive Y is up
+
+    projection = glm::perspective( this->FOV, float(this->size.width())/float(this->size.height()), this->sensor_distance, this->focal_distance);
+
+    //enable depth testing (cool!)
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     //Add Program
-    this->Add(std::move(program));
+    if( !this->Add(std::move(program)) )
+    {
+        cerr << "[F] Program failed to load."<<endl;
+        qApp->quit();
+        return;
+    }
+
+    //Bind uniforms
+    //this->program.front().Bind("mvp_matrix", this->M_POSITION, this->DEFAULT_BLOCK);
+
 }
 
 void GLMain::paintGL()
 {
     //clear the screen
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    GLProgram &program = *(this->program.front());
+
     //Choose the shader program
-    glUseProgram(this->program.front()->getId());
+    glUseProgram(program.getId());
+
+    //premultiply the matrix for this example
+    mvp = projection * view * model;
+
+    //enable the shader program
+    glUseProgram(program.getId());
+
+    GLuint m_pos = glGetUniformLocation(program.getId(), "mvpMatrix");
+    
+    //upload the matrix to the shader
+    glUniformMatrix4fv(m_pos, 1, GL_FALSE, glm::value_ptr(mvp));
+
 
     //set up the Vertex Buffer Object so it can be drawn
     glEnableVertexAttribArray(this->V_POSITION);
@@ -70,15 +154,36 @@ void GLMain::paintGL()
                            sizeof(Vertex),
                            (void*)offsetof(Vertex,color));
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);//mode, starting index, count
+    glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
 
     //clean up
     glDisableVertexAttribArray(this->V_POSITION);
     glDisableVertexAttribArray(this->V_COLOR);
 
     glUseProgram(0);
-
-    this->swapBuffers();
 }
 
+void GLMain::idleGL()
+{
+    float dt = getDT();
 
+    angle += dt * M_PI/2;
+    model = glm::translate( glm::mat4(1.0f), glm::vec3(2.0 * sin(angle), 0.0, 2.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * angle, glm::vec3(0.0, 1.0, 0.0));
+    
+    QGLApp::idleGL();
+}
+
+void GLMain::resizeGL(int width, int height)
+{
+    QGLApp::resizeGL(width, height);
+    projection = glm::perspective(this->FOV, float(width)/float(height), this->sensor_distance, this->focal_distance);
+}
+
+float GLMain::getDT()
+{
+    float ret;
+    time = chrono::high_resolution_clock::now();
+    ret = chrono::duration_cast< std::chrono::duration<float> >(time-start_time).count();
+    start_time = chrono::high_resolution_clock::now();
+    return ret;
+}

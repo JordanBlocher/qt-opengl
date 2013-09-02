@@ -13,10 +13,13 @@ public:
 protected:
     void initializeGL();
     void paintGL();
+    void resizeGL();
 
     GLuint program;
     GLint position;
     GLint color;
+
+    GLuint vbo_geometry;
 };
 
 #endif 

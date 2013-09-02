@@ -12,6 +12,7 @@ void GLMain::initializeGL()
 
     QGLApp::initializeGL();
 
+
     //this defines a triangle, feel free to change it
     // each row is first the position of the vertex then the color
     Vertex geometry[] = { {{0.0, 0.9, 0.0}, {1.0, 0.0, 0.0}},
@@ -107,8 +108,6 @@ void GLMain::initializeGL()
         qApp->quit();
     }
 
-    cout<< "position "<<position<<endl;
-    cout<< "color "<<color<<endl;
 }
 
 void GLMain::paintGL()

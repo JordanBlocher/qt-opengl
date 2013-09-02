@@ -2,7 +2,10 @@
 #define QGLRAPP_H
 
 #include <QGLWidget>
+#include <QTimer>
+
 #include <memory>
+#include <chrono>
 
 #include "GLProgram.hpp"
 
@@ -19,15 +22,18 @@ public:
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
-    //Object Functions
     virtual bool Add(unique_ptr<GLProgram>);
-//    virtual bool Remove(GLProgram);
+    virtual bool Remove();
 
-protected:
+protected slots:
+    virtual void idleGL();
+
+protected: 
     //Callbacks
     virtual void initializeGL();
     virtual void paintGL();
     virtual void keyPressEvent(QKeyEvent*);
+    virtual void resizeGL(int, int);
 
     struct Vertex
     {
@@ -35,8 +41,10 @@ protected:
         GLfloat color[3];
     };
 
-    QSize window_size;
+    QSize size;
     GLuint vbo_geometry;
+    QTimer timer;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
     list<std::unique_ptr<GLProgram>> program;
 

@@ -59,3 +59,8 @@ void GLProgram::Bind(const char* attribute, GLuint index)
 {
     glBindAttribLocation(this->id, index, attribute);
 }
+
+void GLProgram::Bind(const char* uniform, GLuint index, GLuint block)
+{
+    glUniformBlockBinding(this->id, block, index);
+}

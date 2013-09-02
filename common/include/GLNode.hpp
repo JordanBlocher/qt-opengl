@@ -12,7 +12,7 @@ public:
     GLNode();
     ~GLNode();
 
-    GLuint getId();
+    GLuint getId() const;
 
     virtual bool Status();
     virtual void Add(GLNode);
@@ -25,7 +25,6 @@ protected:
     GLint status;
     string msg;
     
-    friend class QGLApp;
 };
 
 #endif 

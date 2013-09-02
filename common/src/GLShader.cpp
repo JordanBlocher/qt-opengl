@@ -48,7 +48,7 @@ bool GLShader::Status()
         glGetShaderiv(this->id, GL_INFO_LOG_LENGTH, &msize);
         msg.resize(msize);
         glGetShaderInfoLog(this->id, msize, NULL, &msg[0]);
-        cerr << "[F] SHADER FAILED TO COMPILE" << endl << msg << endl;
+        cerr << "[F] Shader failed to compile: " << endl << msg << endl;
         return false;
     }
     return true;

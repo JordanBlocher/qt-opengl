@@ -18,7 +18,7 @@ GLNode::~GLNode()
 {
 }
 
-GLuint GLNode::getId()
+GLuint GLNode::getId() const
 {
     return this->id;
 }

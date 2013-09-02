@@ -7,13 +7,14 @@ QT += opengl
 
 TEMPLATE = app
 TARGET = ../bin/assignment01
-DEPENDPATH += .
-INCLUDEPATH += ../../common/include
+DEPENDPATH += ../src ../../common/include
+INCLUDEPATH += ../src ../../common/include
 LIBS += -L../../common/lib -lqglcommon -lGLEW
 QMAKE_CXXFLAGS += -std=c++0x
 
 libqglcommon.target = ../../common/lib/libqglcommon.a
 libqglcommon.commands = cd ../../common && make
+libqglcommon.depends = FORCE
 QMAKE_EXTRA_TARGETS += libqglcommon
 PRE_TARGETDEPS += ../../common/lib/libqglcommon.a
 
@@ -21,5 +22,4 @@ CONFIG += debug
 
 # Input
 SOURCES += ../src/*.cpp
-HEADERS += ../src/*.hpp
-
+HEADERS += ../src/*.hpp ../../common/include/*.hpp
