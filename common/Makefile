@@ -1,11 +1,11 @@
 # just move into the temp directory and run qmake from there, this
 # keeps all the temporary and object files out of the main directory
-bin/assignment00:
+lib/common.so:
 	@mkdir -p temp
-	@cd temp; qmake ../build/assignment00.pro; make
+	@cd temp; qmake ../build/common.pro; make
 
 clean:
-	rm -fr temp bin/*
+	rm -fr temp lib/*
 
-.PHONY:bin/assignment00 clean
+.PHONY:bin/common clean
 

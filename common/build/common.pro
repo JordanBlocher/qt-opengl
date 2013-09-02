@@ -5,16 +5,17 @@
 # add opengl functionality
 QT += opengl
 
-TEMPLATE = app
-TARGET = ../bin/main
+TEMPLATE = lib
+TARGET = ../lib/qglcommon
 DEPENDPATH += .
-INCLUDEPATH += .
+INCLUDEPATH += ../include
 LIBS += -lGLEW
+VERSION = 1.0
+QMAKE_CXXFLAGS += -std=c++0x
 
-CONFIG += debug
+CONFIG += debug staticlib
 
 # Input
-SOURCES += ../src/main.cpp
-SOURCES += ../src/GLShaderApp.cpp
-HEADERS += ../src/GLShaderApp.hpp
+SOURCES += ../src/*
+HEADERS += ../include/*
 

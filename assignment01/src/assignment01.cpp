@@ -1,12 +1,12 @@
 #include <QApplication>
 
-#include "GLShaderApp.hpp"
+#include "GLMain.hpp"
 
 int main(int argc, char *argv[])
 {
    QApplication app(argc, argv);
 
-   GLShaderApp window;
+   GLMain window;
    window.show();
 
    return app.exec();

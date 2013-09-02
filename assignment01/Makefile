@@ -2,7 +2,7 @@
 # keeps all the temporary and object files out of the main directory
 bin/assignment00:
 	@mkdir -p temp
-	@cd temp; qmake ../build/assignment00.pro; make
+	@cd temp; qmake ../build/assignment01.pro; make
 
 clean:
 	rm -fr temp bin/*

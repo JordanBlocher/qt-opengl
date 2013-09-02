@@ -1,38 +1,16 @@
 #include <GL/glew.h>
+#include <QApplication>
+#include <QWidget>
 #include <iostream>
 
-#include <QApplication>
-#include <QKeyEvent>
+#include "GLMain.hpp"
 
-#include "GLShaderApp.hpp"
+GLMain::GLMain(QWidget *parent) : QGLApp(parent){}
 
-using namespace std;
-
-GLShaderApp::GLShaderApp(QWidget *parent) : QGLWidget(QGLFormat(QGL::DoubleBuffer | QGL::DepthBuffer), parent), m_windowSize(640, 480)
+void GLMain::initializeGL()
 {
-   setMouseTracking(true);
-}
 
-GLShaderApp::~GLShaderApp()
-{
-   glDeleteProgram(m_program);
-   glDeleteBuffers(1, &m_vboGeometry);
-}
-
-QSize GLShaderApp::minimumSizeHint() const
-{
-   return QSize(40,40);
-}
-
-QSize GLShaderApp::sizeHint() const
-{
-   return m_windowSize;
-}
-
-void GLShaderApp::initializeGL()
-{
-    // Initialize basic geometry and shaders for this example
-    glewInit();
+    QGLApp::initializeGL();
 
     //this defines a triangle, feel free to change it
     // each row is first the position of the vertex then the color
@@ -41,8 +19,8 @@ void GLShaderApp::initializeGL()
                           {{0.9, -0.9, 0.0}, {0.0, 0.0, 1.0}}};
 
     // Create a Vertex Buffer object to store this vertex info on the GPU
-    glGenBuffers(1, &m_vboGeometry);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vboGeometry);
+    glGenBuffers(1, &vbo_geometry);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_geometry);
     glBufferData(GL_ARRAY_BUFFER, sizeof(geometry), geometry, GL_STATIC_DRAW);
 
     //--Geometry done
@@ -60,6 +38,7 @@ void GLShaderApp::initializeGL()
         "   gl_Position = vec4(v_position, 1.0);"
         "   color = v_color;"
         "}";
+
 
     const char *fs =
         "varying vec3 color;"
@@ -94,59 +73,66 @@ void GLShaderApp::initializeGL()
 
     //Now we link the 2 shader objects into a program
     //This program is what is run on the GPU
-    m_program = glCreateProgram();
-    glAttachShader(m_program, vertex_shader);
-    glAttachShader(m_program, fragment_shader);
-    glLinkProgram(m_program);
+    program = glCreateProgram();
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
+    
+    glBindAttribLocation(program, 1, "v_position");
+    glBindAttribLocation(program, 2, "v_color");
+
+    glLinkProgram(program);
     //check if everything linked ok
-    glGetProgramiv(m_program, GL_LINK_STATUS, &shader_status);
+    glGetProgramiv(program, GL_LINK_STATUS, &shader_status);
     if(!shader_status)
     {
         std::cerr << "[F] THE SHADER PROGRAM FAILED TO LINK" << std::endl;
         qApp->quit();
     }
-
+    
     //Now we set the locations of the attributes and uniforms
     //this allows us to access them easily while rendering
-    m_locPosition = glGetAttribLocation(m_program,
+    position = glGetAttribLocation(program,
                     const_cast<const char*>("v_position"));
-    if(m_locPosition == -1)
+    if(position == -1)
     {
         std::cerr << "[F] POSITION NOT FOUND" << std::endl;
         qApp->quit();
     }
 
-    m_locColor = glGetAttribLocation(m_program,
+    color = glGetAttribLocation(program,
                     const_cast<const char*>("v_color"));
-    if(m_locColor == -1)
+    if(color == -1)
     {
         std::cerr << "[F] V_COLOR NOT FOUND" << std::endl;
         qApp->quit();
     }
+
+    cout<< "position "<<position<<endl;
+    cout<< "color "<<color<<endl;
 }
 
-void GLShaderApp::paintGL()
+void GLMain::paintGL()
 {
     //clear the screen
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //enable the shader program
-    glUseProgram(m_program);
+    glUseProgram(program);
 
     //set up the Vertex Buffer Object so it can be drawn
-    glEnableVertexAttribArray(m_locPosition);
-    glEnableVertexAttribArray(m_locColor);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vboGeometry);
+    glEnableVertexAttribArray(position);
+    glEnableVertexAttribArray(color);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_geometry);
     //set pointers into the vbo for each of the attributes(position and color)
-    glVertexAttribPointer( m_locPosition,//location of attribute
+    glVertexAttribPointer( position,//location of attribute
                            3,//number of elements
                            GL_FLOAT,//type
                            GL_FALSE,//normalized?
                            sizeof(Vertex),//stride
                            0);//offset
 
-    glVertexAttribPointer( m_locColor,
+    glVertexAttribPointer( color,
                            3,
                            GL_FLOAT,
                            GL_FALSE,
@@ -156,23 +142,10 @@ void GLShaderApp::paintGL()
     glDrawArrays(GL_TRIANGLES, 0, 3);//mode, starting index, count
 
     //clean up
-    glDisableVertexAttribArray(m_locPosition);
-    glDisableVertexAttribArray(m_locColor);
+    glDisableVertexAttribArray(position);
+    glDisableVertexAttribArray(color);
 
     this->swapBuffers();
 }
 
-void GLShaderApp::resizeGL(int width __attribute__((unused)), int height __attribute__((unused)))
-{
-   // Not used in this example
-}
-
-void GLShaderApp::keyPressEvent(QKeyEvent *event)
-{
-   // Handle keyboard input
-   if ( event->key() == Qt::Key_Escape )
-   {
-      qApp->quit();
-   }
-}
 
