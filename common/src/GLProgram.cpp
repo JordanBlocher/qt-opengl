@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <iostream>
+#include <glm/glm.hpp>
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -7,7 +8,6 @@
 #include "GLProgram.hpp"
 
 using namespace std;
-
 
 GLProgram::GLProgram()
 {
@@ -55,12 +55,19 @@ void GLProgram::Remove(GLShader shader)
     glDetachShader(this->id, shader.getId());
 }
 
-void GLProgram::Bind(const char* attribute, GLuint index)
+void GLProgram::Bind(const char* name, GLuint index)
 {
-    glBindAttribLocation(this->id, index, attribute);
+    glBindAttribLocation(this->id, index, name);
 }
 
-void GLProgram::Bind(const char* uniform, GLuint index, GLuint block)
+void GLProgram::Bind(const char* name, GLuint index, GLuint offset, GLenum type, Uniform &GLUniform)
 {
-    glUniformBlockBinding(this->id, block, index);
+    GLUniform.block = glGetUniformBlockIndex(this->id, name);
+    glGenBuffers(1, &GLUniform.buffer);
+    glBindBuffer(type, GLUniform.buffer);
+    glBufferData(type, sizeof(glm::mat4) * offset, NULL, GL_STREAM_DRAW);
+    glBindBuffer(type, index);
+    glUniformBlockBinding(this->id, GLUniform.block, index);
+    glBindBufferRange(type, index, GLUniform.buffer, 0, sizeof(glm::mat4) * offset);
 }
+

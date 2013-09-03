@@ -3,8 +3,6 @@
 
 #include "GLNode.hpp"
 
-using namespace std;
-
 class GLShader : public GLNode
 {
 
@@ -18,12 +16,12 @@ public:
     void Create(const char*, GLenum);
     bool Status();
     bool Source(const char*);
-    bool Add(string);
-    string toString(GLenum);
+    bool Add(std::string);
+    std::string toString(GLenum);
 
 protected:
-    string source;
-    string path;
+    std::string source;
+    std::string path;
 };
 
 

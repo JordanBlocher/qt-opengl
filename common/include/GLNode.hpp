@@ -2,8 +2,7 @@
 #define GLNODE_H
 
 #include <string>
-
-using namespace std;
+#include "GLStruct.hpp"
 
 class GLNode
 {
@@ -19,11 +18,10 @@ public:
     virtual void Remove(GLNode);
 
 protected:
-
     GLuint id;
     GLenum type;
     GLint status;
-    string msg;
+    std::string msg;
     
 };
 

@@ -7,6 +7,7 @@
 #include <memory>
 #include <chrono>
 
+#include "GLNode.hpp"
 #include "GLProgram.hpp"
 
 using std::unique_ptr;
@@ -25,6 +26,8 @@ public:
     virtual bool Add(unique_ptr<GLProgram>);
     virtual bool Remove();
 
+    Uniform GLUniform;
+
 protected slots:
     virtual void idleGL();
 
@@ -35,20 +38,14 @@ protected:
     virtual void keyPressEvent(QKeyEvent*);
     virtual void resizeGL(int, int);
 
-    struct Vertex
-    {
-        GLfloat position[3];
-        GLfloat color[3];
-    };
-
     QSize size;
-    GLuint vbo_geometry;
     QTimer timer;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
-    list<std::unique_ptr<GLProgram>> program;
-
-};
+    std::list<std::unique_ptr<GLProgram>> program;
+    std::list<std::unique_ptr<GLShader>> shader;
+    
+ };
 
 #endif 
 

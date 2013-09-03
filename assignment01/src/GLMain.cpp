@@ -11,6 +11,8 @@
 #include <GLPrint.hpp>
 #include "GLMain.hpp"
 
+using namespace std;
+
 GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
 
 void GLMain::initializeGL()
@@ -108,8 +110,7 @@ void GLMain::initializeGL()
     }
 
     //Bind uniforms
-    //this->program.front().Bind("mvp_matrix", this->M_POSITION, this->DEFAULT_BLOCK);
-
+    this->program.front()->Bind("mvpMatrix", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
 }
 
 void GLMain::paintGL()
@@ -118,22 +119,25 @@ void GLMain::paintGL()
     glClearColor(0.0, 0.0, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    GLProgram &program = *(this->program.front());
-
     //Choose the shader program
+    GLProgram &program = *(this->program.front());
     glUseProgram(program.getId());
 
     //premultiply the matrix for this example
     mvp = projection * view * model;
 
-    //enable the shader program
-    glUseProgram(program.getId());
-
+    GLint num;
+    glGetProgramiv(program.getId(), GL_ACTIVE_UNIFORMS, &num);
+    cout<<"num "<<num<<endl;
     GLuint m_pos = glGetUniformLocation(program.getId(), "mvpMatrix");
+    cout<< "buf "<<m_pos<<endl;
+    cout<<"GLbuf "<<this->U_POSITION<<endl;
     
     //upload the matrix to the shader
-    glUniformMatrix4fv(m_pos, 1, GL_FALSE, glm::value_ptr(mvp));
-
+    glUniformMatrix4fv(this->U_POSITION, 1, GL_FALSE, glm::value_ptr(mvp));
+    //glBindBuffer(GL_UNIFORM_BUFFER, GLUniform.buffer);
+    //glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mvp));
+    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     //set up the Vertex Buffer Object so it can be drawn
     glEnableVertexAttribArray(this->V_POSITION);

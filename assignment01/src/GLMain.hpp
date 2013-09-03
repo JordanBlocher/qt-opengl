@@ -26,8 +26,7 @@ protected:
 
     static const GLuint V_POSITION = 1;
     static const GLuint V_COLOR = 2;
-    static const GLuint M_POSITION = 1;
-    static const GLuint DEFAULT_BLOCK = 0;
+    static const GLuint U_POSITION = 0;
 
     // Does not belong here
     const float FOV = 45.0f; // half-angle FOV
