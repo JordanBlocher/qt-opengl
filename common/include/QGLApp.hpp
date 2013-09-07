@@ -5,47 +5,40 @@
 #include <QTimer>
 
 #include <memory>
-#include <chrono>
 
-#include "GLNode.hpp"
-#include "GLProgram.hpp"
+#include "GLContext.hpp"
 
-using std::unique_ptr;
+class GLProgram;
+class GLNode;
 
-class QGLApp : public QGLWidget
+class QGLApp : public QGLWidget, public GLContext
 {
 Q_OBJECT
 
-public:
+ public:
     QGLApp(QWidget *parent = 0);
     ~QGLApp();
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
-    virtual bool Add(unique_ptr<GLProgram>);
-    virtual bool Remove();
-
-    Uniform GLUniform;
-
-protected slots:
+ protected slots:
     virtual void idleGL();
 
-protected: 
-    //Callbacks
+ protected: 
     virtual void initializeGL();
     virtual void paintGL();
     virtual void keyPressEvent(QKeyEvent*);
     virtual void resizeGL(int, int);
 
+    virtual bool AddProgram(std::shared_ptr<GLProgram>);
+    virtual std::shared_ptr<GLNode> Get(const char*) const;
+
+
     QSize size;
     QTimer timer;
-    std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
-    std::list<std::unique_ptr<GLProgram>> program;
-    std::list<std::unique_ptr<GLShader>> shader;
-    
- };
+};
 
 #endif 
 

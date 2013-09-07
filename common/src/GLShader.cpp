@@ -10,18 +10,21 @@
 
 using namespace std;
 
-GLShader::GLShader() : path("shaders/")
+GLShader::GLShader(const char* name) : GLNode(name)
 {
+    path = "shaders/";
 }
 
-GLShader::GLShader(GLenum type) : GLShader()
+GLShader::GLShader(GLenum type, const char* name) : GLShader(name)
 {
     this->Create(this->toString(type).c_str(), type);
+    this->Compile();
 }
 
-GLShader::GLShader(const char* filename, GLenum type) : GLShader()
+GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLShader(name)
 {
     this->Create(filename, type);
+    this->Compile();
 }
 
 GLShader::~GLShader()
@@ -37,7 +40,6 @@ void GLShader::Create(const char* filename, GLenum type)
         this->type = type;
     }
 }
-
 
 bool GLShader::Status()
 {

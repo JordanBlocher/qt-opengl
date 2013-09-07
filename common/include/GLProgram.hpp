@@ -1,25 +1,26 @@
 #ifndef GLPROGRAM_H
 #define GLPROGRAM_H
 
-#include<glm/glm.hpp>
+#include <glm/glm.hpp>
+#include <memory>
 
 #include "GLNode.hpp"
-#include "GLShader.hpp"
+
+class GLShader;
 
 class GLProgram : public GLNode
 {
 
-public:
-    GLProgram();
-    GLProgram(GLShader, GLShader);
+ public:
+    GLProgram(const char*);
+    GLProgram(std::shared_ptr<GLShader>, std::shared_ptr<GLShader>, const char*);
     ~GLProgram();
 
     bool Status();
-    bool Add(GLShader);
-    void Remove(GLShader);
-    void Bind(const char*, GLuint);
-    void Bind(const char*, GLuint, GLuint, GLenum, Uniform&);
-    GLuint getUniforms() const;
+    bool AddShader(std::shared_ptr<GLShader>);
+    bool RemoveShader(std::shared_ptr<GLShader>);
+    void SetAttributeIndex(const char*, GLuint);
+    void SetUniformIndex(const char*, GLuint, GLuint, GLenum, Uniform&);
 
 };
 

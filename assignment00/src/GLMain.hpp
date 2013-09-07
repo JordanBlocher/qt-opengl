@@ -2,6 +2,7 @@
 #define GLMAIN_H
 
 #include <QGLApp.hpp>
+#include <GLStruct.hpp>
 
 class GLMain : public QGLApp
 {

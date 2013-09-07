@@ -9,6 +9,10 @@
 #include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
 
 #include <GLPrint.hpp>
+#include <GLNode.hpp>
+#include <GLShader.hpp>
+#include <GLProgram.hpp>
+#include <GLContext.hpp>
 #include "GLMain.hpp"
 
 using namespace std;
@@ -76,19 +80,19 @@ void GLMain::initializeGL()
     glBufferData(GL_ARRAY_BUFFER, sizeof(geometry), geometry, GL_STATIC_DRAW);
 
     //Shaders
-    GLShader vertex = GLShader(GL_VERTEX_SHADER);
-    GLShader fragment = GLShader(GL_FRAGMENT_SHADER);
+    shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
+    shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
 
     //Program
-    unique_ptr<GLProgram> program(new GLProgram());
-
+    shared_ptr<GLProgram> program(new GLProgram("qgl_program"));
+cout<< program <<endl; 
     //Add Shaders
-    program->Add(vertex);
-    program->Add(fragment);
+    program->AddShader(vertex);
+    program->AddShader(fragment);
 
     //Bind attribute index
-    program->Bind("v_position", this->V_POSITION);
-    program->Bind("v_color", this->V_COLOR);
+    program->SetAttributeIndex("v_position", this->V_POSITION);
+    program->SetAttributeIndex("v_color", this->V_COLOR);
 
     //--Init the view and projection matrices
     view = glm::lookAt( glm::vec3(0.0, 8.0, -16.0), //Eye Position
@@ -102,15 +106,14 @@ void GLMain::initializeGL()
     glDepthFunc(GL_LESS);
 
     //Add Program
-    if( !this->Add(std::move(program)) )
+    cout<< "adding "<<program<<endl;
+    if( !this->AddProgram(program) )
     {
-        cerr << "[F] Program failed to load."<<endl;
+        cerr << "[F] Program failed to link."<<endl;
         qApp->quit();
-        return;
+        exit(0);
     }
 
-    //Bind uniforms
-    this->program.front()->Bind("mvpMatrix", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
 }
 
 void GLMain::paintGL()
@@ -120,18 +123,15 @@ void GLMain::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //Choose the shader program
-    GLProgram &program = *(this->program.front());
-    glUseProgram(program.getId());
+    shared_ptr<GLProgram> program = static_pointer_cast<GLProgram>(this->Get("qgl_program"));
+    glUseProgram(program->getId());
+    
+    //Bind uniforms
+    //program->SetUniformIndex("mvpMatrix", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
 
     //premultiply the matrix for this example
     mvp = projection * view * model;
 
-    GLint num;
-    glGetProgramiv(program.getId(), GL_ACTIVE_UNIFORMS, &num);
-    cout<<"num "<<num<<endl;
-    GLuint m_pos = glGetUniformLocation(program.getId(), "mvpMatrix");
-    cout<< "buf "<<m_pos<<endl;
-    cout<<"GLbuf "<<this->U_POSITION<<endl;
     
     //upload the matrix to the shader
     glUniformMatrix4fv(this->U_POSITION, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -187,7 +187,7 @@ float GLMain::getDT()
 {
     float ret;
     time = chrono::high_resolution_clock::now();
-    ret = chrono::duration_cast< std::chrono::duration<float> >(time-start_time).count();
-    start_time = chrono::high_resolution_clock::now();
+    ret = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
+    this->start_time = chrono::high_resolution_clock::now();
     return ret;
 }

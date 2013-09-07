@@ -3,14 +3,18 @@
 #include <fstream>
 #include <string>
 #include <cerrno>
-#include <stdio.h>
+#include <string>
 
 #include <QApplication>
 #include <QKeyEvent>
 
 #include "QGLApp.hpp"
+#include "GLNode.hpp"
+#include "GLContext.hpp"
+#include "GLProgram.hpp"
 
-using namespace std;
+typedef std::pair<std::string, std::shared_ptr<GLNode>> QGLPair;
+
 
 QGLApp::QGLApp(QWidget *parent) : QGLWidget(QGLFormat(QGL::DoubleBuffer | QGL::DepthBuffer), parent), size(640, 480), timer(this)
 {
@@ -40,33 +44,13 @@ void QGLApp::initializeGL()
     GLenum status = glewInit();
     if( status != GLEW_OK)
     {
-        cerr << "[F] GLEW not initialized: ";
-        cerr << glewGetErrorString(status) << std::endl;
+        std::cerr << "[F] GLEW not initialized: ";
+        std::cerr << glewGetErrorString(status) << std::endl;
         qApp->quit();
         return;
     }
-}
-
-bool QGLApp::Add(unique_ptr<GLProgram> program)
-{
-    glLinkProgram(program->getId());
-    this->program.push_front(std::move(program));
-    start_time = chrono::high_resolution_clock::now();
     timer.start();
-
-    return this->program.front()->Status();
 }
-
-bool QGLApp::Remove()
-{
-    if( this->program.size() > 0)
-    {
-        this->program.pop_back();
-        return true;
-    }
-    return false;
-}
-
 
 void QGLApp::paintGL()
 {
@@ -94,4 +78,23 @@ void QGLApp::keyPressEvent(QKeyEvent *event)
       qApp->quit();
    }
 }
+
+std::shared_ptr<GLNode> QGLApp::Get(const char* name) const 
+{
+    if( GLContext::QGLMap.count(name) == 1 )
+        return GLContext::QGLMap.find(name)->second;
+    return NULL;
+}
+
+bool QGLApp::AddProgram(std::shared_ptr<GLProgram> program)
+{
+    std::cout<<"set time qglapp "<<program<<std::endl;
+    glLinkProgram(program->getId());
+    this->start_time = std::chrono::high_resolution_clock::now();
+    GLuint status = program->Status();
+    this->QGLMap.insert( QGLPair(program->getName(), program));
+
+    return status;
+}
+
 

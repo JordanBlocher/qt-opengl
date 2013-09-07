@@ -2,22 +2,18 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-#include <QApplication>
-#include <QKeyEvent>
-
 #include "GLProgram.hpp"
+#include "GLShader.hpp"
 
-using namespace std;
-
-GLProgram::GLProgram()
+GLProgram::GLProgram(const char* name) : GLNode(name)
 {
     this->id = glCreateProgram();
 }
 
-GLProgram::GLProgram(GLShader vertex, GLShader fragment) : GLProgram()
+GLProgram::GLProgram(std::shared_ptr<GLShader> vertex, std::shared_ptr<GLShader> fragment, const char* name) : GLProgram(name)
 {
-    this->Add(vertex);
-    this->Add(fragment);
+    this->AddShader(vertex);
+    this->AddShader(fragment);
 }
 
 GLProgram::~GLProgram()
@@ -34,40 +30,46 @@ bool GLProgram::Status()
         glGetProgramiv(this->id, GL_INFO_LOG_LENGTH, &msize);
         msg.resize(msize);
         glGetProgramInfoLog(this->id, msize, NULL, &msg[0]);
-        cerr << msg << endl;
+        std::cerr << msg << std::endl;
         return false;
     }
     return true;
 }
 
-bool GLProgram::Add(GLShader shader)
+bool GLProgram::AddShader(std::shared_ptr<GLShader> shader)
 {
-    if(shader.Compile())
+    if(shader->Status())
     {
-        glAttachShader(this->id, shader.getId());
+        glAttachShader(this->id, shader->getId());
+        GLNode::Add(shader);
+    }
+    return this->Status();
+}
+
+bool GLProgram::RemoveShader(std::shared_ptr<GLShader> shader)
+{
+    //TODO: Verify shader is flagged for delete after attach
+    glGetShaderiv(shader->getId(), GL_DELETE_STATUS, &status);
+    if(status)
+    {
+        glDetachShader(this->id, shader->getId());
         return true;
     }
     return false;
 }
 
-void GLProgram::Remove(GLShader shader)
-{
-    glDetachShader(this->id, shader.getId());
-}
-
-void GLProgram::Bind(const char* name, GLuint index)
+void GLProgram::SetAttributeIndex(const char* name, GLuint index)
 {
     glBindAttribLocation(this->id, index, name);
 }
 
-void GLProgram::Bind(const char* name, GLuint index, GLuint offset, GLenum type, Uniform &GLUniform)
+void GLProgram::SetUniformIndex(const char* name, GLuint index, GLuint offset, GLenum type, Uniform &GLUniform)
 {
     GLUniform.block = glGetUniformBlockIndex(this->id, name);
+    glUniformBlockBinding(this->id, GLUniform.block, index);
     glGenBuffers(1, &GLUniform.buffer);
     glBindBuffer(type, GLUniform.buffer);
     glBufferData(type, sizeof(glm::mat4) * offset, NULL, GL_STREAM_DRAW);
-    glBindBuffer(type, index);
-    glUniformBlockBinding(this->id, GLUniform.block, index);
-    glBindBufferRange(type, index, GLUniform.buffer, 0, sizeof(glm::mat4) * offset);
+    glBindBufferBase(type, index, GLUniform.buffer);
 }
 

@@ -2,27 +2,35 @@
 #define GLNODE_H
 
 #include <string>
-#include "GLStruct.hpp"
+#include <memory>
 
-class GLNode
+#include "GLContext.hpp"
+
+class GLProgram;
+
+class GLNode : public GLContext
 {
+    friend class GLContext;
 
-public:
+ public:
     GLNode();
+    GLNode(const char*);
+    GLNode(const GLNode&);
     ~GLNode();
 
     GLuint getId() const;
-
-    virtual bool Status();
-    virtual void Add(GLNode);
-    virtual void Remove(GLNode);
+    std::string getName() const;
 
 protected:
+    virtual bool Add(std::shared_ptr<GLNode>);
+    virtual bool Remove(const char*);
+    virtual bool Status();
+
     GLuint id;
     GLenum type;
     GLint status;
     std::string msg;
-    
+    std::string name;
 };
 
 #endif 

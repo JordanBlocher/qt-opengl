@@ -5,23 +5,24 @@
 
 class GLShader : public GLNode
 {
-
-public:
-    GLShader();
-    GLShader(GLenum);
-    GLShader(const char*, GLenum);
+ public:
+    GLShader(const char*);
+    GLShader(GLenum, const char*);
+    GLShader(const char*, GLenum, const char*);
     ~GLShader();
 
-    bool Compile();
-    void Create(const char*, GLenum);
     bool Status();
-    bool Source(const char*);
-    bool Add(std::string);
-    std::string toString(GLenum);
+    bool Compile();
 
-protected:
+ private:
+    void Create(const char*, GLenum);
+    bool Source(const char*);
+    std::string toString(GLenum);
     std::string source;
     std::string path;
+
+
+ 
 };
 
 
