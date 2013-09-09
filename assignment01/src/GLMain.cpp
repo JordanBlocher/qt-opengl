@@ -18,6 +18,10 @@
 
 using namespace std;
 
+float GLMain::focal_distance;
+float GLMain::sensor_distance;
+float GLMain::FOV;
+
 GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
 
 void GLMain::initializeGL()
