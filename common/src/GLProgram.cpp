@@ -11,8 +11,9 @@ GLProgram::GLProgram(const char* name) : GLNode(name)
     this->id = glCreateProgram();
 }
 
-GLProgram::GLProgram(std::shared_ptr<GLShader> vertex, std::shared_ptr<GLShader> fragment, const char* name) : GLProgram(name)
+GLProgram::GLProgram(std::shared_ptr<GLShader> vertex, std::shared_ptr<GLShader> fragment, const char* name) : GLNode(name)
 {
+    this->id = glCreateProgram();
     this->AddShader(vertex);
     this->AddShader(fragment);
 }

@@ -29,13 +29,13 @@ protected:
     static const GLuint V_POSITION = 1;
     static const GLuint V_COLOR = 2;
     static const GLuint U_POSITION = 0;
+    static const GLuint NUM_UNIFORMS = 1;
 
     const float FOV = 45.0f; // half-angle FOV
     const float sensor_distance = 0.01f;
     const float focal_distance = 100.0f;
 
     GLuint vbo_geometry;
-    Uniform GLUniform;
    
     //transform matrices
     glm::mat4 model;//obj->world each object should have its own model matrix

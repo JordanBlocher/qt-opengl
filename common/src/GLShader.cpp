@@ -12,14 +12,16 @@ GLShader::GLShader(const char* name) : GLNode(name)
     path = "shaders/";
 }
 
-GLShader::GLShader(GLenum type, const char* name) : GLShader(name)
+GLShader::GLShader(GLenum type, const char* name) : GLNode(name)
 {
+    path = "shaders/";
     this->Create(this->toString(type).c_str(), type);
     this->Compile();
 }
 
-GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLShader(name)
+GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLNode(name)
 {
+    path = "shaders/";
     this->Create(filename, type);
     this->Compile();
 }

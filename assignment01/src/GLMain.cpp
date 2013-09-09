@@ -12,6 +12,7 @@
 #include <GLNode.hpp>
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
+#include <GLBufferObject.hpp>
 #include <GLContext.hpp>
 #include "GLMain.hpp"
 
@@ -85,7 +86,7 @@ void GLMain::initializeGL()
 
     //Program
     shared_ptr<GLProgram> program(new GLProgram("qgl_program"));
-cout<< program <<endl; 
+    
     //Add Shaders
     program->AddShader(vertex);
     program->AddShader(fragment);
@@ -106,10 +107,23 @@ cout<< program <<endl;
     glDepthFunc(GL_LESS);
 
     //Add Program
-    cout<< "adding "<<program<<endl;
     if( !this->AddProgram(program) )
     {
         cerr << "[F] Program failed to link."<<endl;
+        qApp->quit();
+        exit(0);
+    }
+    this->AddToContext(program);
+    
+    //Create UBO
+    shared_ptr<GLBufferObject> ubo(new GLBufferObject("GMatrices", sizeof(glm::mat4), this->NUM_UNIFORMS, this->U_POSITION, GL_UNIFORM_BUFFER));
+    this->AddToContext(ubo);
+    //Bind uniform index
+    vector<string> uniforms = {"mvpMatrix"};
+
+    if( !program->SetUniformIndex(this->Get<GLBufferObject>("GMatrices"), uniforms, sizeof(glm::mat4), this->U_POSITION))
+    {
+        cerr << "[F] UBO failed to bind."<<endl;
         qApp->quit();
         exit(0);
     }
@@ -123,20 +137,19 @@ void GLMain::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //Choose the shader program
-    shared_ptr<GLProgram> program = static_pointer_cast<GLProgram>(this->Get("qgl_program"));
+    shared_ptr<GLProgram> program = this->Get<GLProgram>("qgl_program");
     glUseProgram(program->getId());
     
-    //Bind uniforms
-    program->SetUniformIndex("GLMatrices", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
-
     //premultiply the matrix for this example
     mvp = projection * view * model;
-
     
-    //upload the matrix to the shader
-    //glUniformMatrix4fv(this->U_POSITION, 1, GL_FALSE, glm::value_ptr(mvp));
-    glBindBuffer(GL_UNIFORM_BUFFER, GLUniform.buffer);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mvp));
+    //Select buffer
+    shared_ptr<GLBufferObject> ubo = this->Get<GLBufferObject>("GMatrices");
+
+    //Load buffer to MVP
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo->getBuffer());
+    Uniform mvpmat = ubo->getUniform("mvpMatrix");
+    glBufferSubData(GL_UNIFORM_BUFFER, mvpmat.offset, mvpmat.size, glm::value_ptr(mvp));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     //set up the Vertex Buffer Object so it can be drawn
@@ -172,7 +185,7 @@ void GLMain::idleGL()
     float dt = getDT();
 
     angle += dt * M_PI/2;
-    model = glm::translate( glm::mat4(1.0f), glm::vec3(2.0 * sin(angle), 0.0, 2.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * angle, glm::vec3(0.0, 1.0, 0.0));
+    model = glm::translate( glm::mat4(1.0f), glm::vec3(4.0 * sin(angle), 0.0, 4.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * angle, glm::vec3(0.0, 1.0, 0.0));
     
     QGLApp::idleGL();
 }
