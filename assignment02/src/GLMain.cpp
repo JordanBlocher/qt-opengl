@@ -16,6 +16,10 @@
 #include <GLContext.hpp>
 #include "GLMain.hpp"
 
+#define FOV 45.0f
+#define SENSOR_DISTANCE 0.01f
+#define FOCAL_DISTANCE 100.0f
+
 using namespace std;
 
 GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
@@ -23,10 +27,6 @@ GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
 void GLMain::initializeGL()
 {
  
-    static const float FOV = 45.0f; // half-angle FOV
-    static const float sensor_distance = 0.01f;
-    static const float focal_distance = 100.0f;
-   
     QGLApp::initializeGL();
 
     //Geometry (le sigh) 
@@ -104,7 +104,7 @@ void GLMain::initializeGL()
                         glm::vec3(0.0, 0.0, 0.0), //Focus point
                         glm::vec3(0.0, 1.0, 0.0)); //Positive Y is up
 
-    projection = glm::perspective( this->FOV, float(this->size.width())/float(this->size.height()), this->sensor_distance, this->focal_distance);
+    projection = glm::perspective( FOV, float(this->size.width())/float(this->size.height()), SENSOR_DISTANCE, FOCAL_DISTANCE);
 
     //enable depth testing (cool!)
     glEnable(GL_DEPTH_TEST);
@@ -197,7 +197,7 @@ void GLMain::idleGL()
 void GLMain::resizeGL(int width, int height)
 {
     QGLApp::resizeGL(width, height);
-    projection = glm::perspective(this->FOV, float(width)/float(height), this->sensor_distance, this->focal_distance);
+    projection = glm::perspective(FOV, float(width)/float(height), SENSOR_DISTANCE, FOCAL_DISTANCE);
 }
 
 float GLMain::getDT()
