@@ -31,9 +31,9 @@ protected:
     static const GLuint U_POSITION = 0;
     static const GLuint NUM_UNIFORMS = 2;
 
-    const float FOV = 45.0f; // half-angle FOV
-    const float sensor_distance = 0.01f;
-    const float focal_distance = 100.0f;
+    static const float FOV = 45.0f; // half-angle FOV
+    static const float sensor_distance = 0.01f;
+    static const float focal_distance = 100.0f;
 
     GLuint vbo_geometry;
    
