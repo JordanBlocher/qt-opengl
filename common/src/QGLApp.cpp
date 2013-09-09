@@ -4,7 +4,6 @@
 #include <string>
 #include <cerrno>
 #include <string>
-
 #include <QApplication>
 #include <QKeyEvent>
 
@@ -13,10 +12,9 @@
 #include "GLContext.hpp"
 #include "GLProgram.hpp"
 
-typedef std::pair<std::string, std::shared_ptr<GLNode>> QGLPair;
+typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
-
-QGLApp::QGLApp(QWidget *parent) : QGLWidget(QGLFormat(QGL::DoubleBuffer | QGL::DepthBuffer), parent), size(640, 480), timer(this)
+QGLApp::QGLApp(QWidget *parent, GLMapPtr m) : QGLWidget(QGLFormat(QGL::DoubleBuffer | QGL::DepthBuffer), parent), GLContext(m), size(640, 480), timer(this)
 {
     setMouseTracking(true);
     setAutoBufferSwap(true);
@@ -79,22 +77,23 @@ void QGLApp::keyPressEvent(QKeyEvent *event)
    }
 }
 
-std::shared_ptr<GLNode> QGLApp::Get(const char* name) const 
-{
-    if( GLContext::QGLMap.count(name) == 1 )
-        return GLContext::QGLMap.find(name)->second;
-    return NULL;
-}
-
 bool QGLApp::AddProgram(std::shared_ptr<GLProgram> program)
 {
-    std::cout<<"set time qglapp "<<program<<std::endl;
     glLinkProgram(program->getId());
     this->start_time = std::chrono::high_resolution_clock::now();
     GLuint status = program->Status();
-    this->QGLMap.insert( QGLPair(program->getName(), program));
 
     return status;
 }
 
+bool QGLApp::AddToContext(std::shared_ptr<GLNode> node)
+{
+    std::cout<<"adding node "<<node->getName()<<std::endl;
+    if( GLContext::QGLMap->count(node->getName()) == 0 )
+    {
+        GLContext::QGLMap->insert(GLPair(node->getName(), node));
+        return true;
+    }
+    return false;
+}
 

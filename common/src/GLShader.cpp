@@ -1,14 +1,11 @@
 #include <GL/glew.h>
 #include <iostream>
-
 #include <QApplication>
 #include <QKeyEvent>
 #include <string>
 #include <fstream>
 
 #include "GLShader.hpp"
-
-using namespace std;
 
 GLShader::GLShader(const char* name) : GLNode(name)
 {
@@ -50,7 +47,7 @@ bool GLShader::Status()
         glGetShaderiv(this->id, GL_INFO_LOG_LENGTH, &msize);
         msg.resize(msize);
         glGetShaderInfoLog(this->id, msize, NULL, &msg[0]);
-        cerr << "[F] Shader failed to compile: " << endl << msg << endl;
+        std::cerr << "[F] Shader failed to compile: " << std::endl << msg << std::endl;
         return false;
     }
     return true;
@@ -58,11 +55,11 @@ bool GLShader::Status()
 
 bool GLShader::Source(const char* filename)
 {
-    ifstream fin(path + filename, ios::binary | ios::in);
+    std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
     if(fin)
     {
-        source.resize((fin.seekg(0, ios::end)).tellg());
-        fin.seekg(0, ios::beg);
+        source.resize((fin.seekg(0, std::ios::end)).tellg());
+        fin.seekg(0, std::ios::beg);
         fin.read(&source.front(), source.size());
         fin.close();
         return true;
@@ -80,7 +77,7 @@ bool GLShader::Compile()
     return false;
 }
 
-string GLShader::toString(GLenum type)
+std::string GLShader::toString(GLenum type)
 {
     switch(type)
     {

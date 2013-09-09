@@ -7,6 +7,7 @@
 #include "GLNode.hpp"
 
 class GLShader;
+class GLBufferObject;
 
 class GLProgram : public GLNode
 {
@@ -19,8 +20,9 @@ class GLProgram : public GLNode
     bool Status();
     bool AddShader(std::shared_ptr<GLShader>);
     bool RemoveShader(std::shared_ptr<GLShader>);
+
     void SetAttributeIndex(const char*, GLuint);
-    void SetUniformIndex(const char*, GLuint, GLuint, GLenum, Uniform&);
+    bool SetUniformIndex(std::shared_ptr<GLBufferObject>, const std::vector<std::string>&, GLsizeiptr, GLuint);
 
 };
 

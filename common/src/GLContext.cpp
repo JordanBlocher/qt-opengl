@@ -1,11 +1,17 @@
 #include <GL/glew.h>
 #include <memory>
+#include <iostream>
 
 #include "GLContext.hpp"
 
+typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
-GLContext::GLContext()
+GLContext::GLContext(GLMapPtr m)
 {
+    if ( m == NULL )
+        QGLMap = GLMapPtr(new GLMap);
+    else
+        QGLMap = m;
 }
 
 GLContext::~GLContext()
@@ -16,6 +22,5 @@ GLContext::~GLContext()
 
 //std::map<std::string, std::shared_ptr<GLNode>> GLContext::QGLMap;
 
-//Uniform GLContext::GLUniform;
 
 

@@ -1,10 +1,7 @@
 #include <GL/glew.h>
 #include <QGLWidget>
 #include <iostream>
-#include <fstream>
-#include <string>
 #include <cerrno>
-
 #include<QApplication>
 
 #include "GLNode.hpp"
@@ -12,8 +9,6 @@
 #include "GLContext.hpp"
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> QGLPair;
-
-using namespace std;
 
 GLNode::GLNode()
 {
@@ -47,26 +42,16 @@ std::string GLNode::getName() const
 
 bool GLNode::Status()
 {
-    return( !GLContext::QGLMap.empty() ); 
-}
-
-bool GLNode::Add(std::shared_ptr<GLNode> node)
-{
-    if( GLContext::QGLMap.count(node->name) == 0 )
-    {
-        GLContext::QGLMap.insert(QGLPair(node->name, node));
-        return true;
-    }
     return false;
 }
 
-bool GLNode::Remove(const char* name)
+bool GLNode::Add(std::shared_ptr<GLNode> node = NULL)
 {
-    if( GLContext::QGLMap.count(name) == 1 )
-    {
-        GLContext::QGLMap.erase(name);
-        return true;
-    }
+    return false;
+}
+
+bool GLNode::Remove(const char* name = NULL)
+{
     return false;
 }
 

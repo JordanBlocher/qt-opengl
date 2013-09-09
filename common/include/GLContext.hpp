@@ -13,22 +13,22 @@
 class GLNode;
 class QGLApp;
 
+typedef std::map<std::string,std::shared_ptr<GLNode>> GLMap; 
+typedef std::shared_ptr<GLMap> GLMapPtr; 
+
 class GLContext
 {
- friend class QGLApp;
-
- public:
-    GLContext();
-    ~GLContext();
  
+ public:
+    GLContext(GLMapPtr m = NULL);
+    ~GLContext();
+
  protected:
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
 
-    std::map<std::string, std::shared_ptr<GLNode>> QGLMap;
-
-    Uniform GLUniform; //FIXME
-
+//    static std::map<std::string, std::shared_ptr<GLNode>> QGLMap;
+    GLMapPtr QGLMap;
 };
 
 

@@ -6,12 +6,9 @@
 
 #include "GLContext.hpp"
 
-class GLProgram;
-
-class GLNode : public GLContext
+class GLNode
 {
-    friend class GLContext;
-
+ 
  public:
     GLNode();
     GLNode(const char*);
