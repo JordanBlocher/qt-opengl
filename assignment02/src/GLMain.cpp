@@ -127,7 +127,6 @@ void GLMain::initializeGL()
         qApp->quit();
         exit(0);
     }
-    cout<<"exiting init"<<endl;
 
 }
 
@@ -150,7 +149,6 @@ void GLMain::paintGL()
     //Load buffer to MVP
     glBindBuffer(GL_UNIFORM_BUFFER, ubo->getBuffer());
     Uniform mvpmat = ubo->getUniform("mvpMatrix");
-    std::cout<< "mvpmat "<<mvpmat.index<<" "<<mvpmat.offset<<" "<<mvpmat.size<<endl;
     glBufferSubData(GL_UNIFORM_BUFFER, mvpmat.offset, mvpmat.size, glm::value_ptr(mvp));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 

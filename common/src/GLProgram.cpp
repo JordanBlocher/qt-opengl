@@ -75,13 +75,11 @@ bool GLProgram::SetUniformIndex(std::shared_ptr<GLBufferObject> ubo, const std::
     {
         std::cerr <<"[W] Buffer " << index <<" is not empty"<< std::endl;
     }
-std::cout<<ubo<<std::endl;
 
-    GLint numUniforms, uniform_blocks, block_uniforms;
+    GLint numUniforms;
     GLuint block;
     std::vector<GLuint> dBlockUniforms;
     std::vector<GLint> size;
-    std::unique_ptr<std::map<std::string, Uniform*>> uniforms(new std::map<std::string, Uniform*>);
 
     glGetProgramiv(this->id, GL_ACTIVE_UNIFORMS, &numUniforms);
 
@@ -91,12 +89,7 @@ std::cout<<ubo<<std::endl;
     }
 
     size.resize(numUniforms);
-    std::cout<<"uniforms "<<numUniforms<<std::endl;
     glGetActiveUniformsiv(this->id, numUniforms, dBlockUniforms.data(), GL_UNIFORM_SIZE, size.data());
-
-    glGetProgramiv(this->id, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_blocks);
-    std::cout<<"uniform blocks"<<uniform_blocks<<std::endl;
-std::cout<<"num names "<<names.size()<<std::endl;
 
     if( names.size() > numUniforms )
     {
@@ -106,28 +99,18 @@ std::cout<<"num names "<<names.size()<<std::endl;
     
     block = glGetUniformBlockIndex(this->id, (ubo->getName()).c_str());
     ubo->SetBlockIndex(block);
-    std::cout<<"block before "<<block<<std::endl;
     
     for( int i = 0; i < numUniforms; i++)
     {
-        /*if(!ubo->Status(type, size[i]))
-        {
-            std::cerr << "Size of uniforms is outside range of buffer size" << std::endl;
-            return false;
-        }*/
+        
         Uniform uniform(size[i]*type, index + i, size[i]*type*i);
         std::pair<std::string, Uniform> pair(names[i], uniform);
-        std::cout<< "pair " <<pair.first<<" "<<(pair.second).size<<std::endl;
         ubo->AddUniform(pair);
     }
-    std::cout<<"going to add uniforms"<<std::endl;
 
 
    glUniformBlockBinding(this->id, block, index);
    glBindBufferBase(ubo->getType(), index, ubo->getBuffer()); 
-
-    glGetActiveUniformBlockiv(this->id, block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &block_uniforms);
-    std::cout<<"block uniforms after"<<block_uniforms<<std::endl;
 
     return true;
 }

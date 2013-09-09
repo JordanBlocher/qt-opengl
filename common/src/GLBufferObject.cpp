@@ -57,14 +57,10 @@ Uniform GLBufferObject::getUniform(const char* name)
 
 void GLBufferObject::AddUniform(std::pair<std::string, Uniform> pair)
 {
-    std::cout<<"uniform set"<<std::endl;
     if( this->uniforms == NULL )
     {
-        std::cout<<"new uniform map"<<std::endl;
         this->uniforms = UniformPtr(new UniformMap);
-        std::cout<<this->uniforms<<std::endl;
     }
     this->uniforms->insert(pair);
-    std::cout<<"set uniform"<<std::endl;
 }
 

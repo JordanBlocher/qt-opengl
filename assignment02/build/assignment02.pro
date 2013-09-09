@@ -6,7 +6,7 @@
 QT += opengl
 
 TEMPLATE = app
-TARGET = ../bin/assignment01
+TARGET = ../bin/assignment02
 DEPENDPATH += ../src ../../common/include
 INCLUDEPATH += ../src ../../common/include
 LIBS += -L../../common/lib -lqglcommon -lGLEW

@@ -6,7 +6,7 @@ struct Uniform
     GLuint index;
     GLuint offset;
     
-    Uniform(GLuint s, GLuint i, GLuint o) : size(s), index(i), offset(o){ std::cout<<"constructing uniform"<<std::endl;}
+    Uniform(GLuint s, GLuint i, GLuint o) : size(s), index(i), offset(o){}
 };
 
 struct Vertex

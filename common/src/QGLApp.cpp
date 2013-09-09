@@ -88,7 +88,6 @@ bool QGLApp::AddProgram(std::shared_ptr<GLProgram> program)
 
 bool QGLApp::AddToContext(std::shared_ptr<GLNode> node)
 {
-    std::cout<<"adding node "<<node->getName()<<std::endl;
     if( GLContext::QGLMap->count(node->getName()) == 0 )
     {
         GLContext::QGLMap->insert(GLPair(node->getName(), node));
