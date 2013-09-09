@@ -64,6 +64,7 @@ bool GLShader::Source(const char* filename)
         fin.seekg(0, std::ios::beg);
         fin.read(&source.front(), source.size());
         fin.close();
+        source.append("");
         return true;
     }
     return false;

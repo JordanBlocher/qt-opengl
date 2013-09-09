@@ -10,6 +10,7 @@ TARGET = ../bin/assignment01
 DEPENDPATH += ../src ../../common/include
 INCLUDEPATH += ../src ../../common/include
 LIBS += -L../../common/lib -lqglcommon -lGLEW
+QMAKE_CXX = g++-4.7
 QMAKE_CXXFLAGS += -std=c++0x
 
 libqglcommon.target = ../../common/lib/libqglcommon.a
