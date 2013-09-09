@@ -35,6 +35,7 @@ protected:
     const float focal_distance = 100.0f;
 
     GLuint vbo_geometry;
+    Uniform GLUniform;
    
     //transform matrices
     glm::mat4 model;//obj->world each object should have its own model matrix

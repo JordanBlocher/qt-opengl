@@ -127,17 +127,17 @@ void GLMain::paintGL()
     glUseProgram(program->getId());
     
     //Bind uniforms
-    //program->SetUniformIndex("mvpMatrix", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
+    program->SetUniformIndex("GLMatrices", this->U_POSITION, 1, GL_UNIFORM_BUFFER, this->GLUniform);
 
     //premultiply the matrix for this example
     mvp = projection * view * model;
 
     
     //upload the matrix to the shader
-    glUniformMatrix4fv(this->U_POSITION, 1, GL_FALSE, glm::value_ptr(mvp));
-    //glBindBuffer(GL_UNIFORM_BUFFER, GLUniform.buffer);
-    //glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mvp));
-    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    //glUniformMatrix4fv(this->U_POSITION, 1, GL_FALSE, glm::value_ptr(mvp));
+    glBindBuffer(GL_UNIFORM_BUFFER, GLUniform.buffer);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(mvp));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     //set up the Vertex Buffer Object so it can be drawn
     glEnableVertexAttribArray(this->V_POSITION);
