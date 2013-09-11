@@ -11,7 +11,7 @@
 #include "GLStruct.hpp"
 
 class GLNode;
-class QGLApp;
+class QGLView;
 
 typedef std::map<std::string,std::shared_ptr<GLNode>> GLMap; 
 typedef std::shared_ptr<GLMap> GLMapPtr; 

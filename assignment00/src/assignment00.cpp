@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
    QApplication app(argc, argv);
 
-   QGLApp *window = new GLMain();
+   QGLView *window = new GLMain();
    window->show();
 
    ret = app.exec();

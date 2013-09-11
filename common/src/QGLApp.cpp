@@ -1,98 +1,78 @@
-#include <GL/glew.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cerrno>
-#include <string>
-#include <QApplication>
-#include <QKeyEvent>
+#include <QtGui>
+#include <QWidget>
+#include <QLabel>
+#include <QMessageBox>
+#include <QMenu>
+#include <QAction>
 
 #include "QGLApp.hpp"
-#include "GLNode.hpp"
-#include "GLContext.hpp"
-#include "GLProgram.hpp"
+#include "QGLView.hpp"
 
-typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
-
-QGLApp::QGLApp(QWidget *parent, GLMapPtr m) : QGLWidget(QGLFormat(QGL::DoubleBuffer | QGL::DepthBuffer), parent), GLContext(m), size(640, 480), timer(this)
+QGLApp::QGLApp(QWidget *parent, QGLView *view)
 {
-    setMouseTracking(true);
-    setAutoBufferSwap(true);
-    timer.setInterval(0);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(idleGL()));
+    this->glView = (view == NULL) ? new QGLView(this) : view;
+    setCentralWidget(glView);
+
+    this->createActions();
+    this->createMenus();
 }
 
 QGLApp::~QGLApp()
 {
-    //Auto
 }
 
-QSize QGLApp::minimumSizeHint() const
+void QGLApp::createActions()
 {
-    return QSize(40,40);
+    this->exit = new QAction(tr("&Quit"), this);
+    this->exit->setShortcuts(QKeySequence::Quit);
+    this->exit->setStatusTip(tr("Quit the application"));
+    connect(exit, SIGNAL(triggered()), this, SLOT(close()));
+
+    this->about = new QAction(tr("&Help"), this);
+    this->about->setStatusTip(tr("Running the application"));
+    connect(about, SIGNAL(triggered()), this, SLOT(aboutCallback()));
+    
+    this->aboutQt = new QAction(tr("&About"), this);
+    this->aboutQt->setStatusTip(tr("App Info"));
+    connect(aboutQt, SIGNAL(triggered()), this, SLOT(aboutQtCallback()));
 }
 
-QSize QGLApp::sizeHint() const
+
+void QGLApp::createMenus()
 {
-    return size;
+    this->menu = menuBar()->addMenu(tr("&Menu"));    
+    this->menu->addAction(exit);
+
+    this->menuBar()->addSeparator();
+
+    this->help = menuBar()->addMenu(tr("&Help"));
+    this->help->addAction(about);
+    this->help->addAction(aboutQt);
 }
 
-void QGLApp::initializeGL()
+
+QMenu* QGLApp::createPopupMenu()
 {
-    GLenum status = glewInit();
-    if( status != GLEW_OK)
-    {
-        std::cerr << "[F] GLEW not initialized: ";
-        std::cerr << glewGetErrorString(status) << std::endl;
-        qApp->quit();
-        return;
-    }
-    timer.start();
+    QMenu *menu = menuBar()->addMenu(tr(""));    
+    menu->addAction(exit);
+    menu->addAction(about);
+
+    return menu;
 }
 
-void QGLApp::paintGL()
+void QGLApp::aboutCallback()
 {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    this->swapBuffers();
+    this->infoLabel = new QLabel(tr("<b>Help|About</b>")); 
+    QMessageBox::about(this, tr("Help"),
+    tr("Right-click on the screen to start/stop the animation.\n"
+    "Use the arrow keys <-> to rotate left and right, or \n"
+    "use the space bar to toggle rotation."));
 }
 
-void QGLApp::resizeGL(int width, int height)
+void QGLApp::aboutQtCallback()
 {
-    glViewport( 0, 0, width, height);
-    size = QSize(width, height);
+    this->infoLabel->setText(tr("<b>Help|About Qt</b>"));
+    QMessageBox::about(this, tr("About Qt"),
+    tr("QGLApp \nQt Version 4.8.3"));
+
 }
-
-void QGLApp::idleGL()
-{
-    updateGL();
-}
-
-void QGLApp::keyPressEvent(QKeyEvent *event)
-{
-   if ( event->key() == Qt::Key_Escape )
-   {
-      qApp->quit();
-   }
-}
-
-bool QGLApp::AddProgram(std::shared_ptr<GLProgram> program)
-{
-    glLinkProgram(program->getId());
-    this->start_time = std::chrono::high_resolution_clock::now();
-    GLuint status = program->Status();
-
-    return status;
-}
-
-bool QGLApp::AddToContext(std::shared_ptr<GLNode> node)
-{
-    if( GLContext::QGLMap->count(node->getName()) == 0 )
-    {
-        GLContext::QGLMap->insert(GLPair(node->getName(), node));
-        return true;
-    }
-    return false;
-}
-

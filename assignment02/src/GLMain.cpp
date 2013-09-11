@@ -1,6 +1,12 @@
 #include <GL/glew.h>
+
 #include <QApplication>
 #include <QWidget>
+#include <QKeyEvent>
+#include <QContextMenuEvent>
+#include <QAction>
+#include <QMenu>
+
 #include <iostream>
 #include <chrono>
 
@@ -22,12 +28,17 @@
 
 using namespace std;
 
-GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
+GLMain::GLMain(QWidget *parent) : angle(0.0)
+{
+    this->setContextMenuPolicy(Qt::DefaultContextMenu);    
+    this->direction = 1.0f;
+    this->update = true;
+}
 
 void GLMain::initializeGL()
 {
  
-    QGLApp::initializeGL();
+    QGLView::initializeGL();
 
     //Geometry (le sigh) 
     Vertex geometry[] = { {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
@@ -186,17 +197,21 @@ void GLMain::paintGL()
 
 void GLMain::idleGL()
 {
-    float dt = getDT();
+    if( update )
+    {
+        float dt = getDT();
 
-    angle += dt * M_PI/2;
-    model = glm::translate( glm::mat4(1.0f), glm::vec3(2.0 * sin(angle), 0.0, 2.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * angle, glm::vec3(0.0, 1.0, 0.0));
-    
-    QGLApp::idleGL();
+        angle += dt * M_PI/2;
+        rotate += dt * M_PI/2 * direction;
+        model = glm::translate( glm::mat4(1.0f), glm::vec3(4.0 * sin(angle), 0.0, 4.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * rotate, glm::vec3(0.0, 1.0, 0.0));
+        
+        QGLView::updateGL();
+    }
 }
 
 void GLMain::resizeGL(int width, int height)
 {
-    QGLApp::resizeGL(width, height);
+    QGLView::resizeGL(width, height);
     projection = glm::perspective(FOV, float(width)/float(height), SENSOR_DISTANCE, FOCAL_DISTANCE);
 }
 
@@ -208,3 +223,60 @@ float GLMain::getDT()
     this->start_time = chrono::high_resolution_clock::now();
     return ret;
 }
+
+void GLMain::keyPressEvent(QKeyEvent *event)
+{
+   QGLView::keyPressEvent(event);
+   int sign = sgn<float>(this->direction);
+
+   if( (event->key() == Qt::Key_Left) && (sign > 0))
+   {
+       this->direction*=-1.0;
+   }
+   if( (event->key() == Qt::Key_Right))
+   {
+       this->direction*=sign;
+   }
+   if( event->key() == Qt::Key_Space )
+   {
+       this->direction*=-1.0;
+   }
+
+}
+
+void GLMain::contextMenuEvent(QContextMenuEvent *event)
+{
+    QAction *start = new QAction(tr("&Start"), this);
+    start->setStatusTip(tr("Start"));
+    connect(start, SIGNAL(triggered()), this, SLOT(start()));
+    
+    QAction *stop = new QAction(tr("&Stop"), this);
+    start->setStatusTip(tr("Stop"));
+    connect(stop, SIGNAL(triggered()), this, SLOT(stop()));
+
+    QMenu menu(this);    
+    menu.addAction(start);
+    menu.addAction(stop);
+    menu.exec(event->globalPos());
+}
+
+void GLMain::start()
+{
+    if(!this->update)
+    {
+        QGLView::start_time  = std::chrono::high_resolution_clock::now();
+        this->update = true;
+        this->time = std::chrono::high_resolution_clock::now();
+        QGLView::timer.start();
+    }
+}
+
+void GLMain::stop()
+{
+    if(this->update)
+    {
+        this->update = false;
+        QGLView::timer.stop();
+    }
+}
+

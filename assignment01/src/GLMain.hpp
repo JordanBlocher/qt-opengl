@@ -1,7 +1,7 @@
 #ifndef GLMAIN_H
 #define GLMAIN_H
 
-#include <QGLApp.hpp>
+#include <QGLView.hpp>
 #include <chrono>
 
 // Also does not belong here
@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
 
-class GLMain : public QGLApp
+class GLMain : public QGLView
 {
     Q_OBJECT
 

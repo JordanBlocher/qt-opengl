@@ -1,9 +1,9 @@
 #ifndef GLMAIN_H
 #define GLMAIN_H
 
-#include <QGLApp.hpp>
+#include <QGLView.hpp>
 
-class GLMain : public QGLApp
+class GLMain : public QGLView
 {
     Q_OBJECT
 

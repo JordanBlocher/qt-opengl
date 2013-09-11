@@ -5,7 +5,7 @@ bin/assignment00:
 	@cd temp; qmake ../build/assignment01.pro; make
 
 clean:
-	rm -fr temp bin/*
+	rm -fr temp bin/assignment01
 
-.PHONY:bin/assignment00 clean
+.PHONY:bin/assignment01 clean
 

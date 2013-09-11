@@ -11,7 +11,7 @@ typedef std::shared_ptr<UniformMap> UniformPtr;
 typedef std::map<std::string, Vertex> VertexMap;
 typedef std::shared_ptr<VertexMap> VertexPtr;
 
-class QGLApp;
+class QGLView;
 class GLProgram;
 
 class GLBufferObject : public GLNode

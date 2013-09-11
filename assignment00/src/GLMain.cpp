@@ -5,12 +5,12 @@
 
 #include "GLMain.hpp"
 
-GLMain::GLMain(QWidget *parent) : QGLApp(parent){}
+GLMain::GLMain(QWidget *parent) : QGLView(parent){}
 
 void GLMain::initializeGL()
 {
 
-    QGLApp::initializeGL();
+    QGLView::initializeGL();
 
 
     //this defines a triangle, feel free to change it

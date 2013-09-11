@@ -22,12 +22,12 @@
 
 using namespace std;
 
-GLMain::GLMain(QWidget *parent) : QGLApp(parent), angle(0.0){}
+GLMain::GLMain(QWidget *parent) : QGLView(parent), angle(0.0){}
 
 void GLMain::initializeGL()
 {
  
-    QGLApp::initializeGL();
+    QGLView::initializeGL();
 
     //Geometry (le sigh) 
     Vertex geometry[] = { {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
@@ -191,12 +191,12 @@ void GLMain::idleGL()
     angle += dt * M_PI/2;
     model = glm::translate( glm::mat4(1.0f), glm::vec3(4.0 * sin(angle), 0.0, 4.0 * cos(angle))) * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * angle, glm::vec3(0.0, 1.0, 0.0));
     
-    QGLApp::idleGL();
+    QGLView::idleGL();
 }
 
 void GLMain::resizeGL(int width, int height)
 {
-    QGLApp::resizeGL(width, height);
+    QGLView::resizeGL(width, height);
     projection = glm::perspective(FOV, float(width)/float(height), SENSOR_DISTANCE, FOCAL_DISTANCE);
 }
 
