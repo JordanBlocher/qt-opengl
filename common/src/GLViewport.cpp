@@ -90,6 +90,10 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
    }
 }
 
+void GLViewport::mousePressEvent(QMouseEvent *event)
+{
+}
+
 void GLViewport::keyPressed(QKeyEvent *event)
 {
     this->keyPressEvent(event);

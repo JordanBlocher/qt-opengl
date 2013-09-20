@@ -239,11 +239,11 @@ void GLScene::idleGL()
         rotate += dt * M_PI/2 * direction;
 
         cube =    glm::translate( glm::mat4(1.0f), glm::vec3(4.0 * sin(angle/2.0), 0.0, 4.0 * cos(angle/2.0))) 
-                * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * rotate, glm::vec3(0.0, 1.0, 0.0));
+                * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * -rotate, glm::vec3(0.0, 1.0, 0.0));
 
         moon =    glm::translate( glm::mat4(1.0f), glm::vec3(4.0 * sin(angle/2.0), 0.0, 4.0 * cos(angle/2.0)))
                 * glm::translate( glm::mat4(1.0f), glm::vec3(2.0 * sin(1.5*angle), 0.0, 2.0 * cos(1.5*angle))) 
-                * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * -rotate, glm::vec3(0.0, 1.0, 0.0))
+                * glm::rotate( glm::mat4(1.0f), float(180.0/M_PI) * rotate, glm::vec3(0.0, 1.0, 0.0))
                 * glm::scale(mat4(1.0f), glm::vec3(0.3f));
         
         GLViewport::updateGL();
@@ -283,6 +283,12 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     {
        this->direction*=-1.0;
     }
+    emit changeDirection(this->direction);
+}
+
+void GLScene::mousePressEvent(QMouseEvent *event)
+{
+    this->direction*=-1.0;
     emit changeDirection(this->direction);
 }
 

@@ -142,7 +142,7 @@ bool GLOverlay::eventFilter(QObject *obj, QEvent *event)
 
 void GLOverlay::updatePaint(int direction)
 {
-    if( direction > 0 )
+    if( direction < 0 )
         this->msg = "CounterClockwise";
     else
         this->msg = "Clockwise";

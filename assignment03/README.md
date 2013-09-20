@@ -1,12 +1,9 @@
-Assignment 02
+Assignment 03
 =============
 
-Assignment 2 deals with enabling callback functions for interaction with the widget. Timers will stop/start when the view is stopped/started using the context menu.
+Assignment 3 includes a second cube orbiting around the first. The smaller cube has an opposite orbit, but the rotation of the smaller cube is opposite from the larger, the larger cube's rotation can be controlled with the arrow keys or reversed with the space bar/ clicking the mouse on the screen.
 
-The main GLWindow uses Click-to-Focus, at which point arrow and spacebar keys are enabled.
-
-Quit is on the main window, or use ESC. 
-
+The display will show the direction of rotation of the large cube. A feature of the text is that it only appears when the window is in focus.
 
 Assets are located in bin/assets.
 

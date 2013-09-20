@@ -46,6 +46,7 @@ Q_OBJECT
     virtual void paintGL();
     virtual void resizeGL(int, int);
     virtual void keyPressEvent(QKeyEvent*);
+    virtual void mousePressEvent(QMouseEvent*);
     virtual void contextMenuEvent(QContextMenuEvent*);
 
     bool AddProgram(std::shared_ptr<GLProgram>);

@@ -32,6 +32,7 @@ class GLScene : public GLViewport
     void resizeGL(int, int);
     float getDT();
     void keyPressEvent(QKeyEvent*);
+    void mousePressEvent(QMouseEvent*);
     void contextMenuEvent(QContextMenuEvent*);
 
     float angle;
