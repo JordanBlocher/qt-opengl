@@ -3,8 +3,9 @@
 
 #include <string>
 #include <memory>
+#include <list>
 
-#include "GLContext.hpp"
+#include "GLStruct.hpp"
 
 class GLNode
 {
@@ -12,7 +13,7 @@ class GLNode
  public:
     GLNode();
     GLNode(const char*);
-    GLNode(const GLNode&);
+    GLNode(const std::shared_ptr<GLNode>);
     ~GLNode();
 
     GLuint getId() const;
@@ -20,7 +21,7 @@ class GLNode
 
 protected:
     virtual bool Add(std::shared_ptr<GLNode>);
-    virtual bool Remove(const char*);
+    virtual bool Remove(std::shared_ptr<GLNode>);
     virtual bool Status();
 
     GLuint id;
@@ -28,6 +29,8 @@ protected:
     GLint status;
     std::string msg;
     std::string name;
+
+    std::list<std::shared_ptr<GLNode>> children;
 };
 
 #endif 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <map>
 
 #include "GLNode.hpp"
 
@@ -11,14 +12,14 @@ typedef std::shared_ptr<UniformMap> UniformPtr;
 typedef std::map<std::string, Vertex> VertexMap;
 typedef std::shared_ptr<VertexMap> VertexPtr;
 
-class QGLView;
+class GLViewport;
 class GLProgram;
 
 class GLBufferObject : public GLNode
 {
 
  public:
-    GLBufferObject(const char*, GLsizeiptr, GLuint, GLuint, GLenum);
+    GLBufferObject(const char*, GLsizeiptr, GLuint, GLuint, GLenum, GLenum);
     ~GLBufferObject();
 
     bool Status(GLenum, GLint);

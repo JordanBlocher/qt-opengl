@@ -7,7 +7,7 @@ QT += opengl
 
 TEMPLATE = lib
 TARGET = ../lib/qglcommon
-DEPENDPATH += ../include
+DEPENDPATH += ../include ../src
 INCLUDEPATH += ../include
 LIBS += -lGLEW
 VERSION = 1.0

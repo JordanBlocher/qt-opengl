@@ -1,15 +1,15 @@
 #include <QApplication>
-#include <QGLApp.hpp>
+#include <GLWindow.hpp>
 
-#include "GLMain.hpp"
+#include "GLScene.hpp"
 
 
 int main(int argc, char *argv[])
 {
    QApplication app(argc, argv);
 
-   GLMain *glView = new GLMain;
-   QGLApp *window = new QGLApp(0, glView);
+   GLScene *glView = new GLScene;
+   GLWindow *window = new GLWindow(0, glView);
 
    window->show();
 

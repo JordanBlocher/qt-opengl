@@ -4,17 +4,18 @@
 #include <cerrno>
 #include<QApplication>
 #include <algorithm>
+#include <climits>
 
 #include "GLBufferObject.hpp"
 
 //Uniform only
-GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLuint index, GLenum type) : GLNode(name)
+GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLuint index, GLenum type, GLenum draw) : GLNode(name)
 {
     this->type = type;
-    this->block = -1;
+    this->block = UINT_MAX;
     glGenBuffers(1, &this->buffer);
     glBindBuffer(type, this->buffer);
-    glBufferData(type, dataSize*size, NULL, GL_STREAM_DRAW);
+    glBufferData(type, dataSize*size, NULL, draw);
 }
 
 GLBufferObject::~GLBufferObject()
@@ -32,7 +33,7 @@ bool GLBufferObject::Status(GLenum type, GLint size)
 
 bool GLBufferObject::Status()
 {
-    return this->block == -1;
+    return this->block == UINT_MAX;
 }
 
 void GLBufferObject::SetBlockIndex(GLuint index)

@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "GLMain.hpp"
+#include "GLScene.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
    QApplication app(argc, argv);
 
-   QGLView *window = new GLMain();
+   GLViewport *window = new GLScene();
    window->show();
 
    ret = app.exec();

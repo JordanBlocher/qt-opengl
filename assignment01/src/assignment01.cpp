@@ -1,12 +1,12 @@
 #include <QApplication>
 
-#include "GLMain.hpp"
+#include "GLScene.hpp"
 
 int main(int argc, char *argv[])
 {
    QApplication app(argc, argv);
 
-   GLMain window;
+   GLScene window;
    window.show();
 
    return app.exec();

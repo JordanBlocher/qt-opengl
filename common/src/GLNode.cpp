@@ -6,7 +6,6 @@
 
 #include "GLNode.hpp"
 #include "GLProgram.hpp"
-#include "GLContext.hpp"
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> QGLPair;
 
@@ -14,10 +13,10 @@ GLNode::GLNode()
 {
 }
 
-GLNode::GLNode(const GLNode& node)
+GLNode::GLNode(const std::shared_ptr<GLNode> node)
 {
-    this->id = node.id;
-    this->name = node.name;
+    this->id = node->id;
+    this->name = node->name;
 }
 
 
@@ -45,13 +44,13 @@ bool GLNode::Status()
     return false;
 }
 
-bool GLNode::Add(std::shared_ptr<GLNode> node = NULL)
+bool GLNode::Add(std::shared_ptr<GLNode> node)
 {
-    return false;
+    this->children.push_back(node);
 }
 
-bool GLNode::Remove(const char* name = NULL)
+bool GLNode::Remove(std::shared_ptr<GLNode> node)
 {
-    return false;
+    this->children.remove(node);
 }
 
