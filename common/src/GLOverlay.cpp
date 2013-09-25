@@ -1,3 +1,7 @@
+#include "GLOverlay.hpp"
+#include "GLWindow.hpp"
+#include "GLViewport.hpp"
+
 #include <QTime>
 #include <QWindowStateChangeEvent>
 #include <QLayout>
@@ -12,10 +16,6 @@
 #include <QPalette>
 
 #define WAIT_MS 300
-
-#include "GLOverlay.hpp"
-#include "GLWindow.hpp"
-#include "GLViewport.hpp"
 
 GLOverlay::GLOverlay(QWidget *parent) : QWidget(parent, Qt::SubWindow)
 {

@@ -1,6 +1,8 @@
 #ifndef GLNODE_H
 #define GLNODE_H
 
+#include <GL/glew.h>
+#include <iostream>
 #include <string>
 #include <memory>
 #include <list>

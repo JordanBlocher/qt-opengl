@@ -1,11 +1,8 @@
-#include <GL/glew.h>
-#include <iostream>
+#include "GLShader.hpp"
+
 #include <QApplication>
 #include <QKeyEvent>
-#include <string>
 #include <fstream>
-
-#include "GLShader.hpp"
 
 GLShader::GLShader(const char* name) : GLNode(name)
 {
@@ -15,29 +12,24 @@ GLShader::GLShader(const char* name) : GLNode(name)
 GLShader::GLShader(GLenum type, const char* name) : GLNode(name)
 {
     path = "assets/shaders/";
-    this->Create(this->toString(type).c_str(), type);
+    this->type = type;
+    if( this->Load(this->toString(type).c_str()) )
+        this->id = glCreateShader(type);
     this->Compile();
 }
 
 GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLNode(name)
 {
     path = "assets/shaders/";
-    this->Create(filename, type);
+    this->type = type;
+    if( this->Load(filename) )
+        this->id = glCreateShader(type);
     this->Compile();
 }
 
 GLShader::~GLShader()
 {
     glDeleteShader(this->id);
-}
-
-void GLShader::Create(const char* filename, GLenum type)
-{
-    if( this->Source(filename) )
-    {
-        this->id = glCreateShader(type);
-        this->type = type;
-    }
 }
 
 bool GLShader::Status()
@@ -55,7 +47,7 @@ bool GLShader::Status()
     return true;
 }
 
-bool GLShader::Source(const char* filename)
+bool GLShader::Load(const char* filename)
 {
     std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
     if(fin)

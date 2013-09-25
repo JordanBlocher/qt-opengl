@@ -15,8 +15,7 @@ class GLShader : public GLNode
     bool Compile();
 
  private:
-    void Create(const char*, GLenum);
-    bool Source(const char*);
+    bool Load(const char*);
     std::string toString(GLenum);
     std::string source;
     std::string path;

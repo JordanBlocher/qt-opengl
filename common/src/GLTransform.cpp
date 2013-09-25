@@ -1,9 +1,6 @@
-#include <GL/glew.h>
-#include <QGLWidget>
-#include <iostream>
-#include <cerrno>
-
 #include "GLTransform.hpp"
+
+#include <QGLWidget>
 
 GLTransform::GLTransform(const char* name) : GLNode(name)
 {

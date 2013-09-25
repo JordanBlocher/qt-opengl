@@ -43,7 +43,6 @@ class GLScene : public GLViewport
     QColor font;
 
     GLuint vbo_geometry;
-    GLuint vbo_geometry2;
     glm::mat4 cube; //obj->world
     glm::mat4 moon;
 

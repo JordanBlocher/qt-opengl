@@ -48,6 +48,7 @@ void GLScene::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
+cou<<"error?"<<endl;
     //Geometry (le sigh) 
     Vertex geometry[] = { {{-1.0, -1.0, -1.0}, {0.0, 0.0, 0.0}},
                           {{-1.0, -1.0, 1.0}, {0.0, 0.0, 1.0}},
@@ -103,9 +104,6 @@ void GLScene::initializeGL()
     glGenBuffers(1, &vbo_geometry);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_geometry);
     glBufferData(GL_ARRAY_BUFFER, sizeof(geometry), geometry, GL_STATIC_DRAW);
-    glGenBuffers(1, &vbo_geometry2);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_geometry2);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(geometry), geometry, GL_STATIC_DRAW);
 
 
     //Shaders
@@ -150,14 +148,12 @@ void GLScene::initializeGL()
     this->AddToContext(ubo);
 
     //Bind uniform index
-    vector<string> uniforms = {"otherMatrix", "mvpMatrix"};
+    vector<string> uniforms = {"otherMatrix", "mvpMatrix"};i
 
-    if( !program->SetUniformIndex(this->Get<GLBufferObject>("GMatrices"), uniforms, sizeof(glm::mat4), this->U_POSITION))
-    {
-        cerr << "[F] UBO failed to bind."<<endl;
-        qApp->quit();
-        exit(0);
-    }
+    vector<shared_ptr<GLUniform>> uniforms;
+    uniforms = program->SetUniformIndex(this->Get<GLBufferObject>("GMatrices"), uniforms, sizeof(glm::mat4), this->U_POSITION);
+    this->AddToContext(uniforms[1]);
+    
 
     //this->SetScene(perspective);
 
@@ -206,17 +202,17 @@ void GLScene::paintGL()
     //Select buffer
     shared_ptr<GLBufferObject> ubo = this->Get<GLBufferObject>("GMatrices");
 
-    Uniform mvpmat = ubo->getUniform("mvpMatrix");
+    std::shared_ptr<GLUniform> mvpmat = this->Get("mvpMatrix");
 
     //Load buffer to MVP
     glBindBuffer(GL_UNIFORM_BUFFER, ubo->getBuffer());
-    glBufferSubData(GL_UNIFORM_BUFFER, mvpmat.offset, mvpmat.size, glm::value_ptr( mvp * cube ));
+    glBufferSubData(GL_UNIFORM_BUFFER, mvpmat->Offset(), mvpmat->Size(), glm::value_ptr( mvp * cube ));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
 
     glBindBuffer(GL_UNIFORM_BUFFER, ubo->getBuffer());
-    glBufferSubData(GL_UNIFORM_BUFFER, mvpmat.offset, mvpmat.size, glm::value_ptr( mvp * moon ));
+    glBufferSubData(GL_UNIFORM_BUFFER, mvpmat->Offset(), mvpmat->Size(), glm::value_ptr( mvp * moon ));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count

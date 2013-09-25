@@ -1,14 +1,13 @@
 #ifndef GLPROGRAM_H
 #define GLPROGRAM_H
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <vector>
-
 #include "GLNode.hpp"
+
+#include <vector>
 
 class GLShader;
 class GLBufferObject;
+class GLUniform;
 
 class GLProgram : public GLNode
 {
@@ -23,7 +22,7 @@ class GLProgram : public GLNode
     bool RemoveShader(std::shared_ptr<GLShader>);
 
     void SetAttributeIndex(const char*, GLuint);
-    bool SetUniformIndex(std::shared_ptr<GLBufferObject>, const std::vector<std::string>&, GLsizeiptr, GLuint);
+    std::vector<std::shared_ptr<GLUniform>> SetUniformIndex(std::shared_ptr<GLBufferObject>, const std::vector<std::string>&, GLsizeiptr, GLuint);
 
 };
 

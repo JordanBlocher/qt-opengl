@@ -1,11 +1,8 @@
-#include <GL/glew.h>
-#include <QGLWidget>
-#include <iostream>
-#include <cerrno>
-#include<QApplication>
-
 #include "GLNode.hpp"
 #include "GLProgram.hpp"
+
+#include <QGLWidget>
+#include<QApplication>
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> QGLPair;
 

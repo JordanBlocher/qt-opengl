@@ -19,7 +19,6 @@
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
 #include <GLBufferObject.hpp>
-#include <GLContext.hpp>
 #include "GLMain.hpp"
 
 #define FOV 45.0f

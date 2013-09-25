@@ -1,12 +1,9 @@
-#include <GL/glew.h>
+#include "GLBufferObject.hpp"
+
 #include <QGLWidget>
-#include <iostream>
-#include <cerrno>
-#include<QApplication>
+#include <QApplication>
 #include <algorithm>
 #include <climits>
-
-#include "GLBufferObject.hpp"
 
 //Uniform only
 GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLuint index, GLenum type, GLenum draw) : GLNode(name)
@@ -20,15 +17,13 @@ GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint siz
 
 GLBufferObject::~GLBufferObject()
 {
-   /* for_each( this->uniforms->begin(), this->uniforms->end(), &deletePtr<Uniform> );
-    this->uniforms->clear();*/
 }
 
 bool GLBufferObject::Status(GLenum type, GLint size)
 {
     glGetBufferParameteriv(type, GL_BUFFER_SIZE, &status);
     
-    return (this->status == size && this->block != -1);
+    return (this->status == size && this->block != UINT_MAX);
 }
 
 bool GLBufferObject::Status()
@@ -41,27 +36,14 @@ void GLBufferObject::SetBlockIndex(GLuint index)
     this->block = index;
 }
 
-GLuint GLBufferObject::getBuffer() const
+GLuint GLBufferObject::Buffer() const
 {
     return this->buffer;
 }
 
-GLenum GLBufferObject::getType() const
+GLenum GLBufferObject::Type() const
 {
     return this->type;
 }
 
-Uniform GLBufferObject::getUniform(const char* name)
-{
-    return this->uniforms->find(name)->second;
-}
-
-void GLBufferObject::AddUniform(std::pair<std::string, Uniform> pair)
-{
-    if( this->uniforms == NULL )
-    {
-        this->uniforms = UniformPtr(new UniformMap);
-    }
-    this->uniforms->insert(pair);
-}
 

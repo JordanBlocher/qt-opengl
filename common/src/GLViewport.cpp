@@ -1,10 +1,8 @@
-#include <GL/glew.h>
+#include "GLNode.hpp"
+#include "GLViewport.hpp"
+#include "GLProgram.hpp"
 
-#include <iostream>
 #include <fstream>
-#include <string>
-#include <cerrno>
-#include <string>
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -13,13 +11,9 @@
 #include <QContextMenuEvent>
 #include <QColor>
 
-#include "GLViewport.hpp"
-#include "GLNode.hpp"
-#include "GLProgram.hpp"
-
 typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
-GLViewport::GLViewport(QWidget *parent) : QGLWidget(QGLFormat(QGL::HasOverlay | QGL::DoubleBuffer | QGL::DepthBuffer), parent), glData(new sceneData), initialSize(640, 480), timer(this)
+GLViewport::GLViewport(QWidget *parent) : QGLWidget(QGLFormat(QGL::HasOverlay | QGL::DoubleBuffer | QGL::DepthBuffer), parent), initialSize(640, 480), timer(this), glData(new sceneData)
 {
     this->setMouseTracking(true);
     this->setAutoBufferSwap(true);

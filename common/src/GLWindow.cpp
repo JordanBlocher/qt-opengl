@@ -1,3 +1,7 @@
+#include "GLWindow.hpp"
+#include "GLViewport.hpp"
+#include "GLOverlay.hpp"
+
 #include <QtGui>
 #include <QWidget>
 #include <QLabel>
@@ -7,10 +11,6 @@
 #include <QResizeEvent>
 #include <QPalette>
 #include <QColor>
-
-#include "GLWindow.hpp"
-#include "GLViewport.hpp"
-#include "GLOverlay.hpp"
 
 GLWindow::GLWindow(QWidget *parent, GLViewport *view)
 {

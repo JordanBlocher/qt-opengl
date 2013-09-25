@@ -4,10 +4,14 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <chrono>
-#include <iostream>
 
 #include <QGLWidget>
 #include <QTimer>
+
+// for std::cerr
+#include <iostream>
+#include <map>
+#include <string>
 
 class GLProgram;
 class GLNode;

@@ -1,24 +1,28 @@
 #include <iostream>
-
-struct Uniform
-{
-    GLuint size;
-    GLuint index;
-    GLuint offset;
-    
-    Uniform(GLuint s, GLuint i, GLuint o) : size(s), index(i), offset(o){}
-};
-
+#include <glm/glm.hpp>
 struct Vertex
 {
-    GLfloat position[3];
-    GLfloat color[3];
+    //GLfloat
+    glm::vec3 position;
+    glm::vec2 uv;
+    glm::vec3 normal;
+    glm::vec3 color;
 };
 
 struct Triangle
 {
-    Vertex x;
-    Vertex y;
-    Vertex z;
+    //GLuint
+    glm::vec3 vertex;
+    glm::vec3 uv;
+    glm::vec3 normal;
+    int mtl;
 };
 
+struct Material
+{
+    std::string name;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float transparency;
+};
