@@ -4,6 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <cstring>
+#include <map>
 
 #include "GLNode.hpp"
 
@@ -18,11 +19,17 @@ class GLModel : public GLNode
     ~GLModel();
 
     std::shared_ptr<std::vector<glm::vec3>> Positions();
-    std::shared_ptr<std::vector<Material>> Materials();
+    std::shared_ptr<std::vector<glm::vec3>> Normals();
+    std::shared_ptr<std::vector<glm::vec2>> UVs();
+    std::vector<Triangle> Triangles(size_t);
+    std::vector<Material> Materials();
     glm::mat4 Matrix();
     GLuint VBO(int);
+    GLuint VAO(size_t);
     void setVBO(GLuint, int);
+    void addVAO(GLuint);
     void setMatrix(glm::mat4);
+    size_t TSize() const;
 
  private:
     bool Load(const char*);
@@ -31,29 +38,27 @@ class GLModel : public GLNode
     void AddNormal(std::vector<std::string>);
     void AddUV(std::vector<std::string>);
     void AddTriangle(std::vector<std::string>);
-    bool AddMaterial(const char*);
+    bool AddMaterials(const char*);
     void Clean();
     std::string toString(MODEL);
 
     std::vector<std::string> source;
     std::string path;
     MODEL type;
-    int mtlIndex;
 
     std::shared_ptr<std::vector<glm::vec3>> positions;
     std::shared_ptr<std::vector<glm::vec3>> normals;
     std::shared_ptr<std::vector<glm::vec2>> uvs;
-    std::shared_ptr<std::vector<Triangle>> triangles;
-    std::shared_ptr<std::vector<Material>> materials;
+    std::shared_ptr<std::vector<std::vector<Triangle>>> triangles;
+    std::shared_ptr<std::map<std::string, Material>> materials;
+    int mtlIndex;
 
     glm::mat4 matrix;
-    GLuint vao;
+    std::vector<GLuint> vao;
     GLuint vbo[4];
 
 
 };
-
-
 
 #endif 
 

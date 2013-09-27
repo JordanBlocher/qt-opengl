@@ -14,19 +14,19 @@
 
 #include <iostream>
 #include <chrono>
+#include <csignal>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
 
-#include <GLNode.hpp>
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
 #include <GLBufferObject.hpp>
 #include <GLTransform.hpp>
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
-//#include <GLPrint.hpp>
+#include <GLPrint.hpp>
 
 #include "GLScene.hpp"
 
@@ -61,28 +61,29 @@ void GLScene::initializeGL()
 
     string filename;
     //Models
-    cout<<"Enter model name"<<endl;
+    cout<<"Enter model path:"<<endl;
     cin>> filename;
+
     shared_ptr<GLModel> model(new GLModel(filename.c_str(), "model"));
-    shared_ptr<vector<glm::vec3>> vertices = model->Positions();
+    shared_ptr<vector<glm::vec3>> positions = model->Positions();
     this->AddToContext(model);
 
-    // Create a Vertex Buffer object to store this vertex info on the GPU
+    //VBO (positions)
     shared_ptr<GLBufferObject> vbo(new GLBufferObject(
                                    "vboposition",
                                    sizeof(glm::vec3),
-                                   vertices->size(),
+                                   positions->size(),
                                    POSITION_OFFSET,
                                    GL_ARRAY_BUFFER,
                                    GL_STATIC_DRAW) );
+    
     glBindBuffer(GL_ARRAY_BUFFER, vbo->Buffer());
     glBufferSubData( GL_ARRAY_BUFFER,
-                     0,
-                     sizeof(glm::vec3)*vertices->size(),
-                     vertices->data() );
+                     POSITION_OFFSET,
+                     sizeof(glm::vec3)*positions->size(),
+                     model->Positions()->data() );
+      
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
     model->setVBO(vbo->Buffer(), 0);
 
     //Shaders
@@ -187,7 +188,6 @@ void GLScene::paintGL()
 
     //Choose Model
     shared_ptr<GLModel> model = this->Get<GLModel>("model");
-    shared_ptr<vector<Material>> modelmtl = model->Materials();
 
     glm::mat4 vp = projection->Matrix() * view->Matrix();
  
@@ -195,18 +195,7 @@ void GLScene::paintGL()
     shared_ptr<GLUniform> vertex_shader = this->Get<GLUniform>("mvpMatrix");
     shared_ptr<GLUniform> frag_shader = this->Get<GLUniform>("color");
 
-    //Model Array
-    glBindBuffer(GL_ARRAY_BUFFER, model->VBO(0));
-    glBufferSubData( GL_ARRAY_BUFFER,
-                     0,
-                     sizeof(glm::vec3)*model->Positions()->size(),
-                     model->Positions()->data() );
-    glEnableVertexAttribArray (POSITION_OFFSET);
-    glVertexAttribPointer (0,3,GL_FLOAT,GL_FALSE,0,0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-   
-    glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
-    //Bind Attributes to model
+    //Bind Position Attributes to model
     glEnableVertexAttribArray(V_INDEX);
     glBindBuffer(GL_ARRAY_BUFFER, model->VBO(0));
     glVertexAttribPointer( V_INDEX,
@@ -215,29 +204,31 @@ void GLScene::paintGL()
                            GL_FALSE,//normalized?
                            sizeof(glm::vec3),
                            0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    
-    glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
     glBindBuffer(GL_UNIFORM_BUFFER, vertex_shader->Buffer());
-    CHECKGLERROR
     glBufferSubData( GL_UNIFORM_BUFFER,
                      vertex_shader->Offset(),
                      vertex_shader->Size(),
                      glm::value_ptr( vp * model->Matrix()) );
-    CHECKGLERROR 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
-    glBindBuffer(GL_UNIFORM_BUFFER, frag_shader->Buffer());
-    glBufferSubData(GL_UNIFORM_BUFFER,
-                    frag_shader->Offset(),
-                    frag_shader->Size(),
-                    glm::value_ptr( glm::normalize(model->Materials()->at(0).diffuse) ));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glDrawArrays(GL_TRIANGLES, 0, 36);//mode, starting index, count
-
-    //clean up
+    
+    GLint offset = 0;
+    //Model Fragment Loading
+    for(size_t i=0; i< model->TSize(); i++)
+    {   
+        vector<Triangle> triangles = model->Triangles(i);
+        
+        glBindBuffer(GL_UNIFORM_BUFFER, frag_shader->Buffer());
+        glBufferSubData(GL_UNIFORM_BUFFER,
+                        frag_shader->Offset(),
+                        frag_shader->Size(),
+                        glm::value_ptr( glm::normalize(model->Materials().at(i).diffuse) ));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLES, offset, triangles.size()*3.0);
+        offset += triangles.size()*3;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDisableVertexAttribArray(V_INDEX);
 
     glUseProgram(0);
@@ -270,12 +261,42 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    GLViewport::keyPressEvent(event);
+    if( (event->key() == Qt::Key_Right))
+    {
+        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
+        view->Set(glm::rotate( view->Matrix() * glm::mat4(1.0f), 15.0f, glm::vec3(0.0, 1.0, 0.0)) );
+    }
+    else if( (event->key() == Qt::Key_Left))
+    {
+        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
+        view->Set(glm::rotate( view->Matrix() * glm::mat4(1.0f), -15.0f, glm::vec3(0.0, 1.0, 0.0)) );
+    }
+    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Up)
+    {
+        shared_ptr<GLModel> model = this->Get<GLModel>("model");
+        model->setMatrix( glm::scale(glm::mat4(1.0f), glm::vec3(1.25, 1.25, 1.25)) * model->Matrix());
+    }
+    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Down)
+    {
+        shared_ptr<GLModel> model = this->Get<GLModel>("model");
+        model->setMatrix( glm::scale(glm::mat4(1.0f), glm::vec3(1.0/1.25, 1.0/1.25, 1.0/1.25)) * model->Matrix());
+    }
+    else if( (event->key() == Qt::Key_Up))
+    {
+        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
+        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -1.0, 4.0)) * view->Matrix());
+    }
+    else if( (event->key() == Qt::Key_Down))
+    {
+        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
+        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 1.0, -4.0)) * view->Matrix());
+    }
+        GLViewport::keyPressEvent(event);
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)
 {
-    event->accept();
+   event->accept();
 }
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)

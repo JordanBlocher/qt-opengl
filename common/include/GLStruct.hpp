@@ -15,7 +15,6 @@ struct Triangle
     glm::vec3 vertex;
     glm::vec3 uv;
     glm::vec3 normal;
-    int mtl;
 };
 
 struct Material
@@ -25,4 +24,6 @@ struct Material
     glm::vec3 diffuse;
     glm::vec3 specular;
     float transparency;
+    
 };
+

@@ -4,26 +4,30 @@
 #include <QKeyEvent>
 #include <fstream>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/bind.hpp>
 #include <csignal>
 #include <sstream>
 
-#include "GLPrint.hpp"
+//#include "GLPrint.hpp"
 
 std::vector<glm::vec3> v_in;
 std::vector<glm::vec2> uv_in;
 std::vector<glm::vec3> n_in;
+
+//Author : user763305 (SO)
+std::istream& safeGetline(std::istream& is, std::string& t);
 
 GLModel::GLModel(const char* name) : GLNode(name)
 {
     this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<Triangle>>(new std::vector<Triangle>);
-    this->materials = std::shared_ptr<std::vector<Material>>(new std::vector<Material>);
+    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
+    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
     path = "assets/models/";
-    this->mtlIndex = 0;
+    this->mtlIndex = -1;
 }
 
 GLModel::GLModel(MODEL type, const char* name) : GLNode(name)
@@ -31,11 +35,11 @@ GLModel::GLModel(MODEL type, const char* name) : GLNode(name)
     this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<Triangle>>(new std::vector<Triangle>);
-    this->materials = std::shared_ptr<std::vector<Material>>(new std::vector<Material>);
+    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
+    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
     path = "assets/models/";
-    this->mtlIndex = 0;
     this->type = type;
+    this->mtlIndex = -1;
     this->Load(this->toString(type).c_str());
 }
 
@@ -44,10 +48,10 @@ GLModel::GLModel(const char* filename, const char* name) : GLNode(name)
     this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
     this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<Triangle>>(new std::vector<Triangle>);
-    this->materials = std::shared_ptr<std::vector<Material>>(new std::vector<Material>);
+    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
+    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
     path = "";
-    this->mtlIndex = 0;
+    this->mtlIndex = -1;
     this->Load(filename);
 }
 
@@ -60,9 +64,10 @@ bool GLModel::Load(const char* filename)
     std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
     if(fin)
     {
-        char line[256];
-        while( fin.getline(line, 256) )
+        std::string line;
+        while( safeGetline(fin, line) )
         {
+            boost::trim(line);
             boost::split(source, line, boost::is_any_of(" "));
             source.erase( std::remove_if( source.begin(), source.end(),                    boost::bind( &std::string::empty, _1 ) ), source.end() );
             if( source[0] == "v" )
@@ -83,15 +88,21 @@ bool GLModel::Load(const char* filename)
             }
             else if( source[0] == "mtllib" )
             {
-                this->AddMaterial( (source[1]).c_str() );
+                this->AddMaterials( (source[1]).c_str());
+            }
+            else if( source[0] == "usemtl" )
+            {
                 this->mtlIndex++;
             }
+
             source.clear();
         }
         this->Clean();
         v_in.clear();
         uv_in.clear();
         n_in.clear();
+        fin.close();
+
         return true;
     }
     return false;
@@ -151,93 +162,112 @@ void GLModel::AddTriangle(std::vector<std::string> t)
         }
     }
     glm::vec3 v(vtemp[0], vtemp[1], vtemp[2]);
-    glm::vec3 uv(uvtemp[0], uvtemp[1], uvtemp[2]);
-    glm::vec3 n(ntemp[0], ntemp[1], ntemp[2]);
-    Triangle triangle = {v, uv, n, this->mtlIndex};
-    this->triangles->push_back(triangle);
+    glm::vec3 n;
+    glm::vec3 uv;
+    if( uvtemp.size() >= 3 )
+    {
+        uv = glm::vec3(uvtemp[0], uvtemp[1], uvtemp[2]);
+    }
+    if( ntemp.size() >=3 )
+    {
+        n = glm::vec3(ntemp[0], ntemp[1], ntemp[2]);
+    }
+    Triangle triangle = {v, uv, n};
+    this->triangles->at(mtlIndex).push_back(triangle);
 
     if( t.size() == 5 ) // Handle quads
     {
-        glm::vec3 v(vtemp[2], vtemp[3], vtemp[0]);
-        glm::vec3 uv(uvtemp[2], uvtemp[3], uvtemp[0]);
-        glm::vec3 n(ntemp[2], ntemp[3], ntemp[0]);
-        Triangle triangle = {v, uv, n, this->mtlIndex};
-        this->triangles->push_back(triangle);
+        v = glm::vec3(vtemp[2], vtemp[3], vtemp[0]);
+        if( uvtemp.size() >= 4 )
+        {
+            uv = glm::vec3(uvtemp[2], uvtemp[3], uvtemp[0]);
+        }
+        if( ntemp.size() >=4 )
+        {
+            n =glm::vec3(ntemp[2], ntemp[3], ntemp[0]);
+        }
+        Triangle triangle = {v, uv, n};
+        this->triangles->at(mtlIndex).push_back(triangle);
     }
     vtemp.clear();
     uvtemp.clear();
     ntemp.clear();
 }
-//Only one material now
-bool GLModel::AddMaterial(const char* filename)
+
+bool GLModel::AddMaterials(const char* filename)
 {
     std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
     if(fin)
     {
-        char line[256];
+        std::string line;
         Material mtl;
+        mtl.name = "";
         std::vector<std::string> mtlsource;
-        while( fin.getline(line, 256) )
+        while( safeGetline(fin, line) )
         {
+            boost::trim(line);
             boost::split(mtlsource, line, boost::is_any_of(" "));
             mtlsource.erase( std::remove_if( mtlsource.begin(), mtlsource.end(),                    boost::bind( &std::string::empty, _1 ) ), mtlsource.end() );
             if( mtlsource[0] == "newmtl" )
             {
-                mtl.name = mtlsource[1];
+                 mtl.name = mtlsource[1] == "" ? "default" : mtlsource[1];
+                 this->materials->insert(std::pair<std::string, Material>(mtl.name, mtl));
             }
             else if( mtlsource[0] == "Ka" )
             {
-                mtl.ambient = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
+                (this->materials->at(mtl.name)).ambient = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
             }
             else if( mtlsource[0] == "Kd" )
             {
-                mtl.diffuse = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
+                (this->materials->at(mtl.name)).diffuse = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
+                //std::cout<<"Kd "<<glm::vec4(mtl.diffuse, 0.0)<<std::endl;
             }
             else if( mtlsource[0] == "Ks" )
             {
-                mtl.specular = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
+                (this->materials->at(mtl.name)).specular = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
             }
             else if( mtlsource[0] == "d")
             {
-                mtl.transparency = std::stof( mtlsource[1] );
+                (this->materials->at(mtl.name)).transparency = std::stof( mtlsource[1] );
             }
         }
-        this->materials->push_back(mtl);
-        mtlsource.clear();
-
+        this->triangles->resize(this->materials->size());
+        fin.close();
         return true;
     }
 
-    std::cerr<<"Material file not found. Please enter the path of the material file:"<<std::endl;
-    std::string newFilename;
-    std::cin >> newFilename;
-    this->AddMaterial(newFilename.c_str());
+    std::cerr<<"Material file not found. Please include in the same directory as the model. Defaulting to clay."<<std::endl;
+    Material clay = {"default", glm::vec3(0.5,0.5,0.5), glm::vec3(0.5,0.5,0.5), glm::vec3(0.5,0.5,0.5), 1.0f };
+    this->materials->insert(std::pair<std::string, Material>("default",clay));
     return false;
 }
 
 void GLModel::Clean()
 {
-    unsigned int index;
-    for(unsigned int i=0; i<triangles->size(); i++)
+    unsigned int idxv, idxuv, idxn;
+    for(int m=0; m<=mtlIndex; m++)
+    {
+    for(unsigned int i=0; i<triangles->at(m).size(); i++)
     {   
         for(int j=0; j<3; j++)
         {
-            if( v_in.size() > 0 )
+            idxv = this->triangles->at(m)[i].vertex[j];
+            if( v_in.size() > idxv - 1 )
             {
-                index = (*this->triangles)[i].vertex[j];
-                this->positions->push_back(v_in[index -1]);
+                this->positions->push_back(v_in[idxv - 1]);
             }
-            if( uv_in.size() > 0 )
+            idxuv = this->triangles->at(m)[i].uv[j];
+            if( uv_in.size() > idxuv - 1 )
             {
-                index = (*this->triangles)[i].uv[j];
-                this->uvs->push_back(uv_in[index -1]);
+                this->uvs->push_back(uv_in[idxuv - 1]);
             }
-             if( n_in.size() > 0 )
+            idxn = this->triangles->at(m)[i].normal[j];
+            if( n_in.size() > idxn - 1 )
             {
-                index = (*this->triangles)[i].normal[j];
-                this->normals->push_back(n_in[index -1]);
+                this->normals->push_back(n_in[idxn - 1]);
             }
         }   
+    }
     }
 }
 
@@ -247,9 +277,30 @@ std::shared_ptr<std::vector<glm::vec3>> GLModel::Positions()
     return this->positions;
 }
 
-std::shared_ptr<std::vector<Material>> GLModel::Materials()
+std::shared_ptr<std::vector<glm::vec3>> GLModel::Normals()
 {
-    return this->materials;
+    return this->normals;
+}
+
+std::shared_ptr<std::vector<glm::vec2>> GLModel::UVs()
+{
+    return this->uvs;
+}
+
+std::vector<Triangle> GLModel::Triangles(size_t index)
+{
+    return this->triangles->at(index);
+}
+
+std::vector<Material> GLModel::Materials()
+{
+    typedef std::map<std::string, Material>::iterator it;
+    std::vector<Material> dest;
+    for(it iterator = this->materials->begin(); iterator != this->materials->end(); iterator++) 
+    {
+        dest.push_back(iterator->second);
+    }
+    return dest;
 }
 
 void GLModel::setMatrix(glm::mat4 m)
@@ -272,6 +323,25 @@ GLuint GLModel::VBO(int index)
     return this->vbo[index];
 }
 
+GLuint GLModel::VAO(size_t index)
+{
+    if( index < vao.size())
+        return this->vao.at(index);
+    std::cerr<<"[E]: VAO not found."<<std::endl;
+    return (GLuint)0;
+}
+
+void GLModel::addVAO(GLuint bufferId)
+{
+    this->vao.resize(vao.size() + 1);
+    this->vao.push_back(bufferId);
+}
+
+size_t GLModel::TSize() const
+{
+    return this->triangles->size();
+}
+
 std::string GLModel::toString(MODEL type)
 {
     switch(type)
@@ -284,3 +354,32 @@ std::string GLModel::toString(MODEL type)
             break;
     }
 }
+
+//Author : user763305 (SO)
+std::istream& safeGetline(std::istream& is, std::string& t)
+{
+    t.clear();
+
+    std::istream::sentry se(is, true);
+    std::streambuf* sb = is.rdbuf();
+
+    for(;;) {
+        int c = sb->sbumpc();
+        switch (c) {
+        case '\n':
+            return is;
+        case '\r':
+            if(sb->sgetc() == '\n')
+                sb->sbumpc();
+            return is;
+        case EOF:
+            if(t.empty())
+                is.setstate(std::ios::eofbit);
+            return is;
+        default:
+            t += (char)c;
+        }
+    }
+}
+
+
