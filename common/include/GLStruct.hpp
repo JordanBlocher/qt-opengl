@@ -9,14 +9,6 @@ struct Vertex
     glm::vec3 color;
 };
 
-struct Triangle
-{
-    //GLuint
-    glm::vec3 vertex;
-    glm::vec3 uv;
-    glm::vec3 normal;
-};
-
 struct Material
 {
     std::string name;

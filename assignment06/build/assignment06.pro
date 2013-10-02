@@ -6,10 +6,10 @@
 QT += opengl
 
 TEMPLATE = app
-TARGET = ../bin/assignment04
+TARGET = ../bin/assignment06
 DEPENDPATH += ../src ../../common/include
 INCLUDEPATH += ../src ../../common/include 
-LIBS += -L../../common/lib -lqglcommon -lGLEW
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp
 QMAKE_CXX = g++-4.7
 QMAKE_CXXFLAGS += -std=c++0x
 

@@ -4,8 +4,9 @@
 #include <QApplication>
 #include <algorithm>
 #include <climits>
+//#include <glm/virtrev/xstream.hpp>
 
-//Uniform only
+// Single Type
 GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLuint index, GLenum type, GLenum draw) : GLNode(name)
 {
     this->type = type;

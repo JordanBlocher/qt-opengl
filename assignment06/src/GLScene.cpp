@@ -34,11 +34,11 @@
 #define SENSOR_DISTANCE 0.01f
 #define FOCAL_DISTANCE 100.0f
 
-const GLuint V_INDEX = 1; //Vertex attribute indices start at 1
+const GLuint NUM_UNIFORMS = 1;
+const GLuint NUM_ATTRIBUTES = 1;
+const GLuint NUM_COLORS = 1;
 const GLuint POSITION_OFFSET = 0;
 const GLuint COLOR_OFFSET = 1;
-const GLuint NUM_UNIFORMS = 1;
-const GLuint NUM_COLORS = 1;
 
 
 using namespace std;
@@ -60,31 +60,13 @@ void GLScene::initializeGL()
     glDepthFunc(GL_LESS);
 
     string filename;
+
     //Models
-    cout<<"Enter model path:"<<endl;
-    cin>> filename;
+    //cout<<"Enter model path:"<<endl;
+    //cin>> filename;
 
-    shared_ptr<GLModel> model(new GLModel(filename.c_str(), "model"));
-    shared_ptr<vector<glm::vec3>> positions = model->Positions();
+    shared_ptr<GLModel> model(new GLModel("cube.obj", "model", NUM_ATTRIBUTES));
     this->AddToContext(model);
-
-    //VBO (positions)
-    shared_ptr<GLBufferObject> vbo(new GLBufferObject(
-                                   "vboposition",
-                                   sizeof(glm::vec3),
-                                   positions->size(),
-                                   POSITION_OFFSET,
-                                   GL_ARRAY_BUFFER,
-                                   GL_STATIC_DRAW) );
-    
-    glBindBuffer(GL_ARRAY_BUFFER, vbo->Buffer());
-    glBufferSubData( GL_ARRAY_BUFFER,
-                     POSITION_OFFSET,
-                     sizeof(glm::vec3)*positions->size(),
-                     model->Positions()->data() );
-      
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    model->setVBO(vbo->Buffer(), 0);
 
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
@@ -109,9 +91,12 @@ void GLScene::initializeGL()
 
     // Set Projection matrix
     shared_ptr<GLTransform> projection = this->Get<GLTransform>("projection");
-    projection->Set(glm::perspective(FOV, 
-                    float(this->size().width())/float(this->size().height()),
-                    SENSOR_DISTANCE, FOCAL_DISTANCE));
+    projection->Set(glm::perspective(
+                    FOV, 
+                    float(this->size().width())
+                    /float(this->size().height()),
+                    SENSOR_DISTANCE,
+                    FOCAL_DISTANCE) );
 
     //Add Program
     if( !this->AddProgram(program) )
@@ -195,41 +180,8 @@ void GLScene::paintGL()
     shared_ptr<GLUniform> vertex_shader = this->Get<GLUniform>("mvpMatrix");
     shared_ptr<GLUniform> frag_shader = this->Get<GLUniform>("color");
 
-    //Bind Position Attributes to model
-    glEnableVertexAttribArray(V_INDEX);
-    glBindBuffer(GL_ARRAY_BUFFER, model->VBO(0));
-    glVertexAttribPointer( V_INDEX,
-                           3,
-                           GL_FLOAT,
-                           GL_FALSE,//normalized?
-                           sizeof(glm::vec3),
-                           0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_UNIFORM_BUFFER, vertex_shader->Buffer());
-    glBufferSubData( GL_UNIFORM_BUFFER,
-                     vertex_shader->Offset(),
-                     vertex_shader->Size(),
-                     glm::value_ptr( vp * model->Matrix()) );
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
-    GLint offset = 0;
-    //Model Fragment Loading
-    for(size_t i=0; i< model->TSize(); i++)
-    {   
-        vector<Triangle> triangles = model->Triangles(i);
-        
-        glBindBuffer(GL_UNIFORM_BUFFER, frag_shader->Buffer());
-        glBufferSubData(GL_UNIFORM_BUFFER,
-                        frag_shader->Offset(),
-                        frag_shader->Size(),
-                        glm::value_ptr( glm::normalize(model->Materials().at(i).diffuse) ));
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, offset, triangles.size()*3.0);
-        offset += triangles.size()*3;
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(V_INDEX);
+    //Draw model
+    model->Draw(vp, vertex_shader, frag_shader);
 
     glUseProgram(0);
 

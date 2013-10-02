@@ -28,7 +28,7 @@ TEMPLATE = lib
 TARGET = ../lib/qglcommon
 DEPENDPATH += ../include ../src
 INCLUDEPATH += ../include
-LIBS += -lGLEW
+LIBS += -lGLEW -lassimp
 VERSION = 1.0
 QMAKE_CXXFLAGS += -std=c++0x
 QMAKE_CXX = gcc-4.7

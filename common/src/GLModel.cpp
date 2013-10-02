@@ -9,49 +9,41 @@
 #include <boost/bind.hpp>
 #include <csignal>
 #include <sstream>
+#include <assert.h>
+
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 //#include "GLPrint.hpp"
+#include "GLBufferObject.hpp"
+#include "GLUniform.hpp"
 
-std::vector<glm::vec3> v_in;
-std::vector<glm::vec2> uv_in;
-std::vector<glm::vec3> n_in;
+const GLuint POSITION_OFFSET = 0;
+const GLuint NORMAL_OFFSET = 1;
+const GLuint UV_OFFSET = 2;
+const GLuint INDEX_OFFSET = 3;
 
-//Author : user763305 (SO)
-std::istream& safeGetline(std::istream& is, std::string& t);
-
-GLModel::GLModel(const char* name) : GLNode(name)
+GLModel::GLModel(const char* name, const GLuint attributes) : GLNode(name)
 {
-    this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
-    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
     path = "assets/models/";
-    this->mtlIndex = -1;
+    this->attributes = attributes;
+    this->Allocate();
 }
 
-GLModel::GLModel(MODEL type, const char* name) : GLNode(name)
+GLModel::GLModel(MODEL type, const char* name, const GLuint attributes) : GLNode(name)
 {
-    this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
-    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
     path = "assets/models/";
     this->type = type;
-    this->mtlIndex = -1;
+    this->attributes = attributes;
+    this->Allocate();
     this->Load(this->toString(type).c_str());
 }
 
-GLModel::GLModel(const char* filename, const char* name) : GLNode(name)
+GLModel::GLModel(const char* filename, const char* name, const GLuint attributes) : GLNode(name)
 {
-    this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
-    this->triangles = std::shared_ptr<std::vector<std::vector<Triangle>>>(new std::vector<std::vector<Triangle>>);
-    this->materials = std::shared_ptr<std::map<std::string, Material>>(new std::map<std::string, Material>);
-    path = "";
-    this->mtlIndex = -1;
+    path= "./";
+    this->attributes = attributes;
+    this->Allocate();
     this->Load(filename);
 }
 
@@ -59,248 +51,231 @@ GLModel::~GLModel()
 {
 }
 
+void GLModel::Allocate()
+{
+    this->positions = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
+    this->normals = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
+    this->uvs = std::shared_ptr<std::vector<glm::vec2>>(new std::vector<glm::vec2>);
+    this->faces = std::shared_ptr<std::vector<std::vector<GLuint>>>(new std::vector<std::vector<GLuint>>);
+    this->materials = std::shared_ptr<std::vector<Material>>(new std::vector<Material>);
+    path = "";
+ 
+}
+
 bool GLModel::Load(const char* filename)
 {
-    std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
-    if(fin)
+    this->positions->clear();
+    this->normals->clear();
+    this->uvs->clear();
+    this->faces->clear();
+    size_t numFaces = 0;
+
+    Assimp::Importer Importer;
+     
+    // Create the VAO
+    glGenVertexArrays(1, &(this->vao));
+    glBindVertexArray(this->vao);
+
+    const aiScene* scene = Importer.ReadFile(filename,
+                            aiProcess_Triangulate | 
+                            aiProcess_GenSmoothNormals | 
+                            aiProcess_FlipUVs | 
+                            aiProcess_JoinIdenticalVertices);
+    if (scene) 
     {
-        std::string line;
-        while( safeGetline(fin, line) )
+        this->faces->resize(scene->mNumMeshes);
+        this->AddMaterials(scene->mMaterials, scene->mNumMaterials);
+        for(unsigned int i=0; i<scene->mNumMeshes; i++)
         {
-            boost::trim(line);
-            boost::split(source, line, boost::is_any_of(" "));
-            source.erase( std::remove_if( source.begin(), source.end(),                    boost::bind( &std::string::empty, _1 ) ), source.end() );
-            if( source[0] == "v" )
-            {
-                this->AddVertex(source);
-            }
-            else if( source[0] == "vt" )
-            {
-                this->AddUV(source);
-            }
-            else if( source[0] == "vn" )
-            {
-                this->AddNormal(source);
-            }
-            else if( source[0] == "f" )
-            {
-                this->AddTriangle(source);
-            }
-            else if( source[0] == "mtllib" )
-            {
-                this->AddMaterials( (source[1]).c_str());
-            }
-            else if( source[0] == "usemtl" )
-            {
-                this->mtlIndex++;
-            }
-
-            source.clear();
+            const aiMesh* mesh = scene->mMeshes[i];
+            numFaces += this->AddAttributeData(mesh, i);
         }
-        this->Clean();
-        v_in.clear();
-        uv_in.clear();
-        n_in.clear();
-        fin.close();
-
+        this->CreateBuffers(numFaces);
+        
+        // Unbind the VAO
+        glBindVertexArray(0);
+        
         return true;
     }
+    else 
+    {
+        std::cerr << "[E] Could not load " << filename << std::endl;
+        std::cerr << Importer.GetErrorString() << std::endl;
+    }
+    
     return false;
 }
 
-void GLModel::AddVertex(std::vector<std::string> v)
+size_t GLModel::AddAttributeData(const aiMesh* mesh, unsigned int index)
 {
-    glm::vec3 vertex( std::stof(v[1]), std::stof(v[2]), std::stof(v[3]) );
-    v_in.push_back(vertex);
-}
+    const aiVector3D zero(0.0f, 0.0f, 0.0f);
+    this->mtlIndices.push_back(mesh->mMaterialIndex);
 
-void GLModel::AddUV(std::vector<std::string> t)
-{
-    glm::vec2 uv( std::stof(t[1]), std::stof(t[2]) );
-    uv_in.push_back(uv);
-}
+    unsigned int offsetV = this->positions->size();
 
-void GLModel::AddNormal(std::vector<std::string> n)
-{
-    glm::vec3 normal( std::stof(n[1]), std::stof(n[2]), std::stof(n[3]) );
-    n_in.push_back(normal);
-}
+    this->positions->resize(offsetV + mesh->mNumVertices);
+    this->normals->resize(offsetV + mesh->mNumVertices);
+    this->uvs->resize(offsetV + mesh->mNumVertices);
+    this->vertexOffset.push_back(mesh->mNumVertices);
+    this->faces->at(index).resize(mesh->mNumFaces * 3);
 
-void GLModel::AddTriangle(std::vector<std::string> t)
-{
-    std::vector<std::string> data;
-    std::vector<unsigned int> vtemp, uvtemp, ntemp;
-
-    for(unsigned int i=1; i< t.size(); i++)
+    // Populate the vertex attribute vectors
+    for (unsigned int i = 0 ; i < mesh->mNumVertices ; i++) 
     {
-        std::istringstream sin(t[i]);
-        int temp;
-        sin >> temp;
-        vtemp.push_back(temp);
+        const aiVector3D* pos = &(mesh->mVertices[i]);
+        const aiVector3D* norm = &(mesh->mNormals[i]);
+        const aiVector3D* uv = mesh->HasTextureCoords(0) ?
+                               &(mesh->mTextureCoords[0][i]) : &zero;
 
-        if ( sin.tellg() != -1L )  // !"1"
-        {
-            sin.get();  // read garbage
-            if ( (char)sin.peek() == '/' )  // "1//1"
-            {
-                sin.get();
-                sin >> temp;
-                ntemp.push_back(temp);
-            }
-            else
-            {
-                sin >> temp;
-                uvtemp.push_back(temp);
-               
-                if ( sin.tellg() != -1L )   // "1/1"
-                {
-                    sin.get();
-                    sin >> temp;
-                    ntemp.push_back(temp);
-                }
-            }
-        }
-    }
-    glm::vec3 v(vtemp[0], vtemp[1], vtemp[2]);
-    glm::vec3 n;
-    glm::vec3 uv;
-    if( uvtemp.size() >= 3 )
-    {
-        uv = glm::vec3(uvtemp[0], uvtemp[1], uvtemp[2]);
-    }
-    if( ntemp.size() >=3 )
-    {
-        n = glm::vec3(ntemp[0], ntemp[1], ntemp[2]);
-    }
-    Triangle triangle = {v, uv, n};
-    this->triangles->at(mtlIndex).push_back(triangle);
-
-    if( t.size() == 5 ) // Handle quads
-    {
-        v = glm::vec3(vtemp[2], vtemp[3], vtemp[0]);
-        if( uvtemp.size() >= 4 )
-        {
-            uv = glm::vec3(uvtemp[2], uvtemp[3], uvtemp[0]);
-        }
-        if( ntemp.size() >=4 )
-        {
-            n =glm::vec3(ntemp[2], ntemp[3], ntemp[0]);
-        }
-        Triangle triangle = {v, uv, n};
-        this->triangles->at(mtlIndex).push_back(triangle);
-    }
-    vtemp.clear();
-    uvtemp.clear();
-    ntemp.clear();
-}
-
-bool GLModel::AddMaterials(const char* filename)
-{
-    std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
-    if(fin)
-    {
-        std::string line;
-        Material mtl;
-        mtl.name = "";
-        std::vector<std::string> mtlsource;
-        while( safeGetline(fin, line) )
-        {
-            boost::trim(line);
-            boost::split(mtlsource, line, boost::is_any_of(" "));
-            mtlsource.erase( std::remove_if( mtlsource.begin(), mtlsource.end(),                    boost::bind( &std::string::empty, _1 ) ), mtlsource.end() );
-            if( mtlsource[0] == "newmtl" )
-            {
-                 mtl.name = mtlsource[1] == "" ? "default" : mtlsource[1];
-                 this->materials->insert(std::pair<std::string, Material>(mtl.name, mtl));
-            }
-            else if( mtlsource[0] == "Ka" )
-            {
-                (this->materials->at(mtl.name)).ambient = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
-            }
-            else if( mtlsource[0] == "Kd" )
-            {
-                (this->materials->at(mtl.name)).diffuse = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
-                //std::cout<<"Kd "<<glm::vec4(mtl.diffuse, 0.0)<<std::endl;
-            }
-            else if( mtlsource[0] == "Ks" )
-            {
-                (this->materials->at(mtl.name)).specular = glm::vec3(std::stof( mtlsource[1] ), std::stof( mtlsource[2] ), std::stof( mtlsource[2] ) );
-            }
-            else if( mtlsource[0] == "d")
-            {
-                (this->materials->at(mtl.name)).transparency = std::stof( mtlsource[1] );
-            }
-        }
-        this->triangles->resize(this->materials->size());
-        fin.close();
-        return true;
+        this->positions->at(i+offsetV) = glm::vec3(pos->x, pos->y, pos->z);
+        this->normals->at(i+offsetV) = glm::vec3(norm->x, norm->y, norm->z);
+        this->uvs->at(i+offsetV) = glm::vec2(uv->x, uv->y);
+        //std::cout<<this->positions->at(i)<<std::endl;
     }
 
-    std::cerr<<"Material file not found. Please include in the same directory as the model. Defaulting to clay."<<std::endl;
-    Material clay = {"default", glm::vec3(0.5,0.5,0.5), glm::vec3(0.5,0.5,0.5), glm::vec3(0.5,0.5,0.5), 1.0f };
-    this->materials->insert(std::pair<std::string, Material>("default",clay));
-    return false;
+    // Populate the index buffer
+    for (unsigned int i = 0 ; i < mesh->mNumFaces ; i+=3) 
+    {
+        const aiFace* face = &(mesh->mFaces[i]);
+        assert(face->mNumIndices == 3);
+        this->faces->at(index).at(i) = face->mIndices[0];
+        this->faces->at(index).at(i+1) = face->mIndices[1];
+        this->faces->at(index).at(i+2) = face->mIndices[2];
+    }
+
+    return mesh->mNumFaces*3;
 }
 
-void GLModel::Clean()
+void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
 {
-    unsigned int idxv, idxuv, idxn;
-    for(int m=0; m<=mtlIndex; m++)
+    this->materials->resize(numMaterials);
+
+    for ( unsigned int i = 0; i < numMaterials; ++i )
     {
-    for(unsigned int i=0; i<triangles->at(m).size(); i++)
+        aiMaterial &material = *(materials[i]);
+
+        aiColor3D ambient(0.0f, 0.0f, 0.0f);
+        aiColor3D diffuse(0.0f, 0.0f, 0.0f);
+        aiColor3D specular(0.0f, 0.0f, 0.0f);
+
+        material.Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+        material.Get(AI_MATKEY_COLOR_AMBIENT, ambient);
+        material.Get(AI_MATKEY_COLOR_SPECULAR, specular);
+        
+        Material mat;
+        mat.diffuse = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
+        mat.ambient = glm::vec3(ambient.r, ambient.g, ambient.b);
+        mat.specular = glm::vec3(specular.r, specular.g, specular.b);
+
+        this->materials->at(i) = mat;
+    }
+}
+
+void GLModel::CreateBuffers(size_t numFaces)
+{
+    //Create VBOs 
+    GLBufferObject vbo_pos("vbopositions",
+                       sizeof(glm::vec3),
+                       this->vbo[POSITION_OFFSET],
+                       this->positions);
+    if( this->attributes > 0)
+    {
+         glEnableVertexAttribArray(0);
+         glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+    
+    GLBufferObject vbo_norm("vbonormals",
+                       sizeof(glm::vec3),
+                       this->vbo[NORMAL_OFFSET],
+                       this->normals);
+    if( this->attributes > 1)
+    {
+         glEnableVertexAttribArray(1);
+         glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+    
+    GLBufferObject vbo_uv("vbotextures",
+                       sizeof(glm::vec2),
+                       this->vbo[UV_OFFSET],
+                       this->uvs);
+    if( this->attributes > 2)
+    {
+         glEnableVertexAttribArray(2);
+         glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+ 
+    GLBufferObject vbo_face("vbofaces",
+                       sizeof(GLuint),
+                       numFaces,
+                       this->vbo[INDEX_OFFSET],
+                       GL_ELEMENT_ARRAY_BUFFER,
+                       GL_STATIC_DRAW);
+    size_t offset = 0;
+    for(size_t i=0; i<this->faces->size(); i++)
+    {
+        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 
+                         (sizeof(GLuint) * offset),
+                         (sizeof(GLuint) * this->faces->at(i).size()),
+                         this->faces->at(i).data() );
+        offset += this->faces->at(i).size();
+    }
+}
+
+
+void GLModel::Draw(glm::mat4 vp, std::shared_ptr<GLUniform> vertex_shader, std::shared_ptr<GLUniform> frag_shader)
+{
+    GLint face_offset = 0;
+    GLint vertex_offset = 0;
+    glBindVertexArray(this->vao);
+    
+    //Bind Position Attributes to model
+    glEnableVertexAttribArray(V_INDEX);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, vertex_shader->Buffer());
+    glBufferSubData( GL_UNIFORM_BUFFER,
+                     vertex_shader->Offset(),
+                     vertex_shader->Size(),
+                     glm::value_ptr( vp * this->matrix ));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, frag_shader->Buffer());
+
+    //Model Fragment Loading
+    for(size_t i=0; i< this->faces->size(); i++)
     {   
-        for(int j=0; j<3; j++)
-        {
-            idxv = this->triangles->at(m)[i].vertex[j];
-            if( v_in.size() > idxv - 1 )
-            {
-                this->positions->push_back(v_in[idxv - 1]);
-            }
-            idxuv = this->triangles->at(m)[i].uv[j];
-            if( uv_in.size() > idxuv - 1 )
-            {
-                this->uvs->push_back(uv_in[idxuv - 1]);
-            }
-            idxn = this->triangles->at(m)[i].normal[j];
-            if( n_in.size() > idxn - 1 )
-            {
-                this->normals->push_back(n_in[idxn - 1]);
-            }
-        }   
+        std::cout<< "i "<< i<<" size "<<this->faces->at(i).size()<<std::endl;
+        glBufferSubData(GL_UNIFORM_BUFFER,
+                            frag_shader->Offset(),
+                            frag_shader->Size(),
+                            glm::value_ptr( glm::normalize(this->materials->at(this->mtlIndices.at(i)).diffuse) ));
+     
+        glDrawElementsBaseVertex(GL_TRIANGLES, 
+                                 this->faces->at(i).size(),
+                                 GL_UNSIGNED_INT,
+                                 (void*)(sizeof(GLuint) * face_offset),
+                                 vertex_offset);
+        
+        //glDrawElements(GL_TRIANGLES, this->faces->at(i).size(), GL_UNSIGNED_INT, (void*)(0));
+        
+        face_offset += this->faces->at(i).size();
+        vertex_offset += this->vertexOffset.at(i);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableVertexAttribArray(V_INDEX);
+
     }
-    }
+
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
-
-std::shared_ptr<std::vector<glm::vec3>> GLModel::Positions()
+std::vector<GLuint> GLModel::Faces(size_t index)
 {
-    return this->positions;
+    return this->faces->at(index);
 }
 
-std::shared_ptr<std::vector<glm::vec3>> GLModel::Normals()
+GLuint GLModel::VAO()
 {
-    return this->normals;
-}
-
-std::shared_ptr<std::vector<glm::vec2>> GLModel::UVs()
-{
-    return this->uvs;
-}
-
-std::vector<Triangle> GLModel::Triangles(size_t index)
-{
-    return this->triangles->at(index);
-}
-
-std::vector<Material> GLModel::Materials()
-{
-    typedef std::map<std::string, Material>::iterator it;
-    std::vector<Material> dest;
-    for(it iterator = this->materials->begin(); iterator != this->materials->end(); iterator++) 
-    {
-        dest.push_back(iterator->second);
-    }
-    return dest;
+    return this->vao;
 }
 
 void GLModel::setMatrix(glm::mat4 m)
@@ -313,33 +288,14 @@ glm::mat4 GLModel::Matrix()
     return this->matrix;
 }
 
-void GLModel::setVBO(GLuint bufferId, int index)
-{
-    this->vbo[index] = bufferId;
-}
-
-GLuint GLModel::VBO(int index)
-{
-    return this->vbo[index];
-}
-
-GLuint GLModel::VAO(size_t index)
-{
-    if( index < vao.size())
-        return this->vao.at(index);
-    std::cerr<<"[E]: VAO not found."<<std::endl;
-    return (GLuint)0;
-}
-
-void GLModel::addVAO(GLuint bufferId)
-{
-    this->vao.resize(vao.size() + 1);
-    this->vao.push_back(bufferId);
-}
-
 size_t GLModel::TSize() const
 {
-    return this->triangles->size();
+    return this->faces->size();
+}
+
+Material GLModel::GetMaterial(size_t index)
+{
+    return this->materials->at(index);
 }
 
 std::string GLModel::toString(MODEL type)
@@ -352,33 +308,6 @@ std::string GLModel::toString(MODEL type)
         default:
             return "";
             break;
-    }
-}
-
-//Author : user763305 (SO)
-std::istream& safeGetline(std::istream& is, std::string& t)
-{
-    t.clear();
-
-    std::istream::sentry se(is, true);
-    std::streambuf* sb = is.rdbuf();
-
-    for(;;) {
-        int c = sb->sbumpc();
-        switch (c) {
-        case '\n':
-            return is;
-        case '\r':
-            if(sb->sgetc() == '\n')
-                sb->sbumpc();
-            return is;
-        case EOF:
-            if(t.empty())
-                is.setstate(std::ios::eofbit);
-            return is;
-        default:
-            t += (char)c;
-        }
     }
 }
 
