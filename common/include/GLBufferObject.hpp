@@ -14,9 +14,6 @@ class GLBufferObject : public GLNode
 
  public:
     GLBufferObject(const char*, GLsizeiptr, GLuint, GLuint, GLenum, GLenum);
-
-    template< class T >
-    GLBufferObject(const char*, GLsizeiptr, GLuint&, std::shared_ptr<std::vector<T>>);
     ~GLBufferObject();
 
     bool Status(GLenum, GLint);
@@ -24,6 +21,9 @@ class GLBufferObject : public GLNode
     void SetBlockIndex(GLuint);
     GLuint Buffer() const;
     GLenum Type() const;
+
+    template< class T >
+    void LoadSubData(size_t, int, const std::vector<T>&);
 
  protected:
     GLuint buffer;
@@ -34,14 +34,10 @@ class GLBufferObject : public GLNode
 
 // Default VBO
 template < class T >
-GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint &buffer, std::shared_ptr<std::vector<T>> vbo) : GLNode(name)
+void GLBufferObject::LoadSubData(size_t offset, int index, const std::vector<T> &vec)
 {
-    this->type = GL_ARRAY_BUFFER;
-    this->block = UINT_MAX;
-    glGenBuffers(1, &this->buffer);
-    glBindBuffer(this->type, this->buffer);
-    glBufferData(this->type, dataSize*vbo->size(), vbo->data(), GL_STATIC_DRAW);
-    buffer = this->buffer;
+    this->block = index;
+    glBufferSubData(this->type, sizeof(T) * offset, sizeof(T) * vec.size(), vec.data());
 }
 
 

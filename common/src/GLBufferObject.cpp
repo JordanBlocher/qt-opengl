@@ -29,7 +29,7 @@ bool GLBufferObject::Status(GLenum type, GLint size)
 
 bool GLBufferObject::Status()
 {
-    return this->block == UINT_MAX;
+    return this->block != UINT_MAX;
 }
 
 void GLBufferObject::SetBlockIndex(GLuint index)

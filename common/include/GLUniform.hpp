@@ -3,11 +3,14 @@
 
 #include "GLNode.hpp"
 
+#include <vector>
+
 class GLUniform : public GLNode
 {
  public:
     GLUniform();
     GLUniform(const char*, GLuint, GLuint, GLuint);
+    GLUniform(const char*, std::vector<std::string>, GLsizeiptr, GLuint, GLuint);
     ~GLUniform();
 
     void setBuffer(GLuint);
@@ -17,6 +20,8 @@ class GLUniform : public GLNode
     GLuint Buffer();
 
  private:
+    std::string name;
+    std::vector<std::string> attributes;
     GLuint size;
     GLuint index;
     GLuint offset;
