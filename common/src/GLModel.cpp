@@ -279,10 +279,9 @@ void GLModel::Draw(glm::mat4 vp, std::shared_ptr<GLUniform> vertex_shader, std::
         
         face_offset += this->faces->at(i).size();
         vertex_offset += this->positions->at(i).size();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(V_INDEX);
     }
-
+        
+    glDisableVertexAttribArray(V_INDEX);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindVertexArray(0);
 }
