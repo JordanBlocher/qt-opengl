@@ -109,44 +109,18 @@ void GLScene::initializeGL()
     else qApp->quit();
     
     //Create UBOs
-    //shared_ptr<GLUniform> vertex_uniform = program->CreateUBO("GColors", uvertex);
-    shared_ptr<GLBufferObject> fubo( new GLBufferObject(
-                                     "GColors",
-                                     sizeof(glm::vec3),
-                                     NUM_COLORS,
-                                     COLOR_OFFSET,
-                                     GL_UNIFORM_BUFFER,
-                                     GL_STATIC_DRAW));
-
-    shared_ptr<GLBufferObject> vubo( new GLBufferObject(
-                                     "GMatrices",
-                                     sizeof(glm::mat4),
-                                     NUM_UNIFORMS,
-                                     POSITION_OFFSET,
-                                     GL_UNIFORM_BUFFER,
-                                     GL_STREAM_DRAW));
-    //Bind uniform indices
-    vector<string> uvertex = {"mvpMatrix"};
     vector<string> ufragment = {"color"};
-
-    vector<shared_ptr<GLUniform>> uniforms;
-    uniforms = program->SetUniformIndex(vubo,
-                                        uvertex,
-                                        sizeof(glm::mat4),
-                                        POSITION_OFFSET);
-    uniforms[0]->setBuffer(vubo->Buffer()); 
-    this->AddToContext(uniforms[0]); //<-- only one!
-    uniforms.clear();
-    uniforms = program->SetUniformIndex(fubo,
-                                        ufragment,
-                                        sizeof(glm::vec3),
-                                        COLOR_OFFSET);
-
-    uniforms[0]->setBuffer(fubo->Buffer()); 
-    this->AddToContext(uniforms[0]);
+    std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GColors"));
+    if( vertex_uniform->CreateUBO(ufragment, sizeof(glm::vec3), COLOR_OFFSET, GL_STATIC_DRAW, program->getId()) )
+       this->AddToContext(vertex_uniform);
+    else qApp->quit();
     
-    if( uniforms.size() == 0 )
-        qApp->quit();
+    vector<string> uvertex = {"mvpMatrix"};
+    std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GMatrices"));
+    if( frag_uniform->CreateUBO(uvertex, sizeof(glm::mat4), POSITION_OFFSET, GL_STREAM_DRAW, program->getId()) )
+       this->AddToContext(frag_uniform);
+    else qApp->quit();
+    
 
     //this->SetScene(perspective);
 
@@ -174,8 +148,8 @@ void GLScene::paintGL()
     glm::mat4 vp = projection->Matrix() * view->Matrix();
  
     //Get Shader Data
-    shared_ptr<GLUniform> vertex_uniform = this->Get<GLUniform>("mvpMatrix");
-    shared_ptr<GLUniform> frag_uniform = this->Get<GLUniform>("color");
+    shared_ptr<GLUniform> vertex_uniform = this->Get<GLUniform>("GMatrices");
+    shared_ptr<GLUniform> frag_uniform = this->Get<GLUniform>("GColors");
 
     //Draw model
     model->Draw(vp, vertex_uniform, frag_uniform);
@@ -233,12 +207,12 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     else if( (event->key() == Qt::Key_Up))
     {
         shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -1.0, 4.0)) * view->Matrix());
+        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -2.0, 4.0)) * view->Matrix());
     }
     else if( (event->key() == Qt::Key_Down))
     {
         shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 1.0, -4.0)) * view->Matrix());
+        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 2.0, -4.0)) * view->Matrix());
     }
         GLViewport::keyPressEvent(event);
 }

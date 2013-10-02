@@ -1,5 +1,10 @@
+#ifndef GLSTRUCT_H
+#define GLSTRUCT_H
+
 #include <iostream>
 #include <glm/glm.hpp>
+#include <GL/glew.h>
+
 struct Vertex
 {
     //GLfloat
@@ -18,4 +23,13 @@ struct Material
     float transparency;
     
 };
+
+struct Uniform
+{
+    GLuint size;
+    GLuint index;
+    GLuint offset;
+};
+
+#endif
 

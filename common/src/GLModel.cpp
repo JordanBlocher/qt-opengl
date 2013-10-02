@@ -247,28 +247,30 @@ void GLModel::CreateVBOs()
 }
 
 
-void GLModel::Draw(glm::mat4 vp, std::shared_ptr<GLUniform> vertex_shader, std::shared_ptr<GLUniform> frag_shader)
+void GLModel::Draw(glm::mat4 vp, std::shared_ptr<GLUniform> vertex_uniform, std::shared_ptr<GLUniform> frag_uniform)
 {
     GLint face_offset = 0;
     GLint vertex_offset = 0;
     glBindVertexArray(this->vao);
+    Uniform vuniform = vertex_uniform->Get("mvpMatrix");
+    Uniform funiform = frag_uniform->Get("color");
     
     //Bind Position Attributes to model
     glEnableVertexAttribArray(V_INDEX);
-    glBindBuffer(GL_UNIFORM_BUFFER, vertex_shader->Buffer());
+    glBindBuffer(GL_UNIFORM_BUFFER, vertex_uniform->getId());
     glBufferSubData( GL_UNIFORM_BUFFER,
-                     vertex_shader->Offset(),
-                     vertex_shader->Size(),
+                     vuniform.offset,
+                     vuniform.size,
                      glm::value_ptr( vp * this->matrix ));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBuffer(GL_UNIFORM_BUFFER, frag_shader->Buffer());
+    glBindBuffer(GL_UNIFORM_BUFFER, frag_uniform->getId());
 
     //Draw Model 
     for(size_t i=0; i< this->faces->size(); i++)
     {   
         glBufferSubData(GL_UNIFORM_BUFFER,
-                            frag_shader->Offset(),
-                            frag_shader->Size(),
+                            funiform.offset,
+                            funiform.size,
                             glm::value_ptr( glm::normalize(this->materials->at(this->mtlIndices.at(i)).diffuse) ));
      
         glDrawElementsBaseVertex(GL_TRIANGLES, 
@@ -279,11 +281,10 @@ void GLModel::Draw(glm::mat4 vp, std::shared_ptr<GLUniform> vertex_shader, std::
         
         face_offset += this->faces->at(i).size();
         vertex_offset += this->positions->at(i).size();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(V_INDEX);
     }
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glDisableVertexAttribArray(V_INDEX);
     glBindVertexArray(0);
 }
 
