@@ -285,45 +285,48 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     GLint vertex_offset = 0;
     glBindVertexArray(this->vao);
     Uniform funiform;
+
+    bool texture, color;
+
+    color = (fragment->getId() != UINT_MAX);
     
-    if(fragment->getId() != UINT_MAX)
+    if(color)
+    {
         glBindBuffer(GL_UNIFORM_BUFFER, fragment->getId());
-    CHECKGLERROR
+        funiform = fragment->Get(COLOR);
+    }
 
     //Draw Model 
     for(size_t i=0; i< this->faces->size(); i++)
     {   
         
-        funiform = fragment->Get(COLOR);
-    CHECKGLERROR
-        if ( this->materials->at(this->mtlIndices.at(i)).texture ) 
+        texture = this->materials->at(this->mtlIndices.at(i)).texture;
+        if ( texture ) 
                 this->textures->at(this->mtlIndices.at(i)).Bind(GL_TEXTURE0);
-        if(fragment->getId() != UINT_MAX)
+        if( color )
         {
             glBufferSubData(GL_UNIFORM_BUFFER,
                      		funiform.offset,
                      		funiform.size,
                             glm::value_ptr( glm::normalize(this->materials->at(this->mtlIndices.at(i)).diffuse) ));
         }
-    CHECKGLERROR
         
+        if( (color && !texture) || (!color && texture) )
+        {
         glDrawElementsBaseVertex(GL_TRIANGLES, 
                                  this->faces->at(i).size(),
                                  GL_UNSIGNED_INT,
                                  (void*)(sizeof(GLuint) * face_offset),
                                  vertex_offset);
-    CHECKGLERROR
+        }
         
         face_offset += this->faces->at(i).size();
         vertex_offset += this->positions->at(i).size();
     }
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    CHECKGLERROR
     glBindTexture(GL_TEXTURE_2D, 0);
-    CHECKGLERROR
     glBindVertexArray(0);
-    CHECKGLERROR
 }
 
 void GLModel::setMatrix(glm::mat4 m)
