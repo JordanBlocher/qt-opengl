@@ -1,6 +1,7 @@
 #include "GLProgram.hpp"
 
 #include "GLShader.hpp"
+#include "GLUniform.hpp"
 
 GLProgram::GLProgram(const char* name) : GLNode(name)
 {
@@ -40,7 +41,7 @@ bool GLProgram::AddShader(std::shared_ptr<GLShader> shader)
     {
         glAttachShader(this->id, shader->getId());
     }
-    return this->Status();
+    return shader->Status();
 }
 
 bool GLProgram::RemoveShader(std::shared_ptr<GLShader> shader)
@@ -59,4 +60,11 @@ void GLProgram::SetAttributeIndex(const char* name, GLuint index)
 {
     glBindAttribLocation(this->id, index, name);
 }
+
+void GLProgram::SetUBO(std::shared_ptr<GLUniform> ubo)
+{
+    GLuint block = glGetUniformBlockIndex(this->id, ubo->getName().c_str());
+    glUniformBlockBinding(this->id, block, ubo->getLocation());
+}
+
 

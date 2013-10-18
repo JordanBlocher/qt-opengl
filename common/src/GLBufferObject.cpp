@@ -7,9 +7,8 @@
 //#include <glm/virtrev/xstream.hpp>
 
 // Single Type
-GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLuint index, GLenum type, GLenum draw) : GLNode(name)
+GLBufferObject::GLBufferObject(const char* name, GLsizeiptr dataSize, GLuint size, GLenum type, GLenum draw) : GLNode(name, type)
 {
-    this->type = type;
     this->block = UINT_MAX;
     glGenBuffers(1, &this->buffer);
     glBindBuffer(type, this->buffer);

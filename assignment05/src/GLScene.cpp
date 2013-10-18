@@ -34,12 +34,9 @@
 #define SENSOR_DISTANCE 0.01f
 #define FOCAL_DISTANCE 100.0f
 
-const GLuint NUM_UNIFORMS = 1;
-const GLuint NUM_ATTRIBUTES = 1;
-const GLuint NUM_COLORS = 1;
-const GLuint POSITION_OFFSET = 0;
-const GLuint COLOR_OFFSET = 1;
-
+const GLuint NUM_ATTRIBUTES = 3;
+const GLuint POSITION_OFFSET = 1;
+const GLuint COLOR_OFFSET = 0;
 
 using namespace std;
 
@@ -69,23 +66,32 @@ void GLScene::initializeGL()
 
     if( model->CreateVAO() )
         this->AddToContext(model);
-    else qApp->quit();
 
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
+    shared_ptr<GLShader> tvertex(new GLShader("tvertex.glsl", GL_VERTEX_SHADER, "texvshader"));
+    shared_ptr<GLShader> tfragment(new GLShader("tfragment.glsl", GL_FRAGMENT_SHADER, "texfshader"));
 
     //Program
-    shared_ptr<GLProgram> program(new GLProgram("qgl_program"));
+    shared_ptr<GLProgram> cprogram(new GLProgram("color_program"));
+    shared_ptr<GLProgram> tprogram(new GLProgram("texture_program"));
     
     //Add Shaders
-    if( !program->AddShader(vertex) )
-        qApp->quit();
-    if( !program->AddShader(fragment) )
-        qApp->quit();
+    if( !cprogram->AddShader(vertex) )
+        std::cout << "Failed to attach vertex shader" << std::endl;
+    if( !cprogram->AddShader(fragment) )
+        std::cout << "Failed to attach fragment shader" << std::endl;
+    if( !tprogram->AddShader(tvertex) )
+        std::cout << "Failed to attach vertex shader" << std::endl;
+    if( !tprogram->AddShader(tfragment) )
+        std::cout << "Failed to attach fragment shader" << std::endl;
+
 
     //Bind attribute index
-    program->SetAttributeIndex("v_position", V_INDEX);
+    //cprogram->SetAttributeIndex("v_position", V_INDEX);
+    //tprogram->SetAttributeIndex("v_position", V_INDEX);
+    //tprogram->SetAttributeIndex("v_uv", UV_INDEX);
 
     // View matrix (eye pos, focus point, up)
     shared_ptr<GLTransform> view( new GLTransform("view", glm::lookAt(
@@ -104,23 +110,28 @@ void GLScene::initializeGL()
                     FOCAL_DISTANCE) );
 
     //Add Program
-    if( this->AddProgram(program) )
-        this->AddToContext(program);
-    else qApp->quit();
+    if( this->AddProgram(cprogram) )
+        this->AddToContext(cprogram);
+    if( this->AddProgram(tprogram) )
+        this->AddToContext(tprogram);
     
-    //Create UBOs
-    vector<string> ufragment = {"color"};
-    std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GColors"));
-    if( vertex_uniform->CreateUBO(ufragment, sizeof(glm::vec3), COLOR_OFFSET, GL_STATIC_DRAW, program->getId()) )
-       this->AddToContext(vertex_uniform);
-    else qApp->quit();
+    //Create UBOs 
+    std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
+    vertex_uniform->CreateUBO(1, cprogram->getId(), POSITION_OFFSET, GL_STATIC_DRAW);
+    this->AddToContext(vertex_uniform);
     
-    vector<string> uvertex = {"mvpMatrix"};
-    std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GMatrices"));
-    if( frag_uniform->CreateUBO(uvertex, sizeof(glm::mat4), POSITION_OFFSET, GL_STREAM_DRAW, program->getId()) )
-       this->AddToContext(frag_uniform);
-    else qApp->quit();
-    
+    std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
+    frag_uniform->CreateUBO(1, cprogram->getId(), COLOR_OFFSET, GL_STREAM_DRAW);
+    this->AddToContext(frag_uniform);
+
+    //Add Sampler
+    std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
+    this->AddToContext(texture_uniform);
+
+    //Set UBOs to Share
+    cprogram->SetUBO(vertex_uniform);
+    cprogram->SetUBO(frag_uniform);
+    tprogram->SetUBO(vertex_uniform);
 
     //this->SetScene(perspective);
 
@@ -133,29 +144,47 @@ void GLScene::paintGL()
     this->background.getRgbF(&r, &g, &b);
     glClearColor(r, g, b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //Choose the shader program
-    shared_ptr<GLProgram> program = this->Get<GLProgram>("qgl_program");
-    glUseProgram(program->getId());
-    
+ 
     //Get view & projection matrices
     shared_ptr<GLTransform> projection = this->Get<GLTransform>("projection");
     shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-
+    glm::mat4 vp = projection->Matrix() * view->Matrix();
+    
     //Choose Model
     shared_ptr<GLModel> model = this->Get<GLModel>("model");
+    
+    //Get UBOS
+    shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+    shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+    
+    //Get Programs
+    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
+    shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
-    glm::mat4 vp = projection->Matrix() * view->Matrix();
- 
-    //Get Shader Data
-    shared_ptr<GLUniform> vertex_uniform = this->Get<GLUniform>("GMatrices");
-    shared_ptr<GLUniform> frag_uniform = this->Get<GLUniform>("GColors");
+    //Bind MVP
+    Uniform position = vuniform->Get(POSITION);
+    glEnableVertexAttribArray(V_INDEX);
+    glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+    glBufferSubData( GL_UNIFORM_BUFFER,
+                     position.offset,
+                     position.size,
+                     glm::value_ptr( vp * model->Matrix() ));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    //Draw model
-    model->Draw(vp, vertex_uniform, frag_uniform);
+    //Get Sampler
+    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
+    //Colors Program
+    //glUseProgram(cprogram->getId());
+    //model->Draw(cuniform, cprogram->getId());
+    //glUseProgram(0);
+
+    //Texture Program
+    CHECKGLERROR
+    glUseProgram(tprogram->getId());
+    model->Draw(tuniform, tprogram->getId());
     glUseProgram(0);
-
+    CHECKGLERROR
 }
 
 void GLScene::idleGL()

@@ -1,10 +1,14 @@
 #version 420
+
 uniform GColors
 {
     vec3 color;
 };
 
-void main(void){
-   gl_FragColor = vec4(color, 1.0);
+out vec4 colout;
+
+void main(void)
+{
+   colout = vec4(color, 1.0);
 }
 

@@ -15,6 +15,7 @@ class GLNode
  public:
     GLNode();
     GLNode(const char*);
+    GLNode(const char*, GLenum);
     GLNode(const std::shared_ptr<GLNode>);
     ~GLNode();
 

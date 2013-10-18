@@ -1,69 +1,93 @@
 #include "GLUniform.hpp"
 #include "GLBufferObject.hpp"
 
+
 GLUniform::GLUniform(const char* name) : GLNode(name)
 {
 }
 
-bool GLUniform::CreateUBO(std::vector<std::string> attributes, GLsizeiptr size, GLuint offset, GLuint draw, GLuint program)
+GLUniform::GLUniform(const char* name, GLuint program, int size, const char* type) : GLNode(name)
 {
-    GLBufferObject ubo(this->name.c_str(), size, attributes.size(), offset, GL_UNIFORM_BUFFER, draw);
+    this->location = glGetUniformLocation(program, name);
+    if(size == 1 && std::string(type) == std::string("i") )
+        glProgramUniform1i(program, this->location, 0);
+    else if(size == 1 && std::string(type) == std::string("f") )
+        glProgramUniform1f(program, this->location, 0);
+    else if(size == 2 && std::string(type) == std::string("f") )
+        glProgramUniform2f(program, this->location, 0, 0);
+    else if(size == 3 && std::string(type) == std::string("f") )
+        glProgramUniform3f(program, this->location, 0, 0, 0);
+    else if(size == 3 && std::string(type) == std::string("f") )
+        glProgramUniform3f(program, this->location, 0, 0, 0);
+    else if(size == 4 && std::string(type) == std::string("f") )
+        glProgramUniform4f(program, this->location, 0, 0, 0, 0);
+    this->id = UINT_MAX;
+
+}
+
+bool GLUniform::CreateUBO(int numUniforms, GLuint program, GLuint index, GLenum draw)
+{
+    GLint size;
+    GLenum type;
+    std::string uname;
+    GLsizei len;
+    GLsizei dataSize = 0;
+    GLsizeiptr uniformSize;
+    Uniform unif;
+    this->location = index;
+        
+    this->block = glGetUniformBlockIndex(program, this->name.c_str());
+
+    for( int i = 0; i < numUniforms; i++)
+    {
+        glGetActiveUniform(program, index + i, 256, &len, &size, &type, &uname[0]);
+
+        if(type == GL_FLOAT_VEC3)
+            uniformSize = sizeof(glm::vec3);
+        else if(type == GL_FLOAT_VEC2)
+             uniformSize = sizeof(glm::vec2);
+        else if(type == GL_FLOAT_VEC4)
+            uniformSize = sizeof(glm::vec4);
+        else if(type == GL_FLOAT_MAT4)
+            uniformSize = sizeof(glm::mat4);
+        else if(type == GL_FLOAT_MAT3)
+            uniformSize = sizeof(glm::mat3);
+        else if(type == GL_INT)
+            uniformSize = sizeof(int);
+
+        dataSize += uniformSize*size;
+
+        unif = {&uname[0], static_cast<GLuint>(size*uniformSize), index + (GLuint)i, static_cast<GLuint>(size*uniformSize*i)};
+		this->uniforms[(UniformType)index] = unif;
+    }
+
+    GLBufferObject ubo(name.c_str(), dataSize, (GLuint)1, GL_UNIFORM_BUFFER, draw); 
+    if( ubo.Status(GL_UNIFORM_BUFFER, dataSize) )
+    {
+            std::cerr << "[E] Buffer " << name << " not created."<<std::endl;
+            return false;
+    }
+    glBindBufferBase(ubo.Type(), index, ubo.Buffer());
+    
     this->id = ubo.Buffer();
-    this->programId = program;
-    return this->SetUniformIndex(attributes, size, offset, ubo);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    return true;
 }
 
 GLUniform::~GLUniform()
 {
 }
 
-bool GLUniform::SetUniformIndex(const std::vector<std::string> &names, GLsizeiptr type, GLuint index, GLBufferObject &ubo)
+Uniform GLUniform::Get(UniformType type)
 {
-    if(ubo.Status())
-    {
-        std::cerr <<"[W] Buffer " << index <<" is not empty"<< std::endl;
-        return false;
-    }
-
-    GLint numUniforms;
-    GLuint block;
-    std::vector<GLuint> dBlockUniforms;
-    std::vector<GLint> size;
-
-    glGetProgramiv(this->programId, GL_ACTIVE_UNIFORMS, &numUniforms);
-
-    for(int i=0; i < numUniforms; i++)
-    {
-        dBlockUniforms.push_back(i);
-    }
-
-    size.resize(numUniforms);
-    glGetActiveUniformsiv(this->id, numUniforms, dBlockUniforms.data(), GL_UNIFORM_SIZE, size.data());
-
-    if( (int)names.size() > numUniforms )
-    {
-        std::cerr << "Size of name array is outside range of active uniforms" << std::endl;
-        return false;
-    }
-    
-    block = glGetUniformBlockIndex(this->id, (ubo.getName()).c_str());
-    ubo.SetBlockIndex(block);
-    
-    for( int i = 0; i < numUniforms; i++)
-    {
-        Uniform unif = {(GLuint)(size[i]*type), index + i, (GLuint)(size[i]*type*i)};
-        this->attributes[names[i]] = unif;
-    }
-
-    glUniformBlockBinding(this->id, block, index);
-    glBindBufferBase(ubo.Type(), index, ubo.Buffer()); 
-
-    return true;
+    return this->uniforms[type];
 }
 
-Uniform GLUniform::Get(const char* name)
+GLuint GLUniform::getLocation()
 {
-    return this->attributes[name];
+    return this->location;
 }
 
 

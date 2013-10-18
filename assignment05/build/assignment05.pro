@@ -7,9 +7,9 @@ QT += opengl
 
 TEMPLATE = app
 TARGET = ../bin/assignment05
-DEPENDPATH += ../src ../../common/include
-INCLUDEPATH += ../src ../../common/include 
-LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp
+DEPENDPATH += ../src ../../common/include 
+INCLUDEPATH += ../src ../../common/include /usr/include/ImageMagick
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lMagickCore
 QMAKE_CXX = g++-4.7
 QMAKE_CXXFLAGS += -std=c++0x
 

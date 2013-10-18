@@ -20,12 +20,15 @@ struct Material
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
+    glm::vec3 emissive;
+    glm::vec3 transparent;
     float transparency;
-    
+    bool texture;
 };
 
 struct Uniform
 {
+    std::string name;
     GLuint size;
     GLuint index;
     GLuint offset;

@@ -18,10 +18,8 @@ class GLShader : public GLNode
     bool Load(const char*);
     std::string toString(GLenum);
     std::string source;
-    std::string path;
+    std::string file;
 
-
- 
 };
 
 

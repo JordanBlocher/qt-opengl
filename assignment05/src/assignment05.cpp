@@ -12,14 +12,14 @@ int main(int argc, char *argv[])
 {
     if(argc < 2)
     {
-        std::cout<<"Usage: assignment06 <modelpath>\n"; //(options)\n\t\tOptions: <materialpath>\n";
+        std::cout<<"Usage: assignment05 <modelpath>\n"; //(options)\n\t\tOptions: <materialpath>\n";
         return 0;
     }
 
     QApplication app(argc, argv);
-    app.setPalette(QColor::fromRgbF(0.0, 0.0, 0.2));
-    QPalette palette = app.palette();
-    palette.setColor(QPalette::ButtonText, Qt::white);
+//    app.setPalette(QColor::fromRgbF(0.0, 0.0, 0.2));
+//    QPalette palette = app.palette();
+//    palette.setColor(QPalette::ButtonText, Qt::white);
 
     GLScene *glView = new GLScene(NULL, argc, argv);
     GLWindow *window = new GLWindow(NULL, glView);

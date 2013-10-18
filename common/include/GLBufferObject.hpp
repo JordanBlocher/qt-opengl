@@ -13,7 +13,7 @@ class GLBufferObject : public GLNode
 {
 
  public:
-    GLBufferObject(const char*, GLsizeiptr, GLuint, GLuint, GLenum, GLenum);
+    GLBufferObject(const char*, GLsizeiptr, GLuint, GLenum, GLenum);
     ~GLBufferObject();
 
     bool Status(GLenum, GLint);
@@ -28,8 +28,6 @@ class GLBufferObject : public GLNode
  protected:
     GLuint buffer;
     GLuint block;
-    GLenum type;
-
 };
 
 // Default VBO

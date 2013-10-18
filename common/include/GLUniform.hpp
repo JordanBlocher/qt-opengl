@@ -7,20 +7,26 @@
 
 #include <vector>
 #include <map>
+#include <GL/glew.h>
+
+enum UniformType {COLOR = 0, POSITION = 1, NORMAL = 2, UV = 3};  
 
 class GLUniform : public GLNode
 {
  public:
-    GLUniform(const char*);
+     GLUniform(const char*);
+     GLUniform(const char*, GLuint, int, const char*);
     ~GLUniform();
-
-    bool CreateUBO(std::vector<std::string>, GLsizeiptr, GLuint, GLuint, GLuint);
-    bool SetUniformIndex(const std::vector<std::string>&, GLsizeiptr, GLuint, GLBufferObject &);
-    Uniform Get(const char*);
+    
+    bool CreateUBO(int, GLuint, GLuint, GLenum);
+    Uniform Get(UniformType);
+    GLuint getLocation();
 
  private:
-    std::map<std::string,Uniform> attributes;
-    GLuint programId;
+    std::map<UniformType,Uniform> uniforms;
+    GLuint block;
+    GLuint location;
+
 
 };
 

@@ -22,6 +22,11 @@ GLNode::GLNode(const char* name)
     this->name = name;
 }
 
+GLNode::GLNode(const char* name, GLenum type)
+{
+    this->type = type;
+}
+
 GLNode::~GLNode()
 {
 }

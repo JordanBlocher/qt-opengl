@@ -6,23 +6,21 @@
 
 GLShader::GLShader(const char* name) : GLNode(name)
 {
-    path = "assets/shaders/";
+    file = "assets/shaders/";
 }
 
-GLShader::GLShader(GLenum type, const char* name) : GLNode(name)
+GLShader::GLShader(GLenum type, const char* name) : GLNode(name, type)
 {
-    path = "assets/shaders/";
-    this->type = type;
-    if( this->Load(this->toString(type).c_str()) )
+    file = std::string("assets/shaders/") + this->toString(type);
+    if( this->Load(file.c_str()) )
         this->id = glCreateShader(type);
     this->Compile();
 }
 
-GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLNode(name)
+GLShader::GLShader(const char* filename, GLenum type, const char* name) : GLNode(name, type)
 {
-    path = "assets/shaders/";
-    this->type = type;
-    if( this->Load(filename) )
+    file = std::string("assets/shaders/") + filename;
+    if( this->Load(file.c_str()) )
         this->id = glCreateShader(type);
     this->Compile();
 }
@@ -41,7 +39,7 @@ bool GLShader::Status()
         glGetShaderiv(this->id, GL_INFO_LOG_LENGTH, &msize);
         msg.resize(msize);
         glGetShaderInfoLog(this->id, msize, NULL, &msg[0]);
-        std::cerr << "[F] Shader failed to compile: " << std::endl << msg << std::endl;
+        std::cerr << "[F] Shader " << file << " failed to compile: " << std::endl << msg << std::endl;
         return false;
     }
     return true;
@@ -49,7 +47,7 @@ bool GLShader::Status()
 
 bool GLShader::Load(const char* filename)
 {
-    std::ifstream fin(path + filename, std::ios::binary | std::ios::in);
+    std::ifstream fin(filename, std::ios::binary | std::ios::in);
     if(fin)
     {
         source.resize((fin.seekg(0, std::ios::end)).tellg());
