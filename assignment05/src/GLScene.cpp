@@ -70,21 +70,14 @@ void GLScene::initializeGL()
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
-    shared_ptr<GLShader> tvertex(new GLShader("tvertex.glsl", GL_VERTEX_SHADER, "texvshader"));
-    shared_ptr<GLShader> tfragment(new GLShader("tfragment.glsl", GL_FRAGMENT_SHADER, "texfshader"));
 
     //Program
     shared_ptr<GLProgram> cprogram(new GLProgram("color_program"));
-    shared_ptr<GLProgram> tprogram(new GLProgram("texture_program"));
     
     //Add Shaders
     if( !cprogram->AddShader(vertex) )
         std::cout << "Failed to attach vertex shader" << std::endl;
     if( !cprogram->AddShader(fragment) )
-        std::cout << "Failed to attach fragment shader" << std::endl;
-    if( !tprogram->AddShader(tvertex) )
-        std::cout << "Failed to attach vertex shader" << std::endl;
-    if( !tprogram->AddShader(tfragment) )
         std::cout << "Failed to attach fragment shader" << std::endl;
 
 
@@ -112,8 +105,6 @@ void GLScene::initializeGL()
     //Add Program
     if( this->AddProgram(cprogram) )
         this->AddToContext(cprogram);
-    if( this->AddProgram(tprogram) )
-        this->AddToContext(tprogram);
     
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
@@ -124,14 +115,9 @@ void GLScene::initializeGL()
     frag_uniform->CreateUBO(1, cprogram->getId(), COLOR_OFFSET, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
 
-    //Add Sampler
-    std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
-    this->AddToContext(texture_uniform);
-
     //Set UBOs to Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(frag_uniform);
-    tprogram->SetUBO(vertex_uniform);
 
     //this->SetScene(perspective);
 
@@ -158,7 +144,6 @@ void GLScene::paintGL()
     shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
     
     //Get Programs
-    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
     shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
     //Bind MVP
@@ -171,20 +156,10 @@ void GLScene::paintGL()
                      glm::value_ptr( vp * model->Matrix() ));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    //Get Sampler
-    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
-
     //Colors Program
-    //glUseProgram(cprogram->getId());
-    //model->Draw(cuniform, cprogram->getId());
-    //glUseProgram(0);
-
-    //Texture Program
-    CHECKGLERROR
-    glUseProgram(tprogram->getId());
-    model->Draw(tuniform, tprogram->getId());
+    glUseProgram(cprogram->getId());
+    model->Draw(cuniform, cprogram->getId());
     glUseProgram(0);
-    CHECKGLERROR
 }
 
 void GLScene::idleGL()
