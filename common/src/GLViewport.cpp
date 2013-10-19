@@ -87,6 +87,10 @@ void GLViewport::idleGL()
 
 void GLViewport::keyPressEvent(QKeyEvent *event)
 {
+       if( event->key() == Qt::Key_Escape )
+       {
+            qApp->quit();
+       }
 }
 
 void GLViewport::mousePressEvent(QMouseEvent *event)
