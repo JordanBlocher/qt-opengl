@@ -324,7 +324,6 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
         vertex_offset += this->positions->at(i).size();
     }
         
-    glDisableVertexAttribArray(V_INDEX);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
