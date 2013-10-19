@@ -8,6 +8,7 @@
 #include <map>
 #include <assimp/scene.h>
 #include <climits>
+#include <ImageMagick/Magick++.h>
 
 #include "GLNode.hpp"
 
@@ -17,6 +18,7 @@ const GLuint NORM_INDEX = 1;
 const GLuint UV_INDEX = 2;
 
 class GLUniform;
+class GLTexture;
 
 class GLModel : public GLNode
 {
@@ -29,14 +31,13 @@ class GLModel : public GLNode
     glm::mat4 Matrix();
     void setMatrix(glm::mat4);
 
-    void Draw(glm::mat4, std::shared_ptr<GLUniform>, std::shared_ptr<GLUniform> u = NULL);
+    void Draw(std::shared_ptr<GLUniform>, GLuint);
 
  private:
     void Allocate();
     void AddAttributeData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
-
 
     bool AddMaterials(const char*);
     std::string toString(MODEL);
@@ -50,6 +51,7 @@ class GLModel : public GLNode
     std::shared_ptr<std::vector<std::vector<glm::vec2>>> uvs;
     std::shared_ptr<std::vector<std::vector<GLuint>>> faces;
     std::shared_ptr<std::vector<Material>> materials;
+    std::shared_ptr<std::vector<GLTexture>> textures;
     std::vector<GLuint> mtlIndices;
     size_t e_size;
     size_t v_size;
@@ -57,8 +59,7 @@ class GLModel : public GLNode
     glm::mat4 matrix;
     GLuint vao;
     GLuint vbo[4];
-    int attributes;
-
+    GLuint attributes;
 
 };
 

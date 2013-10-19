@@ -69,15 +69,18 @@ QMenu* GLWindow::createPopupMenu()
 
 void GLWindow::resizeEvent(QResizeEvent *event)
 {
-    //overlay->resize(event->size());
-    glView->resizeApp(event->size().width(), event->size().height());
-    event->accept();
+    //glView->resizeApp(event->size().width(), event->size().height());
+    //event->accept();
 }
 
 void GLWindow::keyPressEvent(QKeyEvent *event)
 {
-    glView->keyPressed(event);
-    event->accept();
+    //glView->keyPressed(event);
+    //event->accept();
+}
+
+void GLWindow::mousePressEvent(QMouseEvent *event)
+{
 }
 
 void GLWindow::aboutCallback()

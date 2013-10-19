@@ -21,6 +21,7 @@ Q_OBJECT
 
     void resizeEvent(QResizeEvent*);
     void keyPressEvent(QKeyEvent*);
+    void mousePressEvent(QMouseEvent*);
 
     GLViewport *glView;
     GLOverlay *overlay;

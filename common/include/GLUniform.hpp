@@ -2,30 +2,31 @@
 #define GLUNIFORM_H
 
 #include "GLNode.hpp"
+#include "GLBufferObject.hpp"
+#include "GLStruct.hpp"
 
 #include <vector>
+#include <map>
+#include <GL/glew.h>
+
+enum UniformType {COLOR = 0, POSITION = 1, NORMAL = 2, UV = 3};  
 
 class GLUniform : public GLNode
 {
  public:
-    GLUniform();
-    GLUniform(const char*, GLuint, GLuint, GLuint);
-    GLUniform(const char*, std::vector<std::string>, GLsizeiptr, GLuint, GLuint);
+     GLUniform(const char*);
+     GLUniform(const char*, GLuint, int, const char*);
     ~GLUniform();
-
-    void setBuffer(GLuint);
-    GLuint Size();
-    GLuint Index();
-    GLuint Offset();
-    GLuint Buffer();
+    
+    bool CreateUBO(int, GLuint, GLuint, GLenum);
+    Uniform Get(UniformType);
+    GLuint getLocation();
 
  private:
-    std::string name;
-    std::vector<std::string> attributes;
-    GLuint size;
-    GLuint index;
-    GLuint offset;
-    GLuint bufferId;
+    std::map<UniformType,Uniform> uniforms;
+    GLuint block;
+    GLuint location;
+
 
 };
 

@@ -21,8 +21,8 @@ class GLProgram : public GLNode
     bool AddShader(std::shared_ptr<GLShader>);
     bool RemoveShader(std::shared_ptr<GLShader>);
 
+    void SetUBO(std::shared_ptr<GLUniform>);
     void SetAttributeIndex(const char*, GLuint);
-    std::vector<std::shared_ptr<GLUniform>> SetUniformIndex(std::shared_ptr<GLBufferObject>, const std::vector<std::string>&, GLsizeiptr, GLuint);
 
 };
 

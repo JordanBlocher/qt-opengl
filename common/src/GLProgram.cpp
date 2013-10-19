@@ -1,8 +1,7 @@
 #include "GLProgram.hpp"
 
 #include "GLShader.hpp"
-#include "GLBufferObject.hpp"
-#include "GLUniform.cpp"
+#include "GLUniform.hpp"
 
 GLProgram::GLProgram(const char* name) : GLNode(name)
 {
@@ -42,7 +41,7 @@ bool GLProgram::AddShader(std::shared_ptr<GLShader> shader)
     {
         glAttachShader(this->id, shader->getId());
     }
-    return this->Status();
+    return shader->Status();
 }
 
 bool GLProgram::RemoveShader(std::shared_ptr<GLShader> shader)
@@ -62,53 +61,10 @@ void GLProgram::SetAttributeIndex(const char* name, GLuint index)
     glBindAttribLocation(this->id, index, name);
 }
 
-std::vector<std::shared_ptr<GLUniform>> GLProgram::SetUniformIndex(std::shared_ptr<GLBufferObject> ubo, const std::vector<std::string> &names, GLsizeiptr type, GLuint index)
+void GLProgram::SetUBO(std::shared_ptr<GLUniform> ubo)
 {
-    std::vector<std::shared_ptr<GLUniform>> uniforms;
-
-    if(ubo == NULL)
-    {
-        std::cerr << "[F] Buffer not found"<< std::endl;
-        return std::vector<std::shared_ptr<GLUniform>>();
-    }
-    if(ubo->Status())
-    {
-        std::cerr <<"[W] Buffer " << index <<" is not empty"<< std::endl;
-    }
-
-    GLint numUniforms;
-    GLuint block;
-    std::vector<GLuint> dBlockUniforms;
-    std::vector<GLint> size;
-
-    glGetProgramiv(this->id, GL_ACTIVE_UNIFORMS, &numUniforms);
-
-    for(int i=0; i < numUniforms; i++)
-    {
-        dBlockUniforms.push_back(i);
-    }
-
-    size.resize(numUniforms);
-    glGetActiveUniformsiv(this->id, numUniforms, dBlockUniforms.data(), GL_UNIFORM_SIZE, size.data());
-
-    if( (int)names.size() > numUniforms )
-    {
-        std::cerr << "Size of name array is outside range of active uniforms" << std::endl;
-        return std::vector<std::shared_ptr<GLUniform>>();
-    }
-    
-    block = glGetUniformBlockIndex(this->id, (ubo->getName()).c_str());
-    ubo->SetBlockIndex(block);
-    
-    for( int i = 0; i < numUniforms; i++)
-    {
-        std::shared_ptr<GLUniform> uniform(new GLUniform(names[i].c_str(), size[i]*type, index + i, size[i]*type*i));
-        uniforms.push_back(uniform);
-    }
-
-    glUniformBlockBinding(this->id, block, index);
-    glBindBufferBase(ubo->Type(), index, ubo->Buffer()); 
-
-    return uniforms;
+    GLuint block = glGetUniformBlockIndex(this->id, ubo->getName().c_str());
+    glUniformBlockBinding(this->id, block, ubo->getLocation());
 }
+
 
