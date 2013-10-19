@@ -49,10 +49,13 @@ bool GLNode::Status()
 bool GLNode::Add(std::shared_ptr<GLNode> node)
 {
     this->children.push_back(node);
+    return true;
 }
 
 bool GLNode::Remove(std::shared_ptr<GLNode> node)
 {
-    this->children.remove(node);
+    //TODO: better data structure for children? 
+    //this->children.pop_back();
+    return false;
 }
 

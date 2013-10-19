@@ -1,8 +1,13 @@
 #include "GLNode.hpp"
 #include "GLViewport.hpp"
 #include "GLProgram.hpp"
+#include "GLCamera.hpp"
 
 #include <fstream>
+#include <memory>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp> 
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -22,6 +27,10 @@ GLViewport::GLViewport(QWidget *parent) : QGLWidget(QGLFormat(QGL::HasOverlay | 
     this->setContextMenuPolicy(Qt::DefaultContextMenu);
     this->background = Qt::black;
     this->font = Qt::white;
+
+    std::shared_ptr<GLCamera> camera(new GLCamera("camera", this->initialSize));
+    this->AddToContext(camera);
+
     connect(&timer, SIGNAL(timeout()), this, SLOT(idleGL()));
 }
 
@@ -78,10 +87,6 @@ void GLViewport::idleGL()
 
 void GLViewport::keyPressEvent(QKeyEvent *event)
 {
-   if( event->key() == Qt::Key_Escape )
-   {
-      qApp->quit();
-   }
 }
 
 void GLViewport::mousePressEvent(QMouseEvent *event)
@@ -134,7 +139,7 @@ void GLViewport::ViewContext()
     std::cout<<"------------ Current Context -------------\n";
     std::map<std::string, std::shared_ptr<GLNode>>::const_iterator mi;
     for (mi = this->glData->begin(); mi != this->glData->end(); ++mi)
-          std::cout<<mi->first<<std::endl;
+        std::cout<<mi->first<<std::endl;
 }
 
 void GLViewport::quit()

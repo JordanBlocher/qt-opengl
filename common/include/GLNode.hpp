@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
-#include <list>
+#include <vector>
 
 #include "GLStruct.hpp"
 
@@ -21,10 +21,10 @@ class GLNode
 
     GLuint getId() const;
     std::string getName() const;
-
+    bool Add(std::shared_ptr<GLNode>);
+    bool Remove(std::shared_ptr<GLNode>);
+ 
 protected:
-    virtual bool Add(std::shared_ptr<GLNode>);
-    virtual bool Remove(std::shared_ptr<GLNode>);
     virtual bool Status();
 
     GLuint id;
@@ -33,7 +33,7 @@ protected:
     std::string msg;
     std::string name;
 
-    std::list<std::shared_ptr<GLNode>> children;
+    std::vector<std::shared_ptr<GLNode>> children;
 };
 
 #endif 
