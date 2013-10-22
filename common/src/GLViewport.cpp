@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -182,6 +184,7 @@ void GLViewport::ViewContext()
     for (mi = this->glData->begin(); mi != this->glData->end(); ++mi)
         std::cout<<mi->first<<std::endl;
 }
+
 
 void GLViewport::quit()
 {

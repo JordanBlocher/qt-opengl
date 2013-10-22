@@ -4,22 +4,22 @@
 #include <QWidget>
 #include <QString>
 
-class GLWindow;
+class MainWindow;
 class QObject;
 class QEvent;
 class QLabel;
 class QHBoxLayout;
 class GLViewport;
 
-class GLOverlay : public QWidget
+class OverlayWidget : public QWidget
 {
 	Q_OBJECT
 
  public: 
-	GLOverlay(QWidget *parent = 0);
-	~GLOverlay();
+	OverlayWidget(QWidget *parent = 0);
+	~OverlayWidget();
 
-	void setBackgroundWidget(GLWindow *backGroundWidget);	
+	void setBackgroundWidget(MainWindow *backGroundWidget);	
 
  public slots:
     void updatePaint(int);
@@ -35,7 +35,7 @@ class GLOverlay : public QWidget
 
 	
  private: 
-	GLWindow *window;
+	MainWindow *window;
     QHBoxLayout *layout;
     GLViewport *glView;
     QString msg;

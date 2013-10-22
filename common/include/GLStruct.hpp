@@ -4,15 +4,8 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
-
-struct Vertex
-{
-    //GLfloat
-    glm::vec3 position;
-    glm::vec2 uv;
-    glm::vec3 normal;
-    glm::vec3 color;
-};
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 
 struct Material
 {
@@ -33,6 +26,7 @@ struct Uniform
     GLuint index;
     GLuint offset;
 };
+
 
 #endif
 

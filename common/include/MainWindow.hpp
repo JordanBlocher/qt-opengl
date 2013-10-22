@@ -7,24 +7,24 @@ class QAction;
 class QLabel;
 class QMenu;
 class GLViewport;
-class GLOverlay;
+class OverlayWidget;
 class QResizeEvent;
 class QColor;
 
-class GLWindow : public QMainWindow
+class MainWindow : public QMainWindow
 {
 Q_OBJECT
 
  public:
-    GLWindow(QWidget *parent = 0, GLViewport *view = NULL);
-    ~GLWindow();
+    MainWindow(QWidget *parent = 0, GLViewport *view = NULL);
+    ~MainWindow();
 
     void resizeEvent(QResizeEvent*);
     void keyPressEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
 
     GLViewport *glView;
-    GLOverlay *overlay;
+    OverlayWidget *overlay;
 
  protected:
     virtual QMenu* createPopupMenu();

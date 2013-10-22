@@ -5,11 +5,54 @@
 # add opengl functionality
 QT += opengl
 
+# ---------- Set Me! ------------
+_BULLET_ROOT = /usr/include/bullet
+_IMAGE_MAGICK_ROOT = /usr/include/ImageMagick
+# -------------------------------
+
+isEmpty(_BULLET_ROOT) {
+    message(\"Bullet Library\" qmake value not detected...)
+            _BULLET_ROOT = $$(BULLET_ROOT)
+}
+isEmpty(_BULLET_ROOT) {
+    message(\"Bullet Library\" qmake value not detected...)
+            _BULLET_ROOT = /usr/local/include/bullet
+}
+isEmpty(_BULLET_ROOT) {
+    message(\"Bullet Library\" environment variable not detected...)
+        !build_pass:error(Please set the environment variable `BULLET_ROOT`.
+} else {
+    message(\"Bullet Library\" detected in BULLET_ROOT = \"$$_BULLET_ROOT\")
+        INCLUDEPATH += $$_BULLET_ROOT
+}
+
+isEmpty(_IMAGE_MAGICK_ROOT) {
+    message(\"Image Magick Library\" qmake value not detected...)
+            _IMAGE_MAGICK_ROOT = $$(IMAGEMAGICK_ROOT)
+}
+isEmpty(_IMAGE_MAGICK_ROOT) {
+    message(\"Image Magick Library\" qmake value not detected...)
+            _IMAGE_MAGICK_ROOT = /usr/local/include/ImageMagick
+}
+isEmpty(_IMAGE_MAGICK_ROOT) {
+    message(\"Image Magick Library\" qmake value not detected...)
+            _IMAGE_MAGICK_ROOT = /usr/include/GraphicsMagick
+}
+isEmpty(_IMAGE_MAGICK_ROOT) {
+    message(\"Image Magick Library\" environment variable not detected...)
+        !build_pass:error(Please set the environment variable `IMAGE_MAGICK_ROOT`.
+} else {
+    message(\"Image Magick Library\" detected in IMAGE_MAGICK_ROOT = \"$$_IMAGE_MAGICK_ROOT\")
+        INCLUDEPATH += $$_IMAGE_MAGICK_ROOT
+}
+
+
+
 TEMPLATE = app
 TARGET = ../bin/assignment06
 DEPENDPATH += ../src ../../common/include 
-INCLUDEPATH += ../src ../../common/include /usr/include/ImageMagick
-LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lMagickCore
+INCLUDEPATH += ../src ../../common/include 
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lMagickCore -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
 #QMAKE_CXX = g++-4.7
 QMAKE_CXXFLAGS += -std=c++0x
 

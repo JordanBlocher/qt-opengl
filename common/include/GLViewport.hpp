@@ -20,6 +20,7 @@ class QKeyEvent;
 class QContextMenuEvent;
 class QColor;
 class QPalette;
+struct Dynamics;
 
 typedef std::map<std::string, std::shared_ptr<GLNode>> sceneData;
 typedef std::shared_ptr<sceneData> dataPtr;
@@ -74,6 +75,7 @@ Q_OBJECT
     // Data Structure for Nodes
     dataPtr glData;
     // Physics Engine
+    std::shared_ptr<Dynamics> dynamics;
     
 
 };
