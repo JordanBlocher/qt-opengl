@@ -16,7 +16,7 @@ GLCamera::GLCamera(const char* name, QSize size)
     // Set the default camera angle
     this->radius  = 5.0f;
     this->azimuth = (2.0f*M_PI)/10.0f;
-    this->zenith  = 0;
+    this->zenith  = (2.0f*M_PI)/10.0f;
 
 
     this->SetProjection(glm::perspective(
@@ -71,9 +71,9 @@ void GLCamera::moveCamera(GLCamera::CamDirection direction)
             }
             break;
         case (CamDirection::Down):
-            if(zenith <= ((1.0f*M_PI)/10.0f))
+            if(zenith <= ((2.0f*M_PI)/10.0f))
             {
-                zenith = ((0.0*M_PI)/10.0f);
+                zenith = ((1.0*M_PI)/10.0f);
             }
             else
             {
@@ -99,9 +99,9 @@ void GLCamera::moveCamera(GLCamera::CamDirection direction)
             }
             break;
         case (CamDirection::Backward):
-            if(radius > 18.0f)
+            if(radius > 178.0f)
             {
-                radius = 20.0f;
+                radius = 180.0f;
             }
             else
             {
@@ -149,5 +149,5 @@ void GLCamera::updateView()
     this->view = (glm::lookAt(
                     glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
                     glm::vec3(0.0, 0.0, 0.0),    //focus point
-                    glm::vec3(upX, upY, upZ)) );  //up
+                    glm::vec3(0, 0, 1)) );  //up
 }
