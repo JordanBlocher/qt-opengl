@@ -71,7 +71,11 @@ Q_OBJECT
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
     glm::mat4 mvp;
 
+    // Data Structure for Nodes
     dataPtr glData;
+    // Physics Engine
+    
+
 };
 
 template<class T>

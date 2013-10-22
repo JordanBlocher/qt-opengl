@@ -6,7 +6,7 @@
 QT += opengl
 
 TEMPLATE = app
-TARGET = ../bin/assignment06
+TARGET = ../bin/assignment07
 DEPENDPATH += ../src ../../common/include 
 INCLUDEPATH += ../src ../../common/include /usr/include/ImageMagick
 LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lMagickCore
