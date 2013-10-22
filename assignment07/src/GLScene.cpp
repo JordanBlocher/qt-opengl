@@ -28,7 +28,6 @@
 #include <GLBufferObject.hpp>
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
-#include <GLPrint.hpp>
 #include <GLCamera.hpp>
 
 #include "GLScene.hpp"

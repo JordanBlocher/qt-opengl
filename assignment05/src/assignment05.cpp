@@ -2,8 +2,8 @@
 #include <QPalette>
 #include <QColor>
 
-#include <GLWindow.hpp>
-#include <GLOverlay.hpp>
+#include <MainWindow.hpp>
+#include <OverlayWidget.hpp>
 
 #include "GLScene.hpp"
 
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 //    palette.setColor(QPalette::ButtonText, Qt::white);
 
     GLScene *glView = new GLScene(NULL, argc, argv);
-    GLWindow *window = new GLWindow(NULL, glView);
+    MainWindow *window = new MainWindow(NULL, glView);
 
     window->show();
 

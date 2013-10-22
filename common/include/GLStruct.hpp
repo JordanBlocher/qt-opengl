@@ -19,15 +19,6 @@ struct Material
     bool texture;
 };
 
-struct Dynamics
-{
-    std::shared_ptr<btDiscreteDynamicsWorld> world;
-    std::shared_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-    std::shared_ptr<btCollisionDispatcher> dispatcher;
-    std::shared_ptr<btBroadphaseInterface> overlappingPairCache;
-    std::shared_ptr<btSequentialImpulseConstraintSolver> solver;
-};
-
 struct Uniform
 {
     std::string name;

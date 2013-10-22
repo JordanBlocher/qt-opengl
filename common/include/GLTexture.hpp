@@ -3,7 +3,7 @@
 
 #include "GLNode.hpp"
 
-#include <GraphicsMagick/Magick++.h>
+#include <Magick++.h>
 
 class GLTexture : GLNode
 {

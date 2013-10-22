@@ -58,7 +58,6 @@ Q_OBJECT
     bool AddToContext(const std::shared_ptr<GLNode>);
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
-    void SetWorld();
     
     template<class T>
     std::shared_ptr<T> Get(const char*) const;

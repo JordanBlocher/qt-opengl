@@ -1,5 +1,5 @@
-#include "GLOverlay.hpp"
-#include "GLWindow.hpp"
+#include "OverlayWidget.hpp"
+#include "MainWindow.hpp"
 #include "GLViewport.hpp"
 
 #include <QTime>
@@ -17,7 +17,7 @@
 
 #define WAIT_MS 300
 
-GLOverlay::GLOverlay(QWidget *parent) : QWidget(parent, Qt::SubWindow)
+OverlayWidget::OverlayWidget(QWidget *parent) : QWidget(parent, Qt::SubWindow)
 {
     this->glView = static_cast<GLViewport*>( parent );
     this->setWindowFlags(windowFlags() | Qt::SubWindow);
@@ -35,17 +35,17 @@ GLOverlay::GLOverlay(QWidget *parent) : QWidget(parent, Qt::SubWindow)
     this->msg = "QT OpenGL";
 }
 
-GLOverlay::~GLOverlay()
+OverlayWidget::~OverlayWidget()
 {
 }
 
-void GLOverlay::setBackgroundWidget(GLWindow *widget)
+void OverlayWidget::setBackgroundWidget(MainWindow *widget)
 {
     window = widget;
     window->installEventFilter(this);
 }
 
-QDialog* GLOverlay::createDialog(const QString &windowTitle)
+QDialog* OverlayWidget::createDialog(const QString &windowTitle)
 {
     QDialog *dialog = new QDialog(this, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
 
@@ -61,12 +61,12 @@ QDialog* GLOverlay::createDialog(const QString &windowTitle)
     return dialog;
 }
 
-void GLOverlay::show()
+void OverlayWidget::show()
 {
     QWidget::show();
 }
 
-void GLOverlay::setTransparent(bool transparent)
+void OverlayWidget::setTransparent(bool transparent)
 {
     if (transparent)
     {
@@ -81,14 +81,14 @@ void GLOverlay::setTransparent(bool transparent)
     }
 }
 
-void GLOverlay::setOpacity(const float &opacity)
+void OverlayWidget::setOpacity(const float &opacity)
 {
     QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
     this->setGraphicsEffect(opacityEffect);
     opacityEffect->setOpacity(opacity);
 }
 
-void GLOverlay::paintEvent(QPaintEvent *event)
+void OverlayWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.eraseRect(event->rect());
@@ -100,7 +100,7 @@ void GLOverlay::paintEvent(QPaintEvent *event)
 
 // Filter events from user
 // Returns false if the window is not grabbed
-bool GLOverlay::eventFilter(QObject *obj, QEvent *event)
+bool OverlayWidget::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj==window)
     {
@@ -140,7 +140,7 @@ bool GLOverlay::eventFilter(QObject *obj, QEvent *event)
     return false;
 }
 
-void GLOverlay::updatePaint(int direction)
+void OverlayWidget::updatePaint(int direction)
 {
     if( direction < 0 )
         this->msg = "CounterClockwise";
@@ -151,7 +151,7 @@ void GLOverlay::updatePaint(int direction)
     this->show();
 }
 
-void GLOverlay::changeEvent(QEvent *event)
+void OverlayWidget::changeEvent(QEvent *event)
 {
     if (event->type()==QEvent::ActivationChange)
     {

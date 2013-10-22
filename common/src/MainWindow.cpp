@@ -1,6 +1,6 @@
-#include "GLWindow.hpp"
+#include "MainWindow.hpp"
 #include "GLViewport.hpp"
-#include "GLOverlay.hpp"
+#include "OverlayWidget.hpp"
 
 #include <QtGui>
 #include <QWidget>
@@ -12,11 +12,11 @@
 #include <QPalette>
 #include <QColor>
 
-GLWindow::GLWindow(QWidget *parent, GLViewport *view)
+MainWindow::MainWindow(QWidget *parent, GLViewport *view)
 {
     this->glView = (view == NULL) ? new GLViewport(this) : view;
     setCentralWidget(glView);
-    overlay = new GLOverlay(centralWidget());
+    overlay = new OverlayWidget(centralWidget());
     overlay->setBackgroundWidget(this);
     overlay->resize(150, overlay->size().height());
 
@@ -25,11 +25,11 @@ GLWindow::GLWindow(QWidget *parent, GLViewport *view)
     connect( glView, SIGNAL(changeDirection(int)), overlay, SLOT( updatePaint(int) ) ); 
 }
 
-GLWindow::~GLWindow()
+MainWindow::~MainWindow()
 {
 }
 
-void GLWindow::createActions()
+void MainWindow::createActions()
 {
     this->exit = new QAction(tr("&Quit"), this);
     this->exit->setShortcuts(QKeySequence::Quit);
@@ -43,7 +43,7 @@ void GLWindow::createActions()
 }
 
 
-void GLWindow::createMenus()
+void MainWindow::createMenus()
 {
     this->infoLabel = new QLabel(tr("")); 
 
@@ -58,7 +58,7 @@ void GLWindow::createMenus()
 }
 
 
-QMenu* GLWindow::createPopupMenu()
+QMenu* MainWindow::createPopupMenu()
 {
     QMenu *menu = menuBar()->addMenu(tr(""));    
     menu->addAction(exit);
@@ -67,23 +67,23 @@ QMenu* GLWindow::createPopupMenu()
     return menu;
 }
 
-void GLWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::resizeEvent(QResizeEvent *event)
 {
     //glView->resizeApp(event->size().width(), event->size().height());
     //event->accept();
 }
 
-void GLWindow::keyPressEvent(QKeyEvent *event)
+void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     //glView->keyPressed(event);
     //event->accept();
 }
 
-void GLWindow::mousePressEvent(QMouseEvent *event)
+void MainWindow::mousePressEvent(QMouseEvent *event)
 {
 }
 
-void GLWindow::aboutCallback()
+void MainWindow::aboutCallback()
 {
     this->infoLabel->setText(tr("<b>Help|About</b>")); 
     QMessageBox::about(this, tr("Help"),
@@ -92,10 +92,10 @@ void GLWindow::aboutCallback()
     "use the space bar to toggle rotation."));
 }
 
-void GLWindow::aboutQtCallback()
+void MainWindow::aboutQtCallback()
 {
     this->infoLabel->setText(tr("<b>Help|About Qt</b>"));
     QMessageBox::about(this, tr("About Qt"),
-    tr("GLWindow \nQt Version 4.8.3"));
+    tr("MainWindow \nQt Version 4.8.3"));
 
 }
