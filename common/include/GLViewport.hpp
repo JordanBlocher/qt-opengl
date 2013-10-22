@@ -57,6 +57,7 @@ Q_OBJECT
     bool AddToContext(const std::shared_ptr<GLNode>);
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
+    void SetDynamics();
     
     template<class T>
     std::shared_ptr<T> Get(const char*) const;
@@ -74,6 +75,7 @@ Q_OBJECT
     // Data Structure for Nodes
     dataPtr glData;
     // Physics Engine
+    std::shared_ptr<Dynamics> dynamics;
     
 
 };

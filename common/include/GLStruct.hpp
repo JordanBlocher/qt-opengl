@@ -4,15 +4,7 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
-
-struct Vertex
-{
-    //GLfloat
-    glm::vec3 position;
-    glm::vec2 uv;
-    glm::vec3 normal;
-    glm::vec3 color;
-};
+#include <btBulletDynamicsCommon.h>
 
 struct Material
 {
@@ -26,12 +18,14 @@ struct Material
     bool texture;
 };
 
-struct Uniform
+struct Dynamics
 {
-    std::string name;
-    GLuint size;
-    GLuint index;
-    GLuint offset;
+    std::shared_ptr<btDiscreteDynamicsWorld> world;
+    std::shared_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
+    std::shared_ptr<btCollisionDispatcher> dispatcher;
+    std::shared_ptr<btBroadphaseInterface> overlappingPairCache;
+    std::shared_ptr<btSequentialImpulseConstraintSolver> solver;
+
 };
 
 #endif
