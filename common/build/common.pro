@@ -27,8 +27,8 @@ isEmpty(_BOOST_ROOT) {
 TEMPLATE = lib
 TARGET = ../lib/qglcommon
 DEPENDPATH += ../include ../src
-INCLUDEPATH += ../include /usr/include/ImageMagick /usr/local/include/bullet
-LIBS += -lGLEW -lassimp -lMagick++ -lMagickCore -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
+INCLUDEPATH += ../include /usr/local/lib /usr/include/GraphicsMagick /usr/include/bullet
+LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
 VERSION = 1.0
 QMAKE_CXXFLAGS += -std=c++0x -fopenmp
 #QMAKE_CXX = gcc-4.7

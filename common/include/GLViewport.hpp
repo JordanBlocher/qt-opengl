@@ -20,6 +20,7 @@ class QKeyEvent;
 class QContextMenuEvent;
 class QColor;
 class QPalette;
+struct Dynamics;
 
 typedef std::map<std::string, std::shared_ptr<GLNode>> sceneData;
 typedef std::shared_ptr<sceneData> dataPtr;
@@ -57,7 +58,7 @@ Q_OBJECT
     bool AddToContext(const std::shared_ptr<GLNode>);
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
-    void SetDynamics();
+    void SetWorld();
     
     template<class T>
     std::shared_ptr<T> Get(const char*) const;

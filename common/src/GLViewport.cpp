@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -146,13 +148,18 @@ void GLViewport::ViewContext()
         std::cout<<mi->first<<std::endl;
 }
 
-void GLViewport::SetDynamics()
+void GLViewport::SetWorld()
 {
-    this->dynamics->collisionConfiguration = std::shared_ptr<btDefaultCollisionConfiguration(new btDefaultCollisionConfiguration());
-    this->dynamics->dispatcher = std::shared_ptr<btCollisionDispatcher>(new btCollisionDispatcher(collisionConfiguration));
+    this->dynamics = std::shared_ptr<Dynamics>(new Dynamics());
+    this->dynamics->collisionConfiguration = std::shared_ptr<btDefaultCollisionConfiguration>(new btDefaultCollisionConfiguration());
+    this->dynamics->dispatcher = std::shared_ptr<btCollisionDispatcher>(new btCollisionDispatcher(this->dynamics->collisionConfiguration.get()));
     this->dynamics->overlappingPairCache = std::shared_ptr<btDbvtBroadphase>(new btDbvtBroadphase());
-    this->dynamics->solver = std::shared_ptr<btDbvtBroadphase>(new btSequentialImpulseConstraintSolver);
-    this->dynamics->world = std::shared_ptr<btDiscreteDynamicsWorld>(new btDiscreteDynamicsWorld( dispatcher, overlappingPairCache, solver, collisionConfiguration));
+    this->dynamics->solver = std::shared_ptr<btSequentialImpulseConstraintSolver>(new btSequentialImpulseConstraintSolver());
+   this->dynamics->world = std::shared_ptr<btDiscreteDynamicsWorld>(
+			    new btDiscreteDynamicsWorld( this->dynamics->dispatcher.get(), 
+						         this->dynamics->overlappingPairCache.get(),
+							 this->dynamics->solver.get(),
+							 this->dynamics->collisionConfiguration.get()));
     this->dynamics->world->setGravity(btVector3(0,-10,0));
 }
 

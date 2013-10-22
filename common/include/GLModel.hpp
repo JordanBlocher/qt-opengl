@@ -8,7 +8,7 @@
 #include <map>
 #include <assimp/scene.h>
 #include <climits>
-#include <ImageMagick/Magick++.h>
+#include <GraphicsMagick/Magick++.h>
 
 #include "GLNode.hpp"
 

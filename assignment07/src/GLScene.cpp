@@ -20,10 +20,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
 
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
 #include <GLBufferObject.hpp>
-#include <GLTransform.hpp>
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
 #include <GLPrint.hpp>

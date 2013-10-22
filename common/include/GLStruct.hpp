@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 
 struct Material
 {
@@ -25,8 +26,16 @@ struct Dynamics
     std::shared_ptr<btCollisionDispatcher> dispatcher;
     std::shared_ptr<btBroadphaseInterface> overlappingPairCache;
     std::shared_ptr<btSequentialImpulseConstraintSolver> solver;
-
 };
+
+struct Uniform
+{
+    std::string name;
+    GLuint size;
+    GLuint index;
+    GLuint offset;
+};
+
 
 #endif
 

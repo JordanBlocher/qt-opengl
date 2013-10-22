@@ -8,8 +8,8 @@ QT += opengl
 TEMPLATE = app
 TARGET = ../bin/assignment07
 DEPENDPATH += ../src ../../common/include 
-INCLUDEPATH += ../src ../../common/include /usr/include/ImageMagick
-LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lMagickCore
+INCLUDEPATH += ../src ../../common/include /usr/local/lib /usr/include/GraphicsMagick /usr/include/bullet
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletDynamics -lBulletSoftBody -lBulletCollision -lLinearMath
 #QMAKE_CXX = g++-4.7
 QMAKE_CXXFLAGS += -std=c++0x
 
