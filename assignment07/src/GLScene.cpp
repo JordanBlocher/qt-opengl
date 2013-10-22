@@ -23,7 +23,6 @@
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
 #include <GLBufferObject.hpp>
-#include <GLTransform.hpp>
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
 #include <GLPrint.hpp>
@@ -44,11 +43,7 @@ GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), 
         this->models.push_back(argv[i]);
         ++i;
     }
-    this->setContextMenuPolicy(Qt::DefaultContextMenu);    
-
-    std::shared_ptr<GLCamera> camera(new GLCamera("camera", this->initialSize));
-    this->AddToContext(camera);
-
+    this->setContextMenuPolicy(Qt::DefaultContextMenu);   
 
 }
 
@@ -190,33 +185,8 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
     shared_ptr<GLModel> model = this->Get<GLModel>("model");
 
+    // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
-
-      if( (event->key() == Qt::Key_Right))
-    {
-        camera->SetView(glm::rotate( camera->View() * glm::mat4(1.0f), 15.0f, glm::vec3(0.0, 1.0, 0.0)) );
-    }
-    else if( (event->key() == Qt::Key_Left))
-    {
-        camera->SetView(glm::rotate( camera->View()  * glm::mat4(1.0f), -15.0f, glm::vec3(0.0, 1.0, 0.0)) );
-    }
-    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Up)
-    {
-        camera->SetView( glm::scale(glm::mat4(1.0f), glm::vec3(1.25, 1.25, 1.25)) * model->Matrix());
-    }
-    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Down)
-    {
-        camera->SetView( glm::scale(glm::mat4(1.0f), glm::vec3(1.0/1.25, 1.0/1.25, 1.0/1.25)) * model->Matrix());
-    }
-    else if( (event->key() == Qt::Key_Up))
-    {
-        camera->SetView( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -1.0, 4.0)) * camera->View());
-    }
-    else if( (event->key() == Qt::Key_Down))
-    {
-        camera->SetView( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 1.0, -4.0)) * camera->View());
-    }
-        GLViewport::keyPressEvent(event);
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)

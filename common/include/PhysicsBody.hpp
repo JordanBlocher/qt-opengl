@@ -1,6 +1,7 @@
 #ifndef PHYSICSBODY_H
 #define PHYSICSBODY_H
 
+/*
 #include "PhysicsBody.hpp"
 
 class PhysicsNode : public PhysicsBody
@@ -14,6 +15,6 @@ class PhysicsNode : public PhysicsBody
 protected:
 
 };
-
+*/
 #endif 
 
