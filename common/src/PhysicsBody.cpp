@@ -63,7 +63,6 @@ void PhysicsBody::SetMotionState(const glm::vec3 &transform)
 
 // Set Physics Constraints 6DOF
 void PhysicsBody::SetConstraints(const glm::vec3 &origin, const glm::vec3 &linearLowerLimit, const glm::vec3 &linearUpperLimit, const glm::vec3 &angularLowerLimit, const glm::vec3 &angularUpperLimit)
->>>>>>> 5c3e4d1b92783b459c9c6a3db45eaebc9660b879
 {
    this->rigidBody->setActivationState(DISABLE_DEACTIVATION);
    this->rigidBody->setLinearFactor(btVector3(1,0,1));
