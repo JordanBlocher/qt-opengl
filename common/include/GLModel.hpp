@@ -12,7 +12,6 @@
 
 #include "GLNode.hpp"
 
-enum MODEL {CUBE};
 const GLuint V_INDEX = 0;
 const GLuint NORM_INDEX = 1;
 const GLuint UV_INDEX = 2;
@@ -22,6 +21,8 @@ class GLTexture;
 
 class GLModel : public GLNode
 {
+ enum MODEL {CUBE};
+ 
  public:
     GLModel(MODEL, const char*, const GLuint);
     GLModel(const char*, const char*, const GLuint);
@@ -32,12 +33,14 @@ class GLModel : public GLNode
     void setMatrix(glm::mat4);
 
     void Draw(std::shared_ptr<GLUniform>, GLuint);
+    std::shared_ptr<std::vector<glm::vec3>> RigidBody();
 
  private:
     void Allocate();
     void AddAttributeData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
+    void CreateRigidBodyMesh();
 
     bool AddMaterials(const char*);
     std::string toString(MODEL);
@@ -53,6 +56,8 @@ class GLModel : public GLNode
     std::shared_ptr<std::vector<Material>> materials;
     std::shared_ptr<std::vector<GLTexture>> textures;
     std::vector<GLuint> mtlIndices;
+    std::shared_ptr<std::vector<glm::vec3>> rigidBody;
+
     size_t e_size;
     size_t v_size;
 

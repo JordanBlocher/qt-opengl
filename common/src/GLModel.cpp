@@ -108,6 +108,14 @@ bool GLModel::CreateVAO()
     return false;
 }
 
+void GLModel::CreateRigidBodyMesh()
+{
+    this->rigidBody = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
+    for(int i=0; i<this->positions->size(); i++)
+    {
+    }
+}
+
 void GLModel::AddAttributeData(const aiMesh* mesh, unsigned int index)
 {
     const aiVector3D zero(0.0f, 0.0f, 0.0f);

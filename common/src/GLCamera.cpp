@@ -149,5 +149,5 @@ void GLCamera::updateView()
     this->view = (glm::lookAt(
                     glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
                     glm::vec3(0.0, 0.0, 0.0),    //focus point
-                    glm::vec3(0, 0, 1)) );  //up
+                    glm::vec3(0, 1, 0)) );  //up
 }
