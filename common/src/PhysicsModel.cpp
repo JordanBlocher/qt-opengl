@@ -42,20 +42,21 @@ PhysicsModel::PhysicsModel(const char* name, std::shared_ptr<std::vector<glm::ve
     // Create triangles
     for(size_t i=0; i<numPoints - 2; i+=3)
     {
-        a0 = glm::vec3( vertices->at(i+0).x, vertices->at(i+0).y, vertices->at(i+0).z );
-        a1 = glm::vec3( vertices->at(i+1).x, vertices->at(i+1).y, vertices->at(i+1).z );
-        a2 = glm::vec3( vertices->at(i+2).x, vertices->at(i+2).y, vertices->at(i+2).z );
+        a0 = glm::vec3( vertices->at(i+0).x*3, vertices->at(i+0).y*3, vertices->at(i+0).z*3 );
+        a1 = glm::vec3( vertices->at(i+1).x*3, vertices->at(i+1).y*3, vertices->at(i+1).z*3 );
+        a2 = glm::vec3( vertices->at(i+2).x*3, vertices->at(i+2).y*3, vertices->at(i+2).z*3 );
 
         btVector3 v0(a0.x,a0.y,a0.z);
         btVector3 v1(a1.x,a1.y,a1.z);
         btVector3 v2(a2.x,a2.y,a2.z);
 
         triMesh->addTriangle(v0,v1,v2);
+
     }
 
     this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triMesh, true));
     //this->collisionShape->calculateLocalInertia( 0, btVector3(0,0,0) );
-
+    
 
     //TODO: Hardcoded defaults?
     this->SetMotionState(glm::vec3(0, 0, 0));
