@@ -128,9 +128,6 @@ void GLScene::paintGL()
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
     glm::mat4 vp = camera->Projection() * camera->View();
     
-    //Choose Model
-    shared_ptr<GLModel> model = this->Get<GLModel>("model");
-    
     //Get UBOS
     shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
     shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
@@ -139,32 +136,59 @@ void GLScene::paintGL()
     shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
     shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
-    //Bind MVP
-    Uniform position = vuniform->Get(POSITION);
-    glEnableVertexAttribArray(V_INDEX);
-    glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-    glBufferSubData( GL_UNIFORM_BUFFER,
-                     position.offset,
-                     position.size,
-                     glm::value_ptr( vp * model->Matrix() ));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    //Get Sampler
-    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+    for(int i=0; i<entities->size(); i++)
+    {
+       //Choose Model
+       std::shared_ptr<PhysicsModel> pmodel = entity->at(i)->getPhysicsModel();
+       std::shared_ptr<PhysicsModel> gmodel = entity->at(i)->getGraphicsModel();
+       glm::mat4 transform = pmodel->getTransform();
 
-    //Colors Program
-    glUseProgram(cprogram->getId());
-    model->Draw(cuniform, cprogram->getId());
-    glUseProgram(0);
+       //Bind MVP
+       Uniform position = vuniform->Get(POSITION);
+       glEnableVertexAttribArray(V_INDEX);
+       glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+       glBufferSubData( GL_UNIFORM_BUFFER,
+                        position.offset,
+                        position.size,
+                        glm::value_ptr( vp * transform ));
+       glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    //Texture Program
-    glUseProgram(tprogram->getId());
-    model->Draw(tuniform, tprogram->getId());
-    glUseProgram(0);
+       //Get Sampler
+       shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+
+       //Colors Program
+       glUseProgram(cprogram->getId());
+       model->Draw(cuniform, cprogram->getId());
+       glUseProgram(0);
+
+       //Texture Program
+       glUseProgram(tprogram->getId());
+       model->Draw(tuniform, tprogram->getId());
+       glUseProgram(0);
+      
+   }
 }
 
+
 void GLScene::idleGL()
-{
+{  
+    // Timer
+    float ret;
+    time = chrono::high_resolution_clock::now();
+    ret = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
+    this-tart_time = chrono::high_resolution_clock::now();
+
+    // Get Discrete Dynamics World and update time step
+    std::ptr<std::vector<DynamicsWorld>> dynamics = this->Get<std::vector<DynamicsWorld>>("world");
+    std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->getWorld();
+    world->stepSimulation((btScalar)time);o
+
+    // Update Physics
+    for(int i=0; i<entities.size(); i++)
+    {
+    }
+
     GLViewport::updateGL();
 }
 

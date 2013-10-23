@@ -25,3 +25,8 @@ void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body, std::share
     this->world->addConstraint(constraint.get());
 }
 
+std::shared_ptr<btDiscreteDynamicsWorld> DynamicsWorld::GetWorld()
+{
+   return this->world;
+}
+

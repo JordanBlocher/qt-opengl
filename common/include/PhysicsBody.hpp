@@ -18,6 +18,9 @@ class PhysicsBody : public GLNode
 
     void SetMotionState(const glm::vec3&);
     void SetConstraints(const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&);
+    glm::mat4 GetTransform();
+    glm::vec3 GetOrigin();
+    void Reset();
 
 protected:
     btScalar mass;

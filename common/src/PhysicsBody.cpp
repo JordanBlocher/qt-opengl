@@ -14,6 +14,12 @@ PhysicsBody::PhysicsBody(const char* name, float mass, float friction, float res
             this->SetMotionState(glm::vec3(0, 0, 0));
             this->SetConstraints(glm::vec3(0.0,0.01,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
             break;
+        case(BOX):
+            this->collisionShape = std::shared_ptr<btBoxShape>( new btBoxShape(btVector3(btScalar(size.x),btScalar(0.1),btScalar(size.x))) );
+            this->SetMotionState(glm::vec3(0, 0, 0));
+            this->SetConstraints(glm::vec3(0.0,0.01,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+            break;
+      
         default:
             std::cerr<< "[E] Rigid Body type not found."<<std::endl;
             return;
@@ -50,7 +56,8 @@ PhysicsBody::PhysicsBody(const char* name, const glm::vec3& size, const glm::vec
 // Set Initial Motion State
 void PhysicsBody::SetMotionState(const glm::vec3 &transform)
 {
-    this->motionState = std::shared_ptr<btDefaultMotionState>( new btDefaultMotionState( btTransform(btQuaternion(0,0,0,1), btVector3( transform.x, transform.y, transform.z))) );
+    // Set to default bullet Motion state (translation on z-axis)
+    this->motionState = std::shared_ptr<btDefaultMotionState>( new btDefaultMotionState( btTransform(btQuaternion(0,0,1,0), btVector3( transform.x, transform.y, transform.z))) );
 
    this->collisionShape->calculateLocalInertia( this->mass, this->inertia );
 
@@ -71,6 +78,7 @@ void PhysicsBody::SetConstraints(const glm::vec3 &origin, const glm::vec3 &linea
    btTransform frame = btTransform::getIdentity();
    frame.setOrigin(btVector3(origin.x, origin.y, origin.z));
 
+   // Generic 6DOF (used as a plane) Constraint
    this->planeConstraint = std::shared_ptr<btGeneric6DofConstraint>(new btGeneric6DofConstraint( *(this->rigidBody), frame, true ));
 
    // lowerlimit = upperlimit --> axis locked
@@ -84,6 +92,28 @@ void PhysicsBody::SetConstraints(const glm::vec3 &origin, const glm::vec3 &linea
    // lock the X, Z, rotations
    this->planeConstraint->setAngularLowerLimit( btVector3(angularLowerLimit.x, angularLowerLimit.y, angularLowerLimit.z) );
    this->planeConstraint->setAngularUpperLimit( btVector3(angularUpperLimit.x, angularUpperLimit.y, angularUpperLimit.z) );
+}
+
+void PhysicsBody::Reset()
+{
+   this->SetMotionState(glm::vec3(0, 0, 0));
+}
+
+// Returns the transformation matrix of the body
+glm::mat4 PhysicsBody::GetTransform()
+{
+   this->motionState->getWorldTransform(this->transform);
+   btMatrix3x3 matrix = this->transform.getBasis();
+   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0, matrix[1][0], matrix[1][1], matrix[1][2], 0, matrix[2][0], matrix[2][1], matrix[2][2], 0, 0, 0, 0, 1);
+   return ret;
+}
+
+// Returns the centroid
+glm::vec3 PhysicsBody::GetOrigin()
+{
+   btVector3 origin = this->transform.getOrigin();
+   glm::vec3 ret(origin.getX(), origin.getY(), origin.getZ());
+   return ret;
 }
 
 PhysicsBody::~PhysicsBody()

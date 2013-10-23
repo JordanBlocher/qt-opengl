@@ -14,6 +14,7 @@ class DynamicsWorld : public GLNode
     ~DynamicsWorld();
 
     void AddPhysicsBody(std::shared_ptr<btRigidBody>, std::shared_ptr<btGeneric6DofConstraint>);
+    std::shared_ptr<btDiscreteDynamicsWorld> GetWorld();
 
 protected:
 
