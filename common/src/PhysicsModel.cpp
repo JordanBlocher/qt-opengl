@@ -1,4 +1,5 @@
 #include "PhysicsModel.hpp"
+#include "GLModel.hpp"
 
 PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float restitution, const glm::vec3 &size, const glm::vec3 &center, BODY type) : GLNode(name)
 {
@@ -34,16 +35,35 @@ PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float r
 }
 
 // Constructor for custom convex triangle mesh
-PhysicsModel::PhysicsModel(const char* name, const std::vector<glm::vec3> &positions, size_t index) : GLNode(name), mass(0), friction(0.1f), restitution(0.3)
+PhysicsModel::PhysicsModel(const char* name, std::shared_ptr<GLModel> model) : GLNode(name), mass(0), friction(0.1f), restitution(0.3)
 {
 
-    //this->triangles->at(index) = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
+	this->triangles = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
+    this->triangles->preallocateIndices(model->Size());
+    this->triangles->preallocateVertices(model->Size());	
 
+    for(int i=0; i<model->Size(); i++)
+    {
+        this->CreateStaticModel(model->Positions(i));
+    }
+
+    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triangles.get(), true, true));
+
+    //TODO: Hardcoded defaults?
+    this->SetMotionState(glm::vec3(0, 0, 0));
+}
+
+// Creates a different static model for each mesh in the model
+void PhysicsModel::CreateStaticModel(const std::vector<glm::vec3> &positions)
+{		
+   // this->triangles->at(index) = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
+  //  this->triangles->at(index)->preallocateIndices(positions.size()*3);
+   // this->triangles->at(index)->preallocateVertices(positions.size());
+	
     glm::vec3 a0, a1, a2;
     // Create triangles
     for(size_t i=0; i<positions.size() - 2 ; i+=3)
     {
-
         a0 = glm::vec3( positions.at(i+0).x, positions.at(i+0).y, positions.at(i+0).z );
         a1 = glm::vec3( positions.at(i+1).x, positions.at(i+1).y, positions.at(i+1).z );
         a2 = glm::vec3( positions.at(i+2).x, positions.at(i+2).y, positions.at(i+2).z );
@@ -52,13 +72,9 @@ PhysicsModel::PhysicsModel(const char* name, const std::vector<glm::vec3> &posit
         btVector3 v1(a1.x,a1.y,a1.z);
         btVector3 v2(a2.x,a2.y,a2.z);
 
-        triangles->at(index).addTriangle(v0,v1,v2,false);
+        triangles->addTriangle(v0,v1,v2,false);
     }
 
-    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(&triangles->at(index), true, true));
-
-    //TODO: Hardcoded defaults?
-    this->SetMotionState(glm::vec3(0, 0, 0));
 }
 
 // Set Initial Motion State
@@ -108,6 +124,7 @@ void PhysicsModel::Reset()
 }
 
 // Returns the transformation matrix of the body
+
 //glm::mat4 PhysicsModel::GetRotation()
 glm::mat4 PhysicsModel::GetTransform()
 {
@@ -118,13 +135,11 @@ glm::mat4 PhysicsModel::GetTransform()
                  matrix[2][0], matrix[2][1], matrix[2][2], 0,
                  0, 0, 0, 1);
    */
-   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0, matrix[1][0], matrix[1][1], matrix[1][2], 0, matrix[2][0], matrix[2][1], matrix[2][2], 0, this->transform.getOrigin().getX(), this->transform.getOrigin().getY(), this->transform.getOrigin().getZ(), 1);
+   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0,
+             matrix[1][0], matrix[1][1], matrix[1][2], 0,
+             matrix[2][0], matrix[2][1], matrix[2][2], 0,
+             this->transform.getOrigin().getX(), this->transform.getOrigin().getY(), this->transform.getOrigin().getZ(), 1);
                  return ret;
-}
-
-void PhysicsModel::SetTransform(glm::vec4 q, glm::vec3 axis)
-{
-    this->rigidBody->getMotionState()->setWorldTransform(btTransform(btQuaternion(q.x, q.y, q.z, q.w), btVector3(axis.z, axis.y, axis.z)));
 }
 
 void PhysicsModel::SetTransform(btTransform newTransform)

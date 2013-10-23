@@ -108,21 +108,6 @@ bool GLModel::CreateVAO()
     return false;
 }
 
-void GLModel::CreateRigidBodyMesh()
-{
-    this->rigidBody = std::shared_ptr<std::vector<glm::vec3>>(new std::vector<glm::vec3>);
-    for(size_t i=0; i<this->positions->size(); i++)
-    {
-        this->rigidBody->insert(this->rigidBody->end(), this->positions->at(i).begin(), this->positions->at(i).end());
-    }
-}
-
-std::shared_ptr<std::vector<glm::vec3>> GLModel::RigidBody()
-{
-    if( this->rigidBody == NULL)
-        this->CreateRigidBodyMesh();
-    return this->rigidBody;
-}
 
 void GLModel::AddAttributeData(const aiMesh* mesh, unsigned int index)
 {
@@ -343,6 +328,21 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
+}
+
+size_t GLModel::Size()
+{
+    return this->positions->size();
+}
+
+const std::vector<glm::vec3>& GLModel::Positions(size_t index)
+{
+    return this->positions->at(index);
+}
+
+const std::vector<GLuint>& GLModel::Faces(size_t index)
+{
+    return this->faces->at(index);
 }
 
 void GLModel::setMatrix(glm::mat4 m)

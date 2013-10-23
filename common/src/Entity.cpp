@@ -26,3 +26,4 @@ std::shared_ptr<PhysicsModel> Entity::getPhysicsModel()
 {
 	return physModel;
 }
+

@@ -7,6 +7,7 @@
 class Entity : public GLNode
 {
 public:
+
 	Entity(std::shared_ptr<GLModel>,std::shared_ptr<PhysicsModel>);
 	void setGraphicsModel(std::shared_ptr<GLModel>);
 	void setPhysicsModel(std::shared_ptr<PhysicsModel>);
@@ -16,7 +17,7 @@ public:
 protected:
 	std::shared_ptr<GLModel> gfxModel;
 	std::shared_ptr<PhysicsModel> physModel;
-
+    
 };
 
 #endif 

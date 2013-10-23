@@ -33,14 +33,15 @@ class GLModel : public GLNode
     void setMatrix(glm::mat4);
 
     void Draw(std::shared_ptr<GLUniform>, GLuint);
-    std::shared_ptr<std::vector<glm::vec3>> RigidBody();
+    const std::vector<glm::vec3>& Positions(size_t);
+    const std::vector<GLuint>& Faces(size_t);
+    size_t Size();
 
  private:
     void Allocate();
     void AddAttributeData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
-    void CreateRigidBodyMesh();
 
     bool AddMaterials(const char*);
     std::string toString(MODEL);
@@ -56,7 +57,6 @@ class GLModel : public GLNode
     std::shared_ptr<std::vector<Material>> materials;
     std::shared_ptr<std::vector<GLTexture>> textures;
     std::vector<GLuint> mtlIndices;
-    std::shared_ptr<std::vector<glm::vec3>> rigidBody;
 
     size_t e_size;
     size_t v_size;
