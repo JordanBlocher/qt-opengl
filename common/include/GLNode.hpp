@@ -21,8 +21,6 @@ class GLNode
 
     GLuint getId() const;
     std::string getName() const;
-    bool Add(std::shared_ptr<GLNode>);
-    bool Remove(std::shared_ptr<GLNode>);
  
 protected:
     virtual bool Status();
@@ -32,8 +30,6 @@ protected:
     GLint status;
     std::string msg;
     std::string name;
-
-    std::vector<std::shared_ptr<GLNode>> children;
 };
 
 #endif 

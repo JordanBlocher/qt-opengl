@@ -47,30 +47,35 @@ GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), 
     }
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
 
+    // Initialize Entity list
+    entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
+
 }
 
 void GLScene::initializeGL()
 {
- 
+
     GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     string filename;
-
-    //Models
-    shared_ptr<GLModel> model(new GLModel(this->models.at(0).c_str(), "model", NUM_ATTRIBUTES));
-
-    if( model->CreateVAO() )
-        this->AddToContext(model);
-
-    for(size_t i=1; i<models.size(); i++)
+    // Create all of the entities from the names of the models
+    for(size_t i=0; i<models.size(); i++)
     {
-        shared_ptr<GLModel> child(new GLModel(this->models.at(i).c_str(), "child", NUM_ATTRIBUTES));
-       model->Add(child);
-       child->CreateVAO();
+        // Create the new entity
+        std::shared_ptr<GLModel> tempGfxModel(new GLModel(this->models.at(0).c_str(), "model", NUM_ATTRIBUTES));
+        std::shared_ptr<PhysicsBody> tempPhysModel(new PhysicsBody(this->models.at(0).c_str(),0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsBody::BODY::CYLINDER));
+        std::shared_ptr<Entity> ent(new Entity(tempGfxModel,tempPhysModel));
+
+        // Create the VAO for the new Graphics Model
+        ent->getGraphicsModel()->CreateVAO();
+
+        // Add the new Ent to the vector
+        entities->push_back(ent);
     }
+
 
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
@@ -128,7 +133,8 @@ void GLScene::paintGL()
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
     glm::mat4 vp = camera->Projection() * camera->View();
     
-    //Choose Model
+    // Iterate and draw over all of the models
+    shared_ptr<PhysicsBody> physicsModels = this->Get<PhysicsBody>("physicsModel");
     shared_ptr<GLModel> model = this->Get<GLModel>("model");
     
     //Get UBOS
@@ -189,6 +195,41 @@ void GLScene::keyPressEvent(QKeyEvent *event)
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
+
+    // Act on the key press event
+    switch(event->key())
+    {
+        case (Qt::Key_Right):
+            // Move RIGHT
+            camera->moveCamera(GLCamera::CamDirection::Right);
+            break;    
+        case (Qt::Key_Left):
+            // Move LEFT
+            camera->moveCamera(GLCamera::CamDirection::Left);
+            break;
+        case (Qt::Key_Up):
+            // Forward if SHIFT, UP otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera->moveCamera(GLCamera::CamDirection::Forward);
+            }
+            else
+            {
+                camera->moveCamera(GLCamera::CamDirection::Up);
+            }
+            break;
+        case (Qt::Key_Down):
+            // Backward if SHIFT, DOWN otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera->moveCamera(GLCamera::CamDirection::Backward);
+            }
+            else
+            {
+                camera->moveCamera(GLCamera::CamDirection::Down);
+            }
+            break;
+    }
+
+
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)

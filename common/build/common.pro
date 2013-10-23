@@ -67,7 +67,7 @@ isEmpty(_IMAGE_MAGICK_ROOT) {
 
 TEMPLATE = lib
 TARGET = ../lib/qglcommon
-DEPENDPATH += ../include ../src
+DEPENDPATH += ../include/* ../src/*
 INCLUDEPATH += ../include
 LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
 VERSION = 1.0

@@ -6,12 +6,12 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
-enum BODY { CYLINDER, BOX, SPHERE };
 
 class PhysicsBody : public GLNode
 {
  
  public:
+     enum BODY { CYLINDER, BOX, SPHERE };
     PhysicsBody(const char*, float, float, float, const glm::vec3&, const glm::vec3&, BODY);
     PhysicsBody(const char*, const glm::vec3&, const glm::vec3&, std::vector<glm::vec4>, const size_t);
     ~PhysicsBody();
