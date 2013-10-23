@@ -142,7 +142,7 @@ void GLScene::initializeGL()
         staticPhysModel->GetRigidBody()->setCollisionFlags(staticPhysModel->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
         staticPhysModel->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
         // WILL BE RE-ENABLED VERY SOON, ENLARGING THE MESH. 
-        world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
+        //world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
 
         std::shared_ptr<Entity> ent10(new Entity(staticModel,staticPhysModel));
 
