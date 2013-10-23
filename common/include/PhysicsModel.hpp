@@ -11,15 +11,18 @@ class PhysicsModel : public GLNode
 {
  
  public:
-    PhysicsModel(const char*, float, float, float, const glm::vec3&, const glm::vec3&);
+    enum BODY { CYLINDER, BOX, SPHERE };
+    PhysicsModel(const char*, float, float, float, const glm::vec3&, const glm::vec3&, BODY);
     PhysicsModel(const char*, const std::vector<glm::vec3>&, size_t);
     ~PhysicsModel();
 
     void SetMotionState(const glm::vec3&);
     void SetConstraints(const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&);
-    glm::mat4 GetRotation();
+    //glm::mat4 GetRotation();
+    glm::mat4 GetTransform();
     void SetTransform(glm::vec4, glm::vec3);
     glm::mat4 GetTranslation();
+    void SetTransform(btTransform newTranform);
     void Reset();
     std::shared_ptr<btRigidBody> GetRigidBody();
     std::shared_ptr<btGeneric6DofConstraint> GetConstraint();
@@ -37,7 +40,7 @@ protected:
 
     std::shared_ptr<btDefaultMotionState> motionState;
    
-    std::shared_ptr<std::vector<std::shared_ptr<btTriangleMesh>>> triangles;
+    std::shared_ptr<std::vector<btTriangleMesh>> triangles;
     btTransform transform;
 
     glm::vec3 pos_towards;
