@@ -79,8 +79,15 @@ void GLViewport::resizeApp(int width, int height)
 
 void GLViewport::resizeGL(int width, int height)
 {
+    // Get access to the camera
+    std::shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
+
+    // Update the size of the viewport and store that
     glViewport( 0, 0, width, height);
     initialSize = QSize(width, height);
+
+    // Update the camera's projection to maintain the aspect ratio
+    camera->SetProjection(glm::perspective(45.0f, float(width)/float(height), 0.01f, 100.0f));
 }
 
 void GLViewport::idleGL()
@@ -92,41 +99,12 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
 {
     std::shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
 
-
     // Act on the key press event
     switch(event->key())
     {
         case (Qt::Key_Escape):
             // Close the qApp
             qApp->quit();
-            break;
-        case (Qt::Key_Right):
-            // Move RIGHT
-            camera->moveCamera(GLCamera::CamDirection::Right);
-            break;    
-        case (Qt::Key_Left):
-            // Move LEFT
-            camera->moveCamera(GLCamera::CamDirection::Left);
-            break;
-        case (Qt::Key_Up):
-            // Forward if SHIFT, UP otherwise
-            if(event->modifiers() & Qt::ShiftModifier){
-                camera->moveCamera(GLCamera::CamDirection::Forward);
-            }
-            else
-            {
-                camera->moveCamera(GLCamera::CamDirection::Up);
-            }
-            break;
-        case (Qt::Key_Down):
-            // Backward if SHIFT, DOWN otherwise
-            if(event->modifiers() & Qt::ShiftModifier){
-                camera->moveCamera(GLCamera::CamDirection::Backward);
-            }
-            else
-            {
-                camera->moveCamera(GLCamera::CamDirection::Down);
-            }
             break;
     } 
 

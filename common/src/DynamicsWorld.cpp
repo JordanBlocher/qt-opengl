@@ -7,11 +7,11 @@ DynamicsWorld::DynamicsWorld(const char* name) : GLNode(name)
     this->dispatcher = std::shared_ptr<btCollisionDispatcher>(new btCollisionDispatcher(this->collisionConfiguration.get()));
     this->overlappingPairCache = std::shared_ptr<btDbvtBroadphase>(new btDbvtBroadphase());
     this->solver = std::shared_ptr<btSequentialImpulseConstraintSolver>(new btSequentialImpulseConstraintSolver());
-   this->world = std::shared_ptr<btDiscreteDynamicsWorld>(
-		               	     new btDiscreteDynamicsWorld( this->dispatcher.get(), 
-					         this->overlappingPairCache.get(),
-							 this->solver.get(),
-							 this->collisionConfiguration.get()));
+    this->world = std::shared_ptr<btDiscreteDynamicsWorld>(
+    	               	     new btDiscreteDynamicsWorld( this->dispatcher.get(), 
+    				         this->overlappingPairCache.get(),
+    						 this->solver.get(),
+    						 this->collisionConfiguration.get()));
     this->world->setGravity(btVector3(0,-10,0));
 }
 

@@ -1,10 +1,13 @@
 #ifndef GLMAIN_H
 #define GLMAIN_H
 
+#include <Entity.hpp>
+
 #include <GLViewport.hpp>
 
 #include <chrono>
 #include <vector>
+
 
 class QKeyEvent;
 class QContextMenuEvent;
@@ -35,6 +38,7 @@ class GLScene : public GLViewport
     std::vector<std::string> models;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
+    std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
 
 };
 

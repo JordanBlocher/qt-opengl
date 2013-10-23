@@ -29,6 +29,9 @@
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
 #include <GLCamera.hpp>
+#include <PhysicsModel.hpp>
+#include <DynamicsWorld.hpp>
+#include <Entity.hpp>
 
 #include "GLScene.hpp"
 
@@ -47,30 +50,39 @@ GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), 
     }
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
 
+    // Initialize Entity list
+    entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
+
+    // Initialize Dynamics World
+    std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
+    this->AddToContext(world);
+
 }
 
 void GLScene::initializeGL()
 {
- 
+
     GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     string filename;
-
-    //Models
-    shared_ptr<GLModel> model(new GLModel(this->models.at(0).c_str(), "model", NUM_ATTRIBUTES));
-
-    if( model->CreateVAO() )
-        this->AddToContext(model);
-
-    for(size_t i=1; i<models.size(); i++)
+    // Create all of the entities from the names of the models
+    for(size_t i=0; i<models.size(); i++)
     {
-        shared_ptr<GLModel> child(new GLModel(this->models.at(i).c_str(), "child", NUM_ATTRIBUTES));
-       model->Add(child);
-       child->CreateVAO();
+        // Create the new entity
+        std::shared_ptr<GLModel> tempGfxModel(new GLModel(this->models.at(0).c_str(), "model", NUM_ATTRIBUTES));
+        std::shared_ptr<PhysicsModel> tempPhysModel(new PhysicsModel(this->models.at(0).c_str(),0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        std::shared_ptr<Entity> ent(new Entity(tempGfxModel,tempPhysModel));
+
+        // Create the VAO for the new Graphics Model
+        ent->getGraphicsModel()->CreateVAO();
+
+        // Add the new Ent to the vector
+        entities->push_back(ent);
     }
+
 
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
@@ -136,13 +148,13 @@ void GLScene::paintGL()
     shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
     shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
-
+    // Iterate and draw over all of the models
     for(int i=0; i<entities->size(); i++)
     {
        //Choose Model
-       std::shared_ptr<PhysicsModel> pmodel = entity->at(i)->getPhysicsModel();
-       std::shared_ptr<PhysicsModel> gmodel = entity->at(i)->getGraphicsModel();
-       glm::mat4 transform = pmodel->getTransform();
+       std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->getPhysicsModel();
+       std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
+       glm::mat4 transform = pmodel->GetTransform();
 
        //Bind MVP
        Uniform position = vuniform->Get(POSITION);
@@ -159,12 +171,12 @@ void GLScene::paintGL()
 
        //Colors Program
        glUseProgram(cprogram->getId());
-       model->Draw(cuniform, cprogram->getId());
+       gmodel->Draw(cuniform, cprogram->getId());
        glUseProgram(0);
 
        //Texture Program
        glUseProgram(tprogram->getId());
-       model->Draw(tuniform, tprogram->getId());
+       gmodel->Draw(tuniform, tprogram->getId());
        glUseProgram(0);
       
    }
@@ -174,18 +186,18 @@ void GLScene::paintGL()
 void GLScene::idleGL()
 {  
     // Timer
-    float ret;
+    float now;
     time = chrono::high_resolution_clock::now();
-    ret = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
-    this-tart_time = chrono::high_resolution_clock::now();
+    now = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
+    this->start_time = chrono::high_resolution_clock::now();
 
     // Get Discrete Dynamics World and update time step
-    std::ptr<std::vector<DynamicsWorld>> dynamics = this->Get<std::vector<DynamicsWorld>>("world");
-    std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->getWorld();
-    world->stepSimulation((btScalar)time);o
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
+    world->stepSimulation((btScalar)now);
 
     // Update Physics
-    for(int i=0; i<entities.size(); i++)
+    for(int i=0; i<entities->size(); i++)
     {
     }
 
@@ -209,10 +221,44 @@ float GLScene::getDT()
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
-    shared_ptr<GLModel> model = this->Get<GLModel>("model");
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
+
+    // Act on the key press event
+    switch(event->key())
+    {
+        case (Qt::Key_Right):
+            // Move RIGHT
+            camera->moveCamera(GLCamera::CamDirection::Right);
+            break;    
+        case (Qt::Key_Left):
+            // Move LEFT
+            camera->moveCamera(GLCamera::CamDirection::Left);
+            break;
+        case (Qt::Key_Up):
+            // Forward if SHIFT, UP otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera->moveCamera(GLCamera::CamDirection::Forward);
+            }
+            else
+            {
+                camera->moveCamera(GLCamera::CamDirection::Up);
+            }
+            break;
+        case (Qt::Key_Down):
+            // Backward if SHIFT, DOWN otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera->moveCamera(GLCamera::CamDirection::Backward);
+            }
+            else
+            {
+                camera->moveCamera(GLCamera::CamDirection::Down);
+            }
+            break;
+    }
+
+
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)
