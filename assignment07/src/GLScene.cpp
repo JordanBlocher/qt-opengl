@@ -196,11 +196,6 @@ void GLScene::idleGL()
     std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
     world->stepSimulation((btScalar)now);
 
-    // Update Physics
-    for(int i=0; i<entities->size(); i++)
-    {
-    }
-
     GLViewport::updateGL();
 }
 

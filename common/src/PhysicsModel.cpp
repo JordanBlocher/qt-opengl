@@ -55,7 +55,7 @@ PhysicsModel::PhysicsModel(const char* name, const glm::vec3& size, const glm::v
 void PhysicsModel::SetMotionState(const glm::vec3 &transform)
 {
     // Set to default bullet Motion state (translation on z-axis)
-    this->motionState = std::shared_ptr<btDefaultMotionState>( new btDefaultMotionState( btTransform(btQuaternion(0,0,1,0), btVector3( transform.x, transform.y, transform.z))) );
+    this->motionState = std::shared_ptr<btDefaultMotionState>( new btDefaultMotionState( btTransform(btQuaternion(0,0,0,1), btVector3( transform.x, transform.y, transform.z))) );
 
     this->collisionShape->calculateLocalInertia( this->mass, this->inertia );
 
@@ -112,6 +112,11 @@ glm::vec3 PhysicsModel::GetOrigin()
    btVector3 origin = this->transform.getOrigin();
    glm::vec3 ret(origin.getX(), origin.getY(), origin.getZ());
    return ret;
+}
+
+std::shared_ptr<btRigidBody> PhysicsModel::GetRigidBody()
+{
+    return this->rigidBody;
 }
 
 PhysicsModel::~PhysicsModel()

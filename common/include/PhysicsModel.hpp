@@ -21,6 +21,7 @@ class PhysicsModel : public GLNode
     glm::mat4 GetTransform();
     glm::vec3 GetOrigin();
     void Reset();
+    std::shared_ptr<btRigidBody> GetRigidBody();
 
 protected:
     btScalar mass;
