@@ -44,7 +44,7 @@ using namespace std;
 GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
     this->dynamicModels = {"puck.obj"};
-    this->staticModels = {"table.obj"};
+    this->staticModels = {"walls.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     // Initialize Entity list
     entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
@@ -74,13 +74,11 @@ void GLScene::initializeGL()
         tempGfxModel->setMatrix(glm::scale(tempGfxModel->Matrix(), glm::vec3(0.2)));    
         // Create 2 dynamic Models
         std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
-        tempPhysModel1->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 5));
         world->AddPhysicsBody(tempPhysModel1->GetRigidBody(), tempPhysModel1->GetConstraint());
         std::shared_ptr<Entity> ent1(new Entity(tempGfxModel,tempPhysModel1));
         // Add the new Ent to the vector
         entities->push_back(ent1);
         std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
-        tempPhysModel2->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, -5));
         world->AddPhysicsBody(tempPhysModel2->GetRigidBody(), tempPhysModel2->GetConstraint());
         std::shared_ptr<Entity> ent2(new Entity(tempGfxModel,tempPhysModel2));
         entities->push_back(ent2);
@@ -94,13 +92,11 @@ void GLScene::initializeGL()
         // Create the VAO for the new Graphics Model
         staticModel->CreateVAO();
         // Create entity
-        std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel->RigidBody(), staticModel->RigidBody()->size()));
+        std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel->Positions(0)));
         world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
         std::shared_ptr<Entity> ent(new Entity(staticModel,staticPhysModel));
         entities->push_back(ent);
     }
-    std::shared_ptr<GLModel> gfxModel = this->entities->at(dynamicModels.size() * 2)->getGraphicsModel();
-    gfxModel->setMatrix(glm::scale(gfxModel->Matrix(), glm::vec3(3, 0.7, 6)));
 
 
     //Shaders
@@ -173,8 +169,9 @@ void GLScene::paintGL()
        //Choose Model
        std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->getPhysicsModel();
        std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
-       glm::mat4 transform = pmodel->GetTransform();
-       //std::cout<<"transform "<<transform<<endl;
+       glm::mat4 transform;
+       transform =  pmodel->GetRotation();// * pmodel->GetTranslation();
+       std::cout<<"transform "<<transform<<endl;
 
        //Bind MVP
        Uniform position = vuniform->Get(POSITION);
@@ -270,6 +267,30 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             {
                 camera->moveCamera(GLCamera::CamDirection::Down);
             }
+            break;            
+       case (Qt::Key_W):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            break;
+        case (Qt::Key_S):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            break;
+        case (Qt::Key_A):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            break;
+        case (Qt::Key_D):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            break;
+        case (Qt::Key_I):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            break;
+        case (Qt::Key_K):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            break;
+        case (Qt::Key_J):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            break;
+        case (Qt::Key_L):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
     }
 

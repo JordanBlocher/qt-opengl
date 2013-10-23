@@ -1,6 +1,6 @@
 #include "PhysicsModel.hpp"
 
-PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float restitution, const glm::vec3 &size, const glm::vec3 &center, BODY type) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float restitution, const glm::vec3 &size, const glm::vec3 &center) : GLNode(name)
 {
     this->mass = mass;
     this->friction = friction;
@@ -11,7 +11,7 @@ PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float r
         case(CYLINDER):
             this->collisionShape = std::shared_ptr<btCylinderShape>( new btCylinderShape(btVector3(btScalar(size.x),btScalar(0.1),btScalar(size.x))) );
             this->SetMotionState(glm::vec3(0, 0, 0));
-            this->SetConstraints(glm::vec3(0.0,0.01,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+            this->SetConstraints(glm::vec3(0.0,0.5,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
             break;
         case(BOX):
             this->collisionShape = std::shared_ptr<btBoxShape>( new btBoxShape(btVector3(btScalar(size.x),btScalar(0.1),btScalar(size.x))) );
@@ -26,26 +26,26 @@ PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float r
 }
 
 // Constructor for custom convex triangle mesh
-PhysicsModel::PhysicsModel(const char* name, std::shared_ptr<std::vector<glm::vec3>> vertices, const size_t numPoints) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, const std::vector<glm::vec3> &positions, size_t index) : GLNode(name), mass(0), friction(0.1f), restitution(0.3)
 {
-    std::shared_ptr<btTriangleMesh> triMesh(new btTriangleMesh());
+    this->triangles->at(index) = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
 
     glm::vec3 a0, a1, a2;
     // Create triangles
-    for(size_t i=0; i<numPoints - 2; i+=3)
+    for(size_t i=0; i<positions.size() - 2 ; i+=3)
     {
-        a0 = glm::vec3( vertices->at(i+0).x, vertices->at(i+0).y, vertices->at(i+0).z );
-        a1 = glm::vec3( vertices->at(i+1).x, vertices->at(i+1).y, vertices->at(i+1).z );
-        a2 = glm::vec3( vertices->at(i+2).x, vertices->at(i+2).y, vertices->at(i+2).z );
+        a0 = glm::vec3( positions.at(i+0).x, positions.at(i+0).y, positions.at(i+0).z );
+        a1 = glm::vec3( positions.at(i+1).x, positions.at(i+1).y, positions.at(i+1).z );
+        a2 = glm::vec3( positions.at(i+2).x, positions.at(i+2).y, positions.at(i+2).z );
 
         btVector3 v0(a0.x,a0.y,a0.z);
         btVector3 v1(a1.x,a1.y,a1.z);
         btVector3 v2(a2.x,a2.y,a2.z);
 
-        triMesh->addTriangle(v0,v1,v2);
+        triangles->at(index)->addTriangle(v0,v1,v2,false);
     }
 
-    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triMesh.get(), true));
+    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triangles->at(index), true, true));
 
     //TODO: Hardcoded defaults?
     this->SetMotionState(glm::vec3(0, -0.1, 0));
@@ -98,12 +98,17 @@ void PhysicsModel::Reset()
 }
 
 // Returns the transformation matrix of the body
-glm::mat4 PhysicsModel::GetTransform()
+glm::mat4 PhysicsModel::GetRotation()
 {
    this->motionState->getWorldTransform(this->transform);
    btMatrix3x3 matrix = this->transform.getBasis();
-   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0, matrix[1][0], matrix[1][1], matrix[1][2], 0, matrix[2][0], matrix[2][1], matrix[2][2], 0, 0, 0, 0, 1);
-   return ret;
+   /*glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0,
+                 matrix[1][0], matrix[1][1], matrix[1][2], 0,
+                 matrix[2][0], matrix[2][1], matrix[2][2], 0,
+                 0, 0, 0, 1);
+   */
+   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0, matrix[1][0], matrix[1][1], matrix[1][2], 0, matrix[2][0], matrix[2][1], matrix[2][2], 0, this->transform.getOrigin().getX(), this->transform.getOrigin().getY(), this->transform.getOrigin().getZ(), 1);
+                 return ret;
 }
 
 void PhysicsModel::SetTransform(glm::vec4 q, glm::vec3 axis)
@@ -112,10 +117,13 @@ void PhysicsModel::SetTransform(glm::vec4 q, glm::vec3 axis)
 }
 
 // Returns the centroid
-glm::vec3 PhysicsModel::GetOrigin()
+glm::mat4 PhysicsModel::GetTranslation()
 {
    btVector3 origin = this->transform.getOrigin();
-   glm::vec3 ret(origin.getX(), origin.getY(), origin.getZ());
+   glm::mat4 ret(1, 0, 0, (float)origin.getX(),
+                 0, 1, 0, (float)origin.getY(),
+                 0, 0, 1, (float)origin.getZ(),
+                 0, 0, 0, 1);
    return ret;
 }
 
