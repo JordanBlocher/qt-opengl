@@ -11,6 +11,7 @@ Controls
 - IJKL: Controls the movement of the sphere in relation to world coordinates
 - Arrow keys: Controls the movement of the camera's spherical coordinates in relation to the world's origin
 - Shift + Arrow key Up/Down: Controls the zoom of the camera
+- YOU MUST CLICK THE WINDOW TO USE THE CONTROLS!!!!!
 
 
 > Note: Most of the work on this program was done at the last minute and does not meet normal coding standards.
