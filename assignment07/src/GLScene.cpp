@@ -19,6 +19,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
+#include <glm/virtrev/xstream.hpp>
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -45,14 +46,8 @@ GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), 
     this->dynamicModels = {"puck.obj"};
     this->staticModels = {"table.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
-
     // Initialize Entity list
     entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
-
-    // Initialize Dynamics World
-    std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
-    this->AddToContext(world);
-
 }
 
 void GLScene::initializeGL()
@@ -64,6 +59,11 @@ void GLScene::initializeGL()
     glDepthFunc(GL_LESS);
 
     string filename;
+
+   // Initialize Dynamics World
+    std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
+    this->AddToContext(world);
+
     // Create Dynamic Models
     for(size_t i=0; i<dynamicModels.size(); i++)
     {
@@ -74,12 +74,15 @@ void GLScene::initializeGL()
         tempGfxModel->setMatrix(glm::scale(tempGfxModel->Matrix(), glm::vec3(0.2)));    
         // Create 2 dynamic Models
         std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        tempPhysModel1->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 5));
+        world->AddPhysicsBody(tempPhysModel1->GetRigidBody(), tempPhysModel1->GetConstraint());
         std::shared_ptr<Entity> ent1(new Entity(tempGfxModel,tempPhysModel1));
         // Add the new Ent to the vector
         entities->push_back(ent1);
         std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        tempPhysModel2->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, -5));
+        world->AddPhysicsBody(tempPhysModel2->GetRigidBody(), tempPhysModel2->GetConstraint());
         std::shared_ptr<Entity> ent2(new Entity(tempGfxModel,tempPhysModel2));
-        // Add the new Ent to the vector
         entities->push_back(ent2);
 
     }
@@ -92,6 +95,7 @@ void GLScene::initializeGL()
         staticModel->CreateVAO();
         // Create entity
         std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel->RigidBody(), staticModel->RigidBody()->size()));
+        world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
         std::shared_ptr<Entity> ent(new Entity(staticModel,staticPhysModel));
         entities->push_back(ent);
     }
@@ -170,6 +174,7 @@ void GLScene::paintGL()
        std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->getPhysicsModel();
        std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
        glm::mat4 transform = pmodel->GetTransform();
+       //std::cout<<"transform "<<transform<<endl;
 
        //Bind MVP
        Uniform position = vuniform->Get(POSITION);
@@ -201,15 +206,15 @@ void GLScene::paintGL()
 void GLScene::idleGL()
 {  
     // Timer
-    float now;
+    float dt;
     time = chrono::high_resolution_clock::now();
-    now = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
+    dt = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
     this->start_time = chrono::high_resolution_clock::now();
 
     // Get Discrete Dynamics World and update time step
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
     std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
-    world->stepSimulation((btScalar)now);
+    world->stepSimulation(dt);
 
     GLViewport::updateGL();
 }

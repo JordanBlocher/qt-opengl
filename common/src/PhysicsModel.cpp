@@ -106,6 +106,11 @@ glm::mat4 PhysicsModel::GetTransform()
    return ret;
 }
 
+void PhysicsModel::SetTransform(glm::vec4 q, glm::vec3 axis)
+{
+    this->motionState->setWorldTransform(btTransform(btQuaternion(q.x, q.y, q.z, q.w), btVector3(axis.z, axis.y, axis.z)));
+}
+
 // Returns the centroid
 glm::vec3 PhysicsModel::GetOrigin()
 {
@@ -117,6 +122,11 @@ glm::vec3 PhysicsModel::GetOrigin()
 std::shared_ptr<btRigidBody> PhysicsModel::GetRigidBody()
 {
     return this->rigidBody;
+}
+
+std::shared_ptr<btGeneric6DofConstraint> PhysicsModel::GetConstraint()
+{
+    return this->planeConstraint;
 }
 
 PhysicsModel::~PhysicsModel()

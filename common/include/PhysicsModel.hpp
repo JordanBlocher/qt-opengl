@@ -19,9 +19,11 @@ class PhysicsModel : public GLNode
     void SetMotionState(const glm::vec3&);
     void SetConstraints(const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&);
     glm::mat4 GetTransform();
+    void SetTransform(glm::vec4, glm::vec3);
     glm::vec3 GetOrigin();
     void Reset();
     std::shared_ptr<btRigidBody> GetRigidBody();
+    std::shared_ptr<btGeneric6DofConstraint> GetConstraint();
 
 protected:
     btScalar mass;
