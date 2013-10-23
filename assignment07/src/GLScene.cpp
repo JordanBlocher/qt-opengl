@@ -42,12 +42,8 @@ using namespace std;
 
 GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
-    int i = 1;
-    while(argv[i])
-    {
-        this->models.push_back(argv[i]);
-        ++i;
-    }
+    this->dynamicModels = {"puck.obj"};
+    this->staticModels = {"table.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
 
     // Initialize Entity list
@@ -68,20 +64,39 @@ void GLScene::initializeGL()
     glDepthFunc(GL_LESS);
 
     string filename;
-    // Create all of the entities from the names of the models
-    for(size_t i=0; i<models.size(); i++)
+    // Create Dynamic Models
+    for(size_t i=0; i<dynamicModels.size(); i++)
     {
-        // Create the new entity
-        std::shared_ptr<GLModel> tempGfxModel(new GLModel(this->models.at(0).c_str(), "model", NUM_ATTRIBUTES));
-        std::shared_ptr<PhysicsModel> tempPhysModel(new PhysicsModel(this->models.at(0).c_str(),0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
-        std::shared_ptr<Entity> ent(new Entity(tempGfxModel,tempPhysModel));
-
+        std::shared_ptr<GLModel> tempGfxModel(new GLModel(this->dynamicModels.at(i).c_str(), "dynamicModel", NUM_ATTRIBUTES));
         // Create the VAO for the new Graphics Model
-        ent->getGraphicsModel()->CreateVAO();
-
+        tempGfxModel->CreateVAO();
+        // Scale smaller
+        tempGfxModel->setMatrix(glm::scale(tempGfxModel->Matrix(), glm::vec3(0.2)));    
+        // Create 2 dynamic Models
+        std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        std::shared_ptr<Entity> ent1(new Entity(tempGfxModel,tempPhysModel1));
         // Add the new Ent to the vector
+        entities->push_back(ent1);
+        std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        std::shared_ptr<Entity> ent2(new Entity(tempGfxModel,tempPhysModel2));
+        // Add the new Ent to the vector
+        entities->push_back(ent2);
+
+    }
+
+    // Create static Models
+    for(size_t i=0; i<staticModels.size(); i++)
+    {
+        std::shared_ptr<GLModel> staticModel(new GLModel(this->staticModels.at(i).c_str(), "staticModel", NUM_ATTRIBUTES));
+        // Create the VAO for the new Graphics Model
+        staticModel->CreateVAO();
+        // Create entity
+        std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel->RigidBody(), staticModel->RigidBody()->size()));
+        std::shared_ptr<Entity> ent(new Entity(staticModel,staticPhysModel));
         entities->push_back(ent);
     }
+    std::shared_ptr<GLModel> gfxModel = this->entities->at(dynamicModels.size() * 2)->getGraphicsModel();
+    gfxModel->setMatrix(glm::scale(gfxModel->Matrix(), glm::vec3(3, 0.7, 6)));
 
 
     //Shaders
@@ -163,7 +178,7 @@ void GLScene::paintGL()
        glBufferSubData( GL_UNIFORM_BUFFER,
                         position.offset,
                         position.size,
-                        glm::value_ptr( vp * transform ));
+                        glm::value_ptr( vp * transform * gmodel->Matrix()));
        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
        //Get Sampler

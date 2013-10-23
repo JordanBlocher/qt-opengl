@@ -13,7 +13,7 @@ class PhysicsModel : public GLNode
  public:
      enum BODY { CYLINDER, BOX, SPHERE };
     PhysicsModel(const char*, float, float, float, const glm::vec3&, const glm::vec3&, BODY);
-    PhysicsModel(const char*, const glm::vec3&, const glm::vec3&, std::vector<glm::vec4>, const size_t);
+    PhysicsModel(const char*, std::shared_ptr<std::vector<glm::vec3>>, const size_t);
     ~PhysicsModel();
 
     void SetMotionState(const glm::vec3&);

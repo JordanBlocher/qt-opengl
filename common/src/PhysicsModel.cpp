@@ -26,17 +26,17 @@ PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float r
 }
 
 // Constructor for custom convex triangle mesh
-PhysicsModel::PhysicsModel(const char* name, const glm::vec3& size, const glm::vec3& center, std::vector<glm::vec4> vertices, const size_t numPoints) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, std::shared_ptr<std::vector<glm::vec3>> vertices, const size_t numPoints) : GLNode(name)
 {
     std::shared_ptr<btTriangleMesh> triMesh(new btTriangleMesh());
 
     glm::vec3 a0, a1, a2;
     // Create triangles
-    for(size_t i=0; i<numPoints; i+=3)
+    for(size_t i=0; i<numPoints - 2; i+=3)
     {
-        a0 = glm::vec3( vertices[i+0].x, vertices[i+0].y, vertices[i+0].z );
-        a1 = glm::vec3( vertices[i+1].x, vertices[i+1].y, vertices[i+1].z );
-        a2 = glm::vec3( vertices[i+2].x, vertices[i+2].y, vertices[i+2].z );
+        a0 = glm::vec3( vertices->at(i+0).x, vertices->at(i+0).y, vertices->at(i+0).z );
+        a1 = glm::vec3( vertices->at(i+1).x, vertices->at(i+1).y, vertices->at(i+1).z );
+        a2 = glm::vec3( vertices->at(i+2).x, vertices->at(i+2).y, vertices->at(i+2).z );
 
         btVector3 v0(a0.x,a0.y,a0.z);
         btVector3 v1(a1.x,a1.y,a1.z);

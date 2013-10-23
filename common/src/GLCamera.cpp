@@ -123,8 +123,8 @@ void GLCamera::updateView()
 
     // Calculate the eye position
     eyeX = radius * sin (zenith) * cos (azimuth);
-    eyeY = radius * sin (zenith) * sin (azimuth);
-    eyeZ = radius * cos (zenith);
+    eyeZ = radius * sin (zenith) * sin (azimuth);
+    eyeY = radius * cos (zenith);
 
     // Do the cross product manually for some reason
     upX = (-eyeX*eyeZ);

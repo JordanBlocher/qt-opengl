@@ -10,11 +10,6 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc < 2)
-    {
-        std::cout<<"Usage: " << argv[0] <<" <modelpath>\n"; //(options)\n\t\tOptions: <materialpath>\n";
-        return 0;
-    }
 
     QApplication app(argc, argv);
 //    app.setPalette(QColor::fromRgbF(0.0, 0.0, 0.2));

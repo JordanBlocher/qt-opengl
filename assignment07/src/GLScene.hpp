@@ -35,7 +35,8 @@ class GLScene : public GLViewport
     QColor background;
     QColor font;
 
-    std::vector<std::string> models;
+    std::vector<std::string> staticModels;
+    std::vector<std::string> dynamicModels;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
