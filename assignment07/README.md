@@ -20,6 +20,7 @@ Controls
 > We will fix these sorts of problems for the next project submission.  
 > A segmentation fault occurs when the program exits and there is also debug information about the posisition and velocity of the puck.
 > Because of this, the bounding wall sometimes work and sometimes do not work, there seems to be a problem with accessing the vector memory.
+
 Group Members
 --------------------- 
 - Jordan Blocher  
