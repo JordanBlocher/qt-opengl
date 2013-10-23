@@ -43,7 +43,7 @@ using namespace std;
 
 GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
-    this->dynamicModels = {"puck.obj"};
+    this->dynamicModels = {"puck.obj", "sphere.obj","cube.obj",};
     this->staticModels = {"table.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     // Initialize Entity list
@@ -65,42 +65,87 @@ void GLScene::initializeGL()
     this->AddToContext(world);
 
     // Create Dynamic Models
-    for(size_t i=0; i<dynamicModels.size(); i++)
+    //for(size_t i=0; i<1; i++)
     {
-        std::shared_ptr<GLModel> tempGfxModel(new GLModel(this->dynamicModels.at(i).c_str(), "dynamicModel", NUM_ATTRIBUTES));
+        std::shared_ptr<GLModel> tempGfxModel1(new GLModel(this->dynamicModels.at(0).c_str(), "dynamicModel", NUM_ATTRIBUTES));
+        std::shared_ptr<GLModel> tempGfxModel2(new GLModel(this->dynamicModels.at(1).c_str(), "dynamicModel", NUM_ATTRIBUTES));
+        std::shared_ptr<GLModel> tempGfxModel3(new GLModel(this->dynamicModels.at(2).c_str(), "dynamicModel", NUM_ATTRIBUTES));
+
+
         // Create the VAO for the new Graphics Model
-        tempGfxModel->CreateVAO();
-        // Scale smaller
-        tempGfxModel->setMatrix(glm::scale(tempGfxModel->Matrix(), glm::vec3(0.2)));    
+        tempGfxModel1->CreateVAO();
+        tempGfxModel1->setMatrix(glm::scale(tempGfxModel1->Matrix(), glm::vec3(0.2))); 
+
+        tempGfxModel2->CreateVAO();
+        tempGfxModel2->setMatrix(glm::scale(tempGfxModel2->Matrix(), glm::vec3(0.2))); 
+
+        tempGfxModel3->CreateVAO();      
+        tempGfxModel3->setMatrix(glm::scale(tempGfxModel3->Matrix(), glm::vec3(0.2))); 
+
         // Create 2 dynamic Models
-        std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
-        tempPhysModel1->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 5));
+        std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.5f,0.05f, glm::vec3(0.2,0.2,0.2), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
+        tempPhysModel1->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        tempPhysModel1->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+        //tempPhysModel1->SetMotionState(glm::vec3(2,0,5));
         world->AddPhysicsBody(tempPhysModel1->GetRigidBody(), tempPhysModel1->GetConstraint());
-        std::shared_ptr<Entity> ent1(new Entity(tempGfxModel,tempPhysModel1));
+        std::shared_ptr<Entity> ent1(new Entity(tempGfxModel1,tempPhysModel1));
         // Add the new Ent to the vector
         entities->push_back(ent1);
-        std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.1f,0.05f, glm::vec3(1,1,1), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::CYLINDER));
-        tempPhysModel2->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, -5));
+        std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.5f,0.05f, glm::vec3(0.2,0.2,0.2), glm::vec3(0.5f,0.5f,0.5f), PhysicsModel::BODY::SPHERE));
+        tempPhysModel2->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        tempPhysModel2->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+                //tempPhysModel2->SetMotionState(glm::vec3(3,0,0));
+
         world->AddPhysicsBody(tempPhysModel2->GetRigidBody(), tempPhysModel2->GetConstraint());
-        std::shared_ptr<Entity> ent2(new Entity(tempGfxModel,tempPhysModel2));
+        std::shared_ptr<Entity> ent2(new Entity(tempGfxModel2,tempPhysModel2));
         entities->push_back(ent2);
+
+        // Place Static Objects
+        std::shared_ptr<PhysicsModel> tempPhysModel3(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,0.2), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
+        tempPhysModel3->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        tempPhysModel3->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+        tempPhysModel3->SetMotionState(glm::vec3(0,0,2));
+        world->AddPhysicsBody(tempPhysModel3->GetRigidBody(), tempPhysModel3->GetConstraint());
+        std::shared_ptr<Entity> ent3(new Entity(tempGfxModel3,tempPhysModel3));
+        entities->push_back(ent3);
+
+  /*      std::shared_ptr<PhysicsModel> tempPhysModel4(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,6), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
+        tempPhysModel4->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        tempPhysModel4->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+        tempPhysModel4->SetMotionState(glm::vec3(5,0,2));
+        world->AddPhysicsBody(tempPhysModel4->GetRigidBody(), tempPhysModel4->GetConstraint());
+
+        std::shared_ptr<PhysicsModel> tempPhysModel5(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,6), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
+        tempPhysModel5->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        tempPhysModel5->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+        tempPhysModel5->SetMotionState(glm::vec3(-5,0,2));
+        world->AddPhysicsBody(tempPhysModel5->GetRigidBody(), tempPhysModel5->GetConstraint());
+*/
 
     }
 
     // Create static Models
-    for(size_t i=0; i<staticModels.size(); i++)
+    for(size_t i=0; i<1; i++)
     {
         std::shared_ptr<GLModel> staticModel(new GLModel(this->staticModels.at(i).c_str(), "staticModel", NUM_ATTRIBUTES));
         // Create the VAO for the new Graphics Model
         staticModel->CreateVAO();
         // Create entity
         std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel->RigidBody(), staticModel->RigidBody()->size()));
-        world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
+        //std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,0.2), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
+        staticPhysModel->SetTransform(glm::vec4(0, 0, 0, 1), glm::vec3(0, 0, 0));
+        staticPhysModel->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
+        //staticPhysModel->SetMotionState(glm::vec3(0,0,0));
+
+        // WILL BE RE-ENABLED VERY SOON, ENLARGING THE MESH. 
+        //world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
+
         std::shared_ptr<Entity> ent(new Entity(staticModel,staticPhysModel));
+
         entities->push_back(ent);
     }
-    std::shared_ptr<GLModel> gfxModel = this->entities->at(dynamicModels.size() * 2)->getGraphicsModel();
-    gfxModel->setMatrix(glm::scale(gfxModel->Matrix(), glm::vec3(3, 0.7, 6)));
+    std::shared_ptr<GLModel> gfxModel = this->entities->at(dynamicModels.size())->getGraphicsModel();
+    //gfxModel->setMatrix(glm::scale(gfxModel->Matrix(), glm::vec3(3, 0.7, 6)));
 
 
     //Shaders
@@ -216,6 +261,12 @@ void GLScene::idleGL()
     std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
     world->stepSimulation(dt);
 
+    cout << "Vel: " << entities->at(0)->getPhysicsModel()->GetRigidBody()->getLinearVelocity().length() << endl;
+    btTransform newTransform;
+    entities->at(0)->getPhysicsModel()->GetRigidBody()->getMotionState()->getWorldTransform(newTransform);
+    cout << "Trasform:" << newTransform.getOrigin().getX() << ", " << newTransform.getOrigin().getY() << ", " << newTransform.getOrigin().getZ() << endl;
+
+    // Update all of the fuck
     GLViewport::updateGL();
 }
 
@@ -271,6 +322,31 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 camera->moveCamera(GLCamera::CamDirection::Down);
             }
             break;
+        case (Qt::Key_W):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            break;
+        case (Qt::Key_S):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            break;
+        case (Qt::Key_A):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            break;
+        case (Qt::Key_D):
+            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            break;
+        case (Qt::Key_I):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            break;
+        case (Qt::Key_K):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            break;
+        case (Qt::Key_J):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            break;
+        case (Qt::Key_L):
+            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            break;
+
     }
 
 

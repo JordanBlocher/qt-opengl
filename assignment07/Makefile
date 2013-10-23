@@ -7,5 +7,5 @@ bin/assignment07:
 clean:
 	rm -fr temp bin/assignment07
 
-.PHONY:bin/assignment06 clean
+.PHONY:bin/assignment07 clean
 
