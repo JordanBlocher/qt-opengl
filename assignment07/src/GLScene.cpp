@@ -146,7 +146,7 @@ void GLScene::initializeGL()
 
     /* -------------------Cube------------------- */
     // Create the cube gfxmodel
-    /*std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
+    std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
     cubeGfx->CreateVAO();
     cubeGfx->setMatrix(glm::scale(cubeGfx->Matrix(), glm::vec3(0.5f))); 
 
@@ -165,7 +165,7 @@ void GLScene::initializeGL()
 
     // Merge models, add to entity list
     std::shared_ptr<Entity> cubeEnt(new Entity(cubeGfx,cubePhys));
-    entities->push_back(cubeEnt);*/
+    entities->push_back(cubeEnt);
 
 
 
