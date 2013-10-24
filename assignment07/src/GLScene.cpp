@@ -65,84 +65,111 @@ void GLScene::initializeGL()
     std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
     this->AddToContext(world);
 
-    // Create Dynamic Models
-    //for(size_t i=0; i<1; i++)
-    {
-        std::shared_ptr<GLModel> tempGfxModel1(new GLModel(this->dynamicModels.at(0).c_str(), "dynamicModel", NUM_ATTRIBUTES));
-        std::shared_ptr<GLModel> tempGfxModel2(new GLModel(this->dynamicModels.at(1).c_str(), "dynamicModel", NUM_ATTRIBUTES));
-        std::shared_ptr<GLModel> tempGfxModel3(new GLModel(this->dynamicModels.at(2).c_str(), "dynamicModel", NUM_ATTRIBUTES));
+    /****** Model Creation ******/
+    /* -------------------Table------------------- */
+    // Create the table gfxmodel
+    std::shared_ptr<GLModel> tableGfx(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
+    tableGfx->CreateVAO();
+    tableGfx->setMatrix(glm::scale(tableGfx->Matrix(), glm::vec3(1.0f))); 
+
+    // Create the table physmodel
+    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableGfx,btVector3(1.0f,1.0f,1.0f),
+                                            btQuaternion(0,0,0,1), btVector3(0,0,0),
+                                            0.0f, 0.5f, 1.0f));
+
+    // Add table to world 
+    world->AddPhysicsBody(tablePhys->GetRigidBody());
+
+    // Special table settings
+    tablePhys->GetRigidBody()->setCollisionFlags(tablePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
+    tablePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
+    entities->push_back(tableEnt);
+
+    /* -------------------Puck------------------- */
+    // Create the puck gfxmodel
+    std::shared_ptr<GLModel> puckGfx(new GLModel("puck.obj", "puck", NUM_ATTRIBUTES));
+    puckGfx->CreateVAO();
+    puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
+
+    // Create the puck physmodel
+    std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.1f,0.2f),
+                                            btQuaternion(0,0,0,1), btVector3(1.0f,0.25f,0.0f),
+                                            0.7f, 0.05f, 0.5f));
+
+    // Add puck to world 
+    world->AddPhysicsBody(puckPhys->GetRigidBody());
+
+    // Set up puck constraints
+    puckPhys->initConstraints(btVector3(0.0f,0.01f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+                    btVector3(0.0f,0.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
+
+    // Add constraints to world
+    world->AddConstraint(puckPhys->GetConstraint());
+
+    // Special sphere settings
+    puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
+    entities->push_back(puckEnt);
+
+    /* -------------------Sphere------------------- */
+    // Create the sphere gfxmodel
+    std::shared_ptr<GLModel> sphereGfx(new GLModel("sphere.obj", "sphere", NUM_ATTRIBUTES));
+    sphereGfx->CreateVAO();
+    sphereGfx->setMatrix(glm::scale(sphereGfx->Matrix(), glm::vec3(0.2f))); 
+
+    // Create the sphere physmodel
+    std::shared_ptr<PhysicsModel> spherePhys(new PhysicsModel("sphere",PhysicsModel::BODY::SPHERE, btVector3(0.25f,0.0f,0.0f),
+                                            btQuaternion(0,0,0,1), btVector3(0,0.25,0),
+                                            0.7f, 0.05f, 0.5f));
+
+    // Add sphere to world 
+    world->AddPhysicsBody(spherePhys->GetRigidBody());
+
+    // Set up sphere constraints
+    spherePhys->initConstraints(btVector3(0.0f,0.01f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+                    btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
+
+    // Add constraints to world
+    world->AddConstraint(spherePhys->GetConstraint());
+
+    // Special sphere settings
+    spherePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> sphereEnt(new Entity(sphereGfx, spherePhys));
+    entities->push_back(sphereEnt);
+
+    /* -------------------Cube------------------- */
+    // Create the cube gfxmodel
+    /*std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
+    cubeGfx->CreateVAO();
+    cubeGfx->setMatrix(glm::scale(cubeGfx->Matrix(), glm::vec3(0.5f))); 
 
 
-        // Create the VAO for the new Graphics Model
-        tempGfxModel1->CreateVAO();
-        tempGfxModel1->setMatrix(glm::scale(tempGfxModel1->Matrix(), glm::vec3(0.2))); 
+    // Create the cube physmodel
+    std::shared_ptr<PhysicsModel> cubePhys(new PhysicsModel("cube",PhysicsModel::BODY::BOX,
+                                            btVector3(0.25f,0.25f,0.25f),btQuaternion(0,0,0,1),
+                                            btVector3(0,0,0), 0.0f, 0.05f, 1.0f));
 
-        tempGfxModel2->CreateVAO();
-        tempGfxModel2->setMatrix(glm::scale(tempGfxModel2->Matrix(), glm::vec3(0.2))); 
+    // Add cube to world 
+    world->AddPhysicsBody(cubePhys->GetRigidBody());
 
-        tempGfxModel3->CreateVAO();      
-        tempGfxModel3->setMatrix(glm::scale(tempGfxModel3->Matrix(), glm::vec3(0.2))); 
+    // Special cube settings
+    cubePhys->GetRigidBody()->setCollisionFlags(cubePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
+    cubePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
 
-        // Create 2 dynamic Models
-        std::shared_ptr<PhysicsModel> tempPhysModel1(new PhysicsModel("dynamicBody", 0.7f, 0.5f,0.05f, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(0.1f,0.1f,0.1f), PhysicsModel::BODY::CYLINDER));
-        tempPhysModel1->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-      //  tempPhysModel1->SetMotionState(glm::vec3(2,0,5));
-        world->AddPhysicsBody(tempPhysModel1->GetRigidBody(), tempPhysModel1->GetConstraint());
-        std::shared_ptr<Entity> ent1(new Entity(tempGfxModel1,tempPhysModel1));
-        // Add the new Ent to the vector
-        entities->push_back(ent1);
-        std::shared_ptr<PhysicsModel> tempPhysModel2(new PhysicsModel("dynamicBody", 0.7f, 0.5f,0.05f, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(0.1f,0.1f,0.1f), PhysicsModel::BODY::SPHERE));
-        tempPhysModel2->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-      //  tempPhysModel2->SetMotionState(glm::vec3(3,0,0));
-
-        world->AddPhysicsBody(tempPhysModel2->GetRigidBody(), tempPhysModel2->GetConstraint());
-        std::shared_ptr<Entity> ent2(new Entity(tempGfxModel2,tempPhysModel2));
-        entities->push_back(ent2);
-
-        // Place Static Objects
-        std::shared_ptr<PhysicsModel> tempPhysModel3(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
-        tempPhysModel3->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-        world->AddPhysicsBody(tempPhysModel3->GetRigidBody(), tempPhysModel3->GetConstraint());
-        std::shared_ptr<Entity> ent3(new Entity(tempGfxModel3,tempPhysModel3));
-        entities->push_back(ent3);
-
-  /*      std::shared_ptr<PhysicsModel> tempPhysModel4(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,6), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
-        tempPhysModel4->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-        tempPhysModel4->SetMotionState(glm::vec3(5,0,2));
-        world->AddPhysicsBody(tempPhysModel4->GetRigidBody(), tempPhysModel4->GetConstraint());
-
-        std::shared_ptr<PhysicsModel> tempPhysModel5(new PhysicsModel("dynamicBody", 0.0f, 0.5f,0.05f, glm::vec3(0.2,0.2,6), glm::vec3(0.05f,0.05f,0.05f), PhysicsModel::BODY::BOX));
-        tempPhysModel5->SetConstraints(glm::vec3(0.0,0.0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-        tempPhysModel5->SetMotionState(glm::vec3(-5,0,2));
-        world->AddPhysicsBody(tempPhysModel5->GetRigidBody(), tempPhysModel5->GetConstraint());
-*/
-
-    }
-
-    // Create static Models
-  //  for(size_t i=0; i<1; i++)
-    {
-        std::shared_ptr<GLModel> staticModel(new GLModel("walls.obj", "staticModel", NUM_ATTRIBUTES));
-
-        // Create the VAO for the new Graphics Model
-        staticModel->CreateVAO();
-        // Create entity
-
-	    std::shared_ptr<PhysicsModel> staticPhysModel(new PhysicsModel("table", staticModel));
-	    staticPhysModel->SetConstraints(glm::vec3(0.0,0,0.0),glm::vec3(1,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0),glm::vec3(0,0,0));
-
-	    staticPhysModel->GetRigidBody()->setCollisionFlags(staticPhysModel->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
-	    staticPhysModel->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-	    // WILL BE RE-ENABLED VERY SOON, ENLARGING THE MESH. 
-	    world->AddPhysicsBody(staticPhysModel->GetRigidBody(), staticPhysModel->GetConstraint());
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> cubeEnt(new Entity(cubeGfx,cubePhys));
+    entities->push_back(cubeEnt);*/
 
 
-	    std::shared_ptr<Entity> ent10(new Entity(staticModel,staticPhysModel));
 
-	    entities->push_back(ent10);
-        
-    }
-
+    /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
@@ -255,7 +282,7 @@ void GLScene::idleGL()
     // Get Discrete Dynamics World and update time step
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
     std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
-    world->stepSimulation(dt);
+    world->stepSimulation(dt/1.0f);
 
     cout << "Vel: " << entities->at(0)->getPhysicsModel()->GetRigidBody()->getLinearVelocity().length() << endl;
     btTransform newTransform;
@@ -319,28 +346,28 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             }
             break;            
        case (Qt::Key_W):
-            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
-            break;
-        case (Qt::Key_S):
-            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
-            break;
-        case (Qt::Key_A):
-            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
-            break;
-        case (Qt::Key_D):
-            entities->at(0)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
-            break;
-        case (Qt::Key_I):
             entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
             break;
-        case (Qt::Key_K):
+        case (Qt::Key_S):
             entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
             break;
-        case (Qt::Key_J):
+        case (Qt::Key_A):
             entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
             break;
-        case (Qt::Key_L):
+        case (Qt::Key_D):
             entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            break;
+        case (Qt::Key_I):
+            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            break;
+        case (Qt::Key_K):
+            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            break;
+        case (Qt::Key_J):
+            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            break;
+        case (Qt::Key_L):
+            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
     }
 

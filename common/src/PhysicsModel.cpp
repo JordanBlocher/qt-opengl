@@ -1,81 +1,137 @@
 #include "PhysicsModel.hpp"
 #include "GLModel.hpp"
 
-PhysicsModel::PhysicsModel(const char* name, float mass, float friction, float restitution, const glm::vec3 &size, const glm::vec3 &center, BODY type) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, const BODY type, const btVector3 scale, 
+                const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
+                const float restitution) : GLNode(name)
 {
-    this->mass = mass;
-    this->friction = friction;
-    this->restitution = restitution;
-    this->inertia = btVector3(0,0,0);
+    // Initialize the collision shape
+    initStandardShape(type, scale);
 
-    transform = btTransform::getIdentity();
+    // Initialize the transform
+    initTransform(orientation, centroid);
 
+    // Initialize the rigid body
+    initRigidBody(mass,friction,restitution);
+}
+
+// Constructor for custom convex triangle mesh
+PhysicsModel::PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, 
+                            const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
+                            const float restitution) : GLNode(name)
+{
+    // Initialize the collision shape
+    initCustomShape(model, scale);
+
+    // Initialize the transform
+    initTransform(orientation, centroid);
+
+    // Initialize the rigid body
+    initRigidBody(mass,friction,restitution);
+}
+
+// Creates custom model
+void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const btVector3 scale)
+{		
+
+    // Allocate memory for the mesh triangles
+    this->triangles = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
+    this->triangles->preallocateIndices(model->Size());
+    this->triangles->preallocateVertices(model->Size());   
+
+    // Iterate over all of the meshes
+    for(size_t meshIndex=0; meshIndex<model->Size(); meshIndex++)
+    {
+
+        // Iterate over all of the triangles of the mesh
+        for(size_t i=0; i<model->Positions(meshIndex).size() - 2 ; i+=3)
+        {
+            // Get a triangle
+            btVector3 a0( model->Positions(meshIndex).at(i+0).x*scale.getX(), 
+                model->Positions(meshIndex).at(i+0).y*scale.getY(), 
+                model->Positions(meshIndex).at(i+0).z*scale.getZ() );
+            btVector3 a1( model->Positions(meshIndex).at(i+1).x*scale.getX(), 
+                model->Positions(meshIndex).at(i+1).y*scale.getY(), 
+                model->Positions(meshIndex).at(i+1).z*scale.getZ() );
+            btVector3 a2( model->Positions(meshIndex).at(i+2).x*scale.getX(), 
+                model->Positions(meshIndex).at(i+2).y*scale.getY(), 
+                model->Positions(meshIndex).at(i+2).z*scale.getZ() );
+
+            // Add it to the triangle set
+            triangles->addTriangle(a0,a1,a2,false);
+        }
+    }
+
+    // Build the shape
+    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triangles.get(), true, true));
+
+}
+
+// Creates default-type model
+void PhysicsModel::initStandardShape(const BODY type, const btVector3 scale)
+{
+    // Pick one of the standard shapes
     switch(type)
     {
         case(CYLINDER):
-            this->collisionShape = std::shared_ptr<btCylinderShape>( new btCylinderShapeZ(btVector3(btScalar(size.x),btScalar(0.1),btScalar(size.x))) );
-            this->SetMotionState(glm::vec3(0, 0, 0));
-            this->SetConstraints(glm::vec3(0.0,0.00,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+            this->collisionShape = std::shared_ptr<btCylinderShape>(new btCylinderShapeZ(scale));
             break;
         case(SPHERE):
-            this->collisionShape = std::shared_ptr<btSphereShape>( new btSphereShape(size.x));
-            this->SetMotionState(glm::vec3(0, 0, 0));
-            this->SetConstraints(glm::vec3(0.0,0.5,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+            this->collisionShape = std::shared_ptr<btSphereShape>(new btSphereShape(scale.getX()));
             break;
         case(BOX):
-            this->collisionShape = std::shared_ptr<btBoxShape>( new btBoxShape(btVector3(btScalar(size.x),btScalar(size.y),btScalar(size.z))) );
-            this->SetMotionState(glm::vec3(0, 0, 0));
-            this->SetConstraints(glm::vec3(0.0,0.00,0.0), glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+            this->collisionShape = std::shared_ptr<btBoxShape>(new btBoxShape(scale));
             break;
-      
         default:
-            std::cerr<< "[E] Rigid Body type not found."<<std::endl;
+            std::cerr<< "[E] PhysicsModel: Rigid Body type not found."<<std::endl;
             return;
     }
 }
 
-// Constructor for custom convex triangle mesh
-PhysicsModel::PhysicsModel(const char* name, std::shared_ptr<GLModel> model) : GLNode(name), mass(0), friction(0.1f), restitution(0.3)
+// Set us up the constraints
+void PhysicsModel::initConstraints(const btVector3 origin, const btVector3 linearLowerLimit, const btVector3 linearUpperLimit, 
+                                    const btVector3 angularLowerLimit, const btVector3 angularUpperLimit)
 {
+    // Create our constraint frame
+    btTransform frame = btTransform::getIdentity();
+    frame.setOrigin(origin);
 
-	this->triangles = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
-    this->triangles->preallocateIndices(model->Size());
-    this->triangles->preallocateVertices(model->Size());	
+    // Generic 6DOF (used as a plane) Constraint
+    this->planeConstraint = std::shared_ptr<btGeneric6DofConstraint>(new btGeneric6DofConstraint( *(this->rigidBody), frame, true ));
 
-    for(int i=0; i<model->Size(); i++)
-    {
-        this->CreateStaticModel(model->Positions(i));
-    }
-
-    this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triangles.get(), true, true));
-
-    //TODO: Hardcoded defaults?
-    this->SetMotionState(glm::vec3(0, 0, 0));
+    // Set those constraints
+    this->planeConstraint->setLinearLowerLimit(linearLowerLimit);
+    this->planeConstraint->setLinearUpperLimit(linearUpperLimit);
+    this->planeConstraint->setAngularLowerLimit(angularLowerLimit);
+    this->planeConstraint->setAngularUpperLimit(angularUpperLimit);
 }
 
-// Creates a different static model for each mesh in the model
-void PhysicsModel::CreateStaticModel(const std::vector<glm::vec3> &positions)
-{		
-   // this->triangles->at(index) = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
-  //  this->triangles->at(index)->preallocateIndices(positions.size()*3);
-   // this->triangles->at(index)->preallocateVertices(positions.size());
-	
-    glm::vec3 a0, a1, a2;
-    // Create triangles
-    for(size_t i=0; i<positions.size() - 2 ; i+=3)
-    {
-        a0 = glm::vec3( positions.at(i+0).x, positions.at(i+0).y, positions.at(i+0).z );
-        a1 = glm::vec3( positions.at(i+1).x, positions.at(i+1).y, positions.at(i+1).z );
-        a2 = glm::vec3( positions.at(i+2).x, positions.at(i+2).y, positions.at(i+2).z );
-
-        btVector3 v0(a0.x,a0.y,a0.z);
-        btVector3 v1(a1.x,a1.y,a1.z);
-        btVector3 v2(a2.x,a2.y,a2.z);
-
-        triangles->addTriangle(v0,v1,v2,false);
-    }
+void PhysicsModel::initTransform(const btQuaternion orientation, const btVector3 centroid)
+{
+    // Set up the position transformation
+    this->transform = btTransform::getIdentity();
+    this->transform.setOrigin(centroid);
+    this->transform.setRotation(orientation);
 
 }
+void PhysicsModel::initRigidBody(const float mass, const float friction, const float restitution)
+{
+    // Store the body parameters
+    this->mass = mass;
+    this->friction = friction;
+    this->restitution = restitution;
+    this->collisionShape->calculateLocalInertia( this->mass, this->inertia );
+    this->motionState = std::make_shared<btDefaultMotionState>(this->transform);
+
+    // Create a rigid body parameter object
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(this->mass, this->motionState.get(), this->collisionShape.get(), this->inertia);
+    rbInfo.m_friction = this->friction;
+    rbInfo.m_restitution = this->restitution;
+
+    // Create the rigid body
+    this->rigidBody = std::make_shared<btRigidBody>(rbInfo);
+}
+
 
 // Set Initial Motion State
 void PhysicsModel::SetMotionState(const glm::vec3 &transform)
@@ -91,31 +147,6 @@ void PhysicsModel::SetMotionState(const glm::vec3 &transform)
 
     this->rigidBody = std::shared_ptr<btRigidBody>(new btRigidBody( rigidBodyInfo ));
 
-}
-
-// Set Physics Constraints 6DOF
-void PhysicsModel::SetConstraints(const glm::vec3 &origin, const glm::vec3 &linearLowerLimit, const glm::vec3 &linearUpperLimit, const glm::vec3 &angularLowerLimit, const glm::vec3 &angularUpperLimit)
-{
-    this->rigidBody->setActivationState(DISABLE_DEACTIVATION);
-    this->rigidBody->setLinearFactor(btVector3(1,1,1));
-
-    btTransform frame = btTransform::getIdentity();
-    frame.setOrigin(btVector3(origin.x, origin.y, origin.z));
-
-   // Generic 6DOF (used as a plane) Constraint
-   this->planeConstraint = std::shared_ptr<btGeneric6DofConstraint>(new btGeneric6DofConstraint( *(this->rigidBody), frame, true ));
-
-    // lowerlimit = upperlimit --> axis locked
-    // lowerlimit < upperlimit --> motion limited between values
-    // lowerlimit > upperlimit --> axis is free
-
-    // lock the Y axis movement
-    this->planeConstraint->setLinearLowerLimit( btVector3(linearLowerLimit.x, linearLowerLimit.y, linearLowerLimit.z) );
-    this->planeConstraint->setLinearUpperLimit( btVector3(linearUpperLimit.x, linearUpperLimit.y, linearUpperLimit.z) );
-
-    // lock the X, Z, rotations
-    this->planeConstraint->setAngularLowerLimit( btVector3(angularLowerLimit.x, angularLowerLimit.y, angularLowerLimit.z) );
-    this->planeConstraint->setAngularUpperLimit( btVector3(angularUpperLimit.x, angularUpperLimit.y, angularUpperLimit.z) );
 }
 
 void PhysicsModel::Reset()

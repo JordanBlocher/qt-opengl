@@ -19,9 +19,13 @@ DynamicsWorld::~DynamicsWorld()
 {
 }
 
-void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body, std::shared_ptr<btGeneric6DofConstraint> constraint)
+void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body)
 {
     this->world->addRigidBody(body.get());
+}
+
+void DynamicsWorld::AddConstraint(std::shared_ptr<btGeneric6DofConstraint> constraint)
+{
     this->world->addConstraint(constraint.get());
 }
 

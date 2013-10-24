@@ -13,12 +13,20 @@ class PhysicsModel : public GLNode
  
  public:
     enum BODY { CYLINDER, BOX, SPHERE };
-    PhysicsModel(const char*, float, float, float, const glm::vec3&, const glm::vec3&, BODY);
-    PhysicsModel(const char*, std::shared_ptr<GLModel>);
+    // Default shape constructor
+    PhysicsModel(const char* name, const BODY type, const btVector3 scale, 
+                const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
+                const float restitution);
+
+    // Custom shape constructor
+    PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, 
+                const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
+                const float restitution);
     ~PhysicsModel();
 
     void SetMotionState(const glm::vec3&);
-    void SetConstraints(const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&, const glm::vec3&);
+    void initConstraints(const btVector3 origin, const btVector3 linearLowerLimit, const btVector3 linearUpperLimit, 
+                                    const btVector3 angularLowerLimit, const btVector3 angularUpperLimit);
     //glm::mat4 GetRotation();
     glm::mat4 GetTransform();
     void SetTransform(btTransform newTranform);
@@ -28,7 +36,11 @@ class PhysicsModel : public GLNode
     std::shared_ptr<btGeneric6DofConstraint> GetConstraint();
 
 protected:
-    void CreateStaticModel(const std::vector<glm::vec3> &positions);
+    void initCustomShape(const std::shared_ptr<GLModel> model, const btVector3 scale);
+    void initStandardShape(const BODY type, const btVector3 scale);
+
+    void initTransform(const btQuaternion orientation, const btVector3 centroid);
+    void initRigidBody(const float mass, const float friction, const float restitution);
 
     btScalar mass;
     btScalar friction;
