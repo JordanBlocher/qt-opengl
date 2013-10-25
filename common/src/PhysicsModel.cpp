@@ -15,7 +15,7 @@ PhysicsModel::PhysicsModel(const char* name, const BODY type, const btVector3 sc
     initRigidBody(mass,friction,restitution);
 }
 
-// Constructor for custom convex triangle mesh
+// Constructor for custom convex triangle mesh (static so no constraints)
 PhysicsModel::PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, 
                             const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
                             const float restitution) : GLNode(name)
@@ -36,26 +36,28 @@ void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const b
 
     // Allocate memory for the mesh triangles
     this->triangles = std::shared_ptr<btTriangleMesh>(new btTriangleMesh());
-    this->triangles->preallocateIndices(model->Size());
-    this->triangles->preallocateVertices(model->Size());   
+    this->triangles->preallocateIndices(model->numFaces());
+    this->triangles->preallocateVertices(model->numVertices());   
 
-    // Iterate over all of the meshes
-    for(size_t meshIndex=0; meshIndex<model->Size(); meshIndex++)
+    // Iterate over all of the triangles
+    for(size_t i=0; i<model->Size(); i++)
     {
-
         // Iterate over all of the triangles of the mesh
-        for(size_t i=0; i<model->Positions(meshIndex).size() - 2 ; i+=3)
+        for(size_t j=0; j<model->Faces(i).size() - 2 ; j+=3)
         {
             // Get a triangle
-            btVector3 a0( model->Positions(meshIndex).at(i+0).x*scale.getX(), 
-                model->Positions(meshIndex).at(i+0).y*scale.getY(), 
-                model->Positions(meshIndex).at(i+0).z*scale.getZ() );
-            btVector3 a1( model->Positions(meshIndex).at(i+1).x*scale.getX(), 
-                model->Positions(meshIndex).at(i+1).y*scale.getY(), 
-                model->Positions(meshIndex).at(i+1).z*scale.getZ() );
-            btVector3 a2( model->Positions(meshIndex).at(i+2).x*scale.getX(), 
-                model->Positions(meshIndex).at(i+2).y*scale.getY(), 
-                model->Positions(meshIndex).at(i+2).z*scale.getZ() );
+            size_t t1 = model->Faces(i).at(j);
+            size_t t2 = model->Faces(i).at(j+1);
+            size_t t3 = model->Faces(i).at(j+2);
+            btVector3 a0( model->Positions(i).at(t1).x*scale.getX(), 
+                model->Positions(i).at(t1).y*scale.getY(), 
+                model->Positions(i).at(t1).z*scale.getZ() );
+            btVector3 a1( model->Positions(i).at(i+1).x*scale.getX(), 
+                model->Positions(i).at(t2).y*scale.getY(), 
+                model->Positions(i).at(t2).z*scale.getZ() );
+            btVector3 a2( model->Positions(i).at(t3).x*scale.getX(), 
+                model->Positions(i).at(t3).y*scale.getY(), 
+                model->Positions(i).at(t3).z*scale.getZ() );
 
             // Add it to the triangle set
             triangles->addTriangle(a0,a1,a2,false);
@@ -155,20 +157,13 @@ void PhysicsModel::Reset()
 }
 
 // Returns the transformation matrix of the body
-
-//glm::mat4 PhysicsModel::GetRotation()
 glm::mat4 PhysicsModel::GetTransform()
 {
    this->rigidBody->getMotionState()->getWorldTransform(this->transform);
    btMatrix3x3 matrix = this->transform.getBasis();
-   /*glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0,
-                 matrix[1][0], matrix[1][1], matrix[1][2], 0,
-                 matrix[2][0], matrix[2][1], matrix[2][2], 0,
-                 0, 0, 0, 1);
-   */
-   glm::mat4 ret(matrix[0][0], matrix[0][1], matrix[0][2], 0,
-             matrix[1][0], matrix[1][1], matrix[1][2], 0,
-             matrix[2][0], matrix[2][1], matrix[2][2], 0,
+   glm::mat4 ret(matrix[0][0], matrix[1][0], matrix[2][0], 0,
+             matrix[0][1], matrix[1][1], matrix[2][1], 0,
+             matrix[0][2], matrix[1][2], matrix[2][2], 0,
              this->transform.getOrigin().getX(), this->transform.getOrigin().getY(), this->transform.getOrigin().getZ(), 1);
                  return ret;
 }
@@ -176,17 +171,6 @@ glm::mat4 PhysicsModel::GetTransform()
 void PhysicsModel::SetTransform(btTransform newTransform)
 {
     this->rigidBody->getMotionState()->setWorldTransform(newTransform);
-}
-
-// Returns the centroid
-glm::mat4 PhysicsModel::GetTranslation()
-{
-   btVector3 origin = this->transform.getOrigin();
-   glm::mat4 ret(1, 0, 0, (float)origin.getX(),
-                 0, 1, 0, (float)origin.getY(),
-                 0, 0, 1, (float)origin.getZ(),
-                 0, 0, 0, 1);
-   return ret;
 }
 
 std::shared_ptr<btRigidBody> PhysicsModel::GetRigidBody()

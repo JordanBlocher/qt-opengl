@@ -30,7 +30,6 @@ class PhysicsModel : public GLNode
     //glm::mat4 GetRotation();
     glm::mat4 GetTransform();
     void SetTransform(btTransform newTranform);
-    glm::mat4 GetTranslation();
     void Reset();
     std::shared_ptr<btRigidBody> GetRigidBody();
     std::shared_ptr<btGeneric6DofConstraint> GetConstraint();

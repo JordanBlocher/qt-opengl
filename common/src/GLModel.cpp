@@ -330,9 +330,19 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     glBindVertexArray(0);
 }
 
+size_t GLModel::numFaces()
+{
+    return this->e_size;
+}
+
+size_t GLModel::numVertices()
+{
+    return this->v_size;
+}
+
 size_t GLModel::Size()
 {
-    return this->positions->size();
+    return this->faces->size();
 }
 
 const std::vector<glm::vec3>& GLModel::Positions(size_t index)

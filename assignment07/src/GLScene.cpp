@@ -81,11 +81,6 @@ void GLScene::initializeGL()
     // Add table to world 
     world->AddPhysicsBody(tablePhys->GetRigidBody());
 
-    // Special table settings
-    tablePhys->GetRigidBody()->setCollisionFlags(tablePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
-    tablePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    tablePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-
     // Merge models, add to entity list
     std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
     entities->push_back(tableEnt);

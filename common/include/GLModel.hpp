@@ -35,6 +35,8 @@ class GLModel : public GLNode
     void Draw(std::shared_ptr<GLUniform>, GLuint);
     const std::vector<glm::vec3>& Positions(size_t);
     const std::vector<GLuint>& Faces(size_t);
+    size_t numVertices();
+    size_t numFaces();
     size_t Size();
 
  private:

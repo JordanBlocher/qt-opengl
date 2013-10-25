@@ -1,19 +1,19 @@
-# Blender MTL File: 'walls.blend'
+# Blender MTL File: 'walls.blend1'
 # Material Count: 2
-newmtl Material
+newmtl Material.002
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
-Kd 0.302131 0.640000 0.144625
+Kd 0.276313 0.640000 0.231023
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
 illum 2
 
 
-newmtl Material.001
+newmtl Material.003
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
-Kd 0.370306 0.068012 0.640000
+Kd 0.265000 0.207401 0.640000
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
