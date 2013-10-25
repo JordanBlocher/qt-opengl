@@ -68,13 +68,15 @@ void GLScene::initializeGL()
     /****** Model Creation ******/
     /* -------------------Table------------------- */
     // Create the table gfxmodel
-    std::shared_ptr<GLModel> tableGfx(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
+    std::shared_ptr<GLModel> tableGfx(new GLModel("table.obj", "table", NUM_ATTRIBUTES));
     tableGfx->CreateVAO();
     tableGfx->setMatrix(glm::scale(tableGfx->Matrix(), glm::vec3(1.0f))); 
     //tableGfx->setMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.5, 0.0)));
 
     // Create the table physmodel
-    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableGfx,btVector3(1.0f,1.0f,1.0f),
+    std::shared_ptr<GLModel> tableConst(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
+    tableConst->CreateVAO();
+    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst,btVector3(1.0f,1.0f,1.0f),
                                             btQuaternion(0,0,0,1), btVector3(0,0,0),
                                             0.0f, 0.0f, 1.0f));
 
@@ -93,14 +95,14 @@ void GLScene::initializeGL()
 
     // Create the puck physmodel
     std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f),
-                                            btQuaternion(0,0,0,1), btVector3(0.0f,5.25f,0.0f),
+                                            btQuaternion(0,0,0,1), btVector3(0.0f,0.0f,-3.0f),
                                             0.7f, 0.00f, 0.5f));
 
     // Add puck to world 
     world->AddPhysicsBody(puckPhys->GetRigidBody());
 
     // Set up puck constraints
-    puckPhys->initConstraints(btVector3(0.0f,0.01f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+    puckPhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
                     btVector3(0.0f,1.0f,0.0f),btVector3(0.0f,0.0f,0.0f));
 
     // Add constraints to world
@@ -108,7 +110,7 @@ void GLScene::initializeGL()
 
     // Special puck settings
     puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,1,1));
+    puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
 
     // Merge models, add to entity list
     std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
@@ -122,14 +124,14 @@ void GLScene::initializeGL()
 
     // Create the sphere physmodel
     std::shared_ptr<PhysicsModel> spherePhys(new PhysicsModel("sphere",PhysicsModel::BODY::SPHERE, btVector3(0.1f,0.0f,0.0f),
-                                            btQuaternion(0,0,0,1), btVector3(0,5.0,0),
+                                            btQuaternion(0,0,0,1), btVector3(0,0.0f,3.0f),
                                             0.7f, 0.05f, 0.5f));
 
     // Add sphere to world 
     world->AddPhysicsBody(spherePhys->GetRigidBody());
 
     // Set up sphere constraints
-    spherePhys->initConstraints(btVector3(0.0f,0.01f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+    spherePhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
                     btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
 
     // Add constraints to world
@@ -137,7 +139,7 @@ void GLScene::initializeGL()
 
     // Special sphere settings
     spherePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    spherePhys->GetRigidBody()->setLinearFactor(btVector3(1,1,1));
+    spherePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
 
     // Merge models, add to entity list
     std::shared_ptr<Entity> sphereEnt(new Entity(sphereGfx, spherePhys));
@@ -145,27 +147,27 @@ void GLScene::initializeGL()
 
     /* -------------------Cube------------------- */
     // Create the cube gfxmodel
-    std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
-    cubeGfx->CreateVAO();
-    cubeGfx->setMatrix(glm::scale(cubeGfx->Matrix(), glm::vec3(0.5f,0.5f,0.5f))); 
+   // std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
+   // cubeGfx->CreateVAO();
+   // cubeGfx->setMatrix(glm::scale(cubeGfx->Matrix(), glm::vec3(0.5f,0.5f,0.5f))); 
 
 
     // Create the cube physmodel
-    std::shared_ptr<PhysicsModel> cubePhys(new PhysicsModel("cube",PhysicsModel::BODY::BOX,
-                                            btVector3(0.5f,0.5f,0.5f),btQuaternion(0,0,0,1),
-                                            btVector3(0,0,0), 0.0f, 0.05f, 1.0f));
+   // std::shared_ptr<PhysicsModel> cubePhys(new PhysicsModel("cube",PhysicsModel::BODY::BOX,
+     //                                       btVector3(0.5f,0.5f,0.5f),btQuaternion(0,0,0,1),
+       //                                     btVector3(0,0,0), 0.0f, 0.05f, 1.0f));
 
     // Add cube to world 
-    world->AddPhysicsBody(cubePhys->GetRigidBody());
+   // world->AddPhysicsBody(cubePhys->GetRigidBody());
 
     // Special cube settings
-    cubePhys->GetRigidBody()->setCollisionFlags(cubePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
-    cubePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    cubePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+   // cubePhys->GetRigidBody()->setCollisionFlags(cubePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
+  //  cubePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+  //  cubePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
 
     // Merge models, add to entity list
-    std::shared_ptr<Entity> cubeEnt(new Entity(cubeGfx,cubePhys));
-    entities->push_back(cubeEnt);
+    //std::shared_ptr<Entity> cubeEnt(new Entity(cubeGfx,cubePhys));
+    //entities->push_back(cubeEnt);
 
     /****** Deep GPU Stuff ******/
     //Shaders
@@ -239,7 +241,7 @@ void GLScene::paintGL()
        std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->getPhysicsModel();
        std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
        glm::mat4 transform;
-       transform =  pmodel->GetTransform();// * pmodel->GetTranslation();
+       transform =  pmodel->GetTransform();
        std::cout<<"transform "<<transform<<endl;
 
        //Bind MVP

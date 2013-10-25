@@ -39,7 +39,7 @@ void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const b
     this->triangles->preallocateIndices(model->numFaces());
     this->triangles->preallocateVertices(model->numVertices());   
 
-    // Iterate over all of the triangles
+    // Iterate over all of the elements
     for(size_t i=0; i<model->Size(); i++)
     {
         // Iterate over all of the triangles of the mesh
@@ -52,7 +52,7 @@ void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const b
             btVector3 a0( model->Positions(i).at(t1).x*scale.getX(), 
                 model->Positions(i).at(t1).y*scale.getY(), 
                 model->Positions(i).at(t1).z*scale.getZ() );
-            btVector3 a1( model->Positions(i).at(i+1).x*scale.getX(), 
+            btVector3 a1( model->Positions(i).at(t2).x*scale.getX(), 
                 model->Positions(i).at(t2).y*scale.getY(), 
                 model->Positions(i).at(t2).z*scale.getZ() );
             btVector3 a2( model->Positions(i).at(t3).x*scale.getX(), 
@@ -60,12 +60,13 @@ void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const b
                 model->Positions(i).at(t3).z*scale.getZ() );
 
             // Add it to the triangle set
-            triangles->addTriangle(a0,a1,a2,false);
+            triangles->addTriangle(a0,a1,a2,true);
         }
     }
 
     // Build the shape
     this->collisionShape = std::shared_ptr<btCollisionShape>(new btBvhTriangleMeshShape(triangles.get(), true, true));
+    this->collisionShape->setMargin(0.3);
 
 }
 
