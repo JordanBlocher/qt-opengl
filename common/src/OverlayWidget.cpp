@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QDialog>
 #include <QPalette>
+#include <QDebug>
 
 #define WAIT_MS 300
 
@@ -89,7 +90,6 @@ void OverlayWidget::paintEvent(QPaintEvent *event)
     painter.eraseRect(event->rect());
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 14));
-    std::cout<<"p1 "<<p1.name<<std::endl;
     painter.drawText(5,20,this->p1.name.c_str());
     painter.drawText(15,40,std::to_string(this->p1.score).c_str());
     painter.drawText(this->width() - 10*this->p2.name.length(),20,this->p2.name.c_str());
@@ -151,11 +151,8 @@ void OverlayWidget::updatePaint(int score, int player)
 
 void OverlayWidget::setPlayer(Player p, int player)
 {
-    std::cout<< "player " << player<<std::endl;
-        
     if (player == 1)
     {
-        std::cout<<"p "<< p.name<<std::endl;
         p1 = p;
     }
     else if (player == 2)

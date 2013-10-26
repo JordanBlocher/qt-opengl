@@ -42,3 +42,15 @@ void DockWidget::player2()
 {
     this->getPaddle(2);
 }
+
+void DockWidget::changeEvent(QEvent *event)
+{
+    if (event->type()==QEvent::ActivationChange)
+    {
+        if(!isActiveWindow())
+            this->hide();
+        else
+            this->show();	
+
+    }		
+}

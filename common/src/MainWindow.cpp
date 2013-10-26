@@ -13,7 +13,9 @@
 #include <QPalette>
 #include <QColor>
 
-MainWindow::MainWindow(QWidget *parent, GLViewport *view)
+
+MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
+    QMainWindow(parent)
 {
     this->glView = ((view == NULL) ? new GLViewport(this) : view);
     setCentralWidget(glView);
@@ -27,14 +29,15 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view)
 
     this->createActions();
     this->createMenus();
+    
+    if (!connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int))) ) std::cout << "Failed to connect" << std::endl; 
+
     this->getPlayer(this->p1, 1);
     this->getPlayer(this->p2, 2);
     this->createDockWindows();
-    std::cout<<p1.name<<endl;
 
-    connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int)) ); 
-    connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)) );
-    connect( dock, SIGNAL(updatePaddle(const char*, int)), glView, SLOT(updatePaddle(const char*, int)) );
+    if (!connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)))) std::cout << "Failed to connect" << std::endl; 
+    if (!connect( dock, SIGNAL(updatePaddle(const char*, int)), glView, SLOT(updatePaddle(const char*, int)))) std::cout << "Failed to connect" << std::endl; 
 
  
 }
@@ -81,21 +84,21 @@ QMenu* MainWindow::createPopupMenu()
     return menu;
 }
 
+// Dock window for player options
 void MainWindow::createDockWindows()
 {
-    // Player 1
-    QDockWidget *qDock = new QDockWidget(tr("Player Options"), this);
-    qDock->setAllowedAreas(Qt::BottomDockWidgetArea);
-    qDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    qDock->setMaximumHeight(200);
+    this->qDock = new QDockWidget(tr("Player Options"), this);
+    this->qDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+    this->qDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    this->qDock->setMaximumHeight(200);
     this->dock = new DockWidget(qDock);
-    qDock->setWidget(dock);
+    this->qDock->setWidget(dock);
 
     this->addDockWidget(Qt::BottomDockWidgetArea, qDock);
     
 }
 
-void MainWindow::getPlayer(Player p, int i)
+void MainWindow::getPlayer(Player &p, int i)
 {
     bool ok;
     QInputDialog *dialog = new QInputDialog();
@@ -118,6 +121,18 @@ void MainWindow::resizeEvent(QResizeEvent* )
     overlay->resize(this->width(), overlay->size().height());
     overlay->updatePaint(0, 1);
     overlay->updatePaint(0, 2);
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type()==QEvent::ActivationChange)
+    {
+        if(this->overlay->isVisible())
+            qDock->show();
+        else
+            qDock->hide();	
+
+    }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* )

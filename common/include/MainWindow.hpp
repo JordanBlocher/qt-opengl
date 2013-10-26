@@ -25,6 +25,7 @@ Q_OBJECT
     void resizeEvent(QResizeEvent*);
     void keyPressEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
+    void changeEvent(QEvent*);
 
     GLViewport *glView;
     OverlayWidget *overlay;
@@ -38,6 +39,7 @@ Q_OBJECT
     Player p1;
     Player p2;
     DockWidget *dock;
+    QDockWidget *qDock;
 
     // Default Menu Options
     QMenu *menu;
@@ -55,7 +57,7 @@ Q_OBJECT
  protected slots:
     void aboutCallback();     
     void aboutQtCallback();
-    void getPlayer(Player, int);
+    void getPlayer(Player&, int);
 
  signals:
    void setPlayer(Player, int);
