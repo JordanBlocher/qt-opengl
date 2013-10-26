@@ -1,6 +1,7 @@
 #include "MainWindow.hpp"
 #include "GLViewport.hpp"
 #include "OverlayWidget.hpp"
+#include "DockWidget.hpp"
 
 #include <QtGui>
 #include <QWidget>
@@ -14,15 +15,28 @@
 
 MainWindow::MainWindow(QWidget *parent, GLViewport *view)
 {
-    this->glView = (view == NULL) ? new GLViewport(this) : view;
+    this->glView = ((view == NULL) ? new GLViewport(this) : view);
     setCentralWidget(glView);
+
     overlay = new OverlayWidget(centralWidget());
     overlay->setBackgroundWidget(this);
-    overlay->resize(150, overlay->size().height());
+    overlay->resize(this->width(), overlay->size().height() + 35);
+
+    setWindowTitle(tr("Air Hockey"));
+    this->ok = true;
 
     this->createActions();
     this->createMenus();
-    connect( glView, SIGNAL(changeDirection(int)), overlay, SLOT( updatePaint(int) ) ); 
+    this->getPlayer(this->p1, 1);
+    this->getPlayer(this->p2, 2);
+    this->createDockWindows();
+    std::cout<<p1.name<<endl;
+
+    connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int)) ); 
+    connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)) );
+    connect( dock, SIGNAL(updatePaddle(const char*, int)), glView, SLOT(updatePaddle(const char*, int)) );
+
+ 
 }
 
 MainWindow::~MainWindow()
@@ -67,19 +81,50 @@ QMenu* MainWindow::createPopupMenu()
     return menu;
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::createDockWindows()
 {
-    //glView->resizeApp(event->size().width(), event->size().height());
-    //event->accept();
+    // Player 1
+    QDockWidget *qDock = new QDockWidget(tr("Player Options"), this);
+    qDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+    qDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    qDock->setMaximumHeight(200);
+    this->dock = new DockWidget(qDock);
+    qDock->setWidget(dock);
+
+    this->addDockWidget(Qt::BottomDockWidgetArea, qDock);
+    
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
+void MainWindow::getPlayer(Player p, int i)
 {
-    //glView->keyPressed(event);
-    //event->accept();
+    bool ok;
+    QInputDialog *dialog = new QInputDialog();
+    QString name = dialog->getText(this, 
+                    tr(std::string("Player" + std::to_string(i)).c_str()),
+                    tr("Name:"), 
+                    QLineEdit::Normal, QDir::home().dirName(),
+                    &ok);
+    if (ok && !name.isEmpty())
+    {
+        p.name = name.toStdString();
+        p.score = 0;
+        emit setPlayer(p, i);
+    }
+    else ok = false;;
 }
 
-void MainWindow::mousePressEvent(QMouseEvent *event)
+void MainWindow::resizeEvent(QResizeEvent* )
+{
+    overlay->resize(this->width(), overlay->size().height());
+    overlay->updatePaint(0, 1);
+    overlay->updatePaint(0, 2);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* )
+{
+}
+
+void MainWindow::mousePressEvent(QMouseEvent*)
 {
 }
 
@@ -98,4 +143,9 @@ void MainWindow::aboutQtCallback()
     QMessageBox::about(this, tr("About Qt"),
     tr("MainWindow \nQt Version 4.8.3"));
 
+}
+
+bool MainWindow::Ok()
+{
+    return this->ok;
 }

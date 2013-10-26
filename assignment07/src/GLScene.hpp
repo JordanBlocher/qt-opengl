@@ -22,6 +22,7 @@ class GLScene : public GLViewport
 
  protected slots:
     void idleGL();
+    void updatePaddle(const char*, int);
 
  protected:
     void initializeGL();

@@ -10,7 +10,6 @@ class GLModel;
 
 class PhysicsModel : public GLNode
 {
- 
  public:
     enum BODY { CYLINDER, BOX, SPHERE };
     // Default shape constructor

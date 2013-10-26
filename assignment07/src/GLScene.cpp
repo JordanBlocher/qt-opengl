@@ -242,7 +242,6 @@ void GLScene::paintGL()
        std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
        glm::mat4 transform;
        transform =  pmodel->GetTransform();
-       std::cout<<"transform "<<transform<<endl;
 
        //Bind MVP
        Uniform position = vuniform->Get(POSITION);
@@ -270,6 +269,9 @@ void GLScene::paintGL()
    }
 }
 
+void GLScene::updatePaddle(const char* paddle, int player)
+{
+}
 
 void GLScene::idleGL()
 {  
@@ -283,11 +285,6 @@ void GLScene::idleGL()
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
     std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
     world->stepSimulation(dt/1.0f);
-
-    cout << "Vel: " << entities->at(0)->getPhysicsModel()->GetRigidBody()->getLinearVelocity().length() << endl;
-    btTransform newTransform;
-    entities->at(0)->getPhysicsModel()->GetRigidBody()->getMotionState()->getWorldTransform(newTransform);
-    cout << "Trasform:" << newTransform.getOrigin().getX() << ", " << newTransform.getOrigin().getY() << ", " << newTransform.getOrigin().getZ() << endl;
 
     // Update all of the fuck
     GLViewport::updateGL();

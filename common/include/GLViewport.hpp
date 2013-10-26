@@ -36,15 +36,13 @@ Q_OBJECT
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
-    void resizeApp(int, int);
-    void keyPressed(QKeyEvent*);
-
  signals:
-    void changeDirection(int); 
+    void updateScore(int, int);
 
  protected slots:
     virtual void idleGL();
     virtual void quit();
+    virtual void updatePaddle(const char*, int);
 
  protected: 
     virtual void initializeGL();

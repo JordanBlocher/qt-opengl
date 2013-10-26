@@ -186,4 +186,10 @@ std::shared_ptr<btGeneric6DofConstraint> PhysicsModel::GetConstraint()
 
 PhysicsModel::~PhysicsModel()
 {
+    rigidBody.reset();
+    collisionShape.reset();
+    boundingBox.reset();
+    planeConstraint.reset();
+    motionState.reset();
+    triangles.reset();
 }

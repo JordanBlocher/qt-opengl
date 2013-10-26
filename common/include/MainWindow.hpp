@@ -1,6 +1,8 @@
 #ifndef QGLAPP_H
 #define QGLRAPP_H
 
+#include "GLStruct.hpp"
+
 #include <QMainWindow>
 
 class QAction;
@@ -10,6 +12,7 @@ class GLViewport;
 class OverlayWidget;
 class QResizeEvent;
 class QColor;
+class DockWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -26,9 +29,17 @@ Q_OBJECT
     GLViewport *glView;
     OverlayWidget *overlay;
 
+    bool Ok();
+
  protected:
     virtual QMenu* createPopupMenu();
-    
+
+    // Initialize Game
+    Player p1;
+    Player p2;
+    DockWidget *dock;
+
+    // Default Menu Options
     QMenu *menu;
     QMenu *help;
     QAction *exit;
@@ -36,15 +47,25 @@ Q_OBJECT
     QAction *aboutQt;
     QLabel *infoLabel;
     QPalette *palette;
+    
+    // Player options for dock widgets
+    QAction *p1puckSelect;
+    QAction *p2puckSelect;
    
  protected slots:
     void aboutCallback();     
     void aboutQtCallback();
+    void getPlayer(Player, int);
+
+ signals:
+   void setPlayer(Player, int);
 
  private:
     void createActions();
     void createMenus();
+    void createDockWindows();
 
+    bool ok;
 };
 
 

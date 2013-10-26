@@ -1,6 +1,8 @@
 #ifndef GLOVERLAY_H
 #define GLOVERLAY_H
 
+#include "GLStruct.hpp"
+
 #include <QWidget>
 #include <QString>
 
@@ -22,7 +24,8 @@ class OverlayWidget : public QWidget
 	void setBackgroundWidget(MainWindow *backGroundWidget);	
 
  public slots:
-    void updatePaint(int);
+    void updatePaint(int, int);
+    void setPlayer(Player, int);
 
  protected: 
 	virtual void changeEvent(QEvent*);
@@ -33,12 +36,12 @@ class OverlayWidget : public QWidget
 	void setTransparent(bool transparent);
 	void setOpacity(const float &opacity=0.8);
 
-	
  private: 
 	MainWindow *window;
     QHBoxLayout *layout;
     GLViewport *glView;
-    QString msg;
+    Player p1;
+    Player p2;
 };
 
 #endif 

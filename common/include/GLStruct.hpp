@@ -27,6 +27,12 @@ struct Uniform
     GLuint offset;
 };
 
+struct Player
+{
+    std::string name;
+    int score;
+    std::string puck;
+};
 
 #endif
 

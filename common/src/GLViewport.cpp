@@ -17,6 +17,7 @@
 #include <QMenu>
 #include <QContextMenuEvent>
 #include <QColor>
+#include <QObject>
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
@@ -72,11 +73,6 @@ void GLViewport::paintGL()
     this->swapBuffers();
 }
 
-void GLViewport::resizeApp(int width, int height)
-{
-    this->resizeGL(width, height);
-}
-
 void GLViewport::resizeGL(int width, int height)
 {
     // Get access to the camera
@@ -114,10 +110,10 @@ void GLViewport::mousePressEvent(QMouseEvent *event)
 {
 }
 
-void GLViewport::keyPressed(QKeyEvent *event)
+void GLViewport::updatePaddle(const char* paddle, int player)
 {
-    this->keyPressEvent(event);
 }
+
 
 bool GLViewport::AddProgram(std::shared_ptr<GLProgram> program)
 {
