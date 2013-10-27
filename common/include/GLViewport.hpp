@@ -1,5 +1,5 @@
-#ifndef QGLAPP_H
-#define QGLRAPP_H
+#ifndef QGLVIEW_H
+#define QGLVIEW_H
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -15,6 +15,7 @@
 
 class GLProgram;
 class GLNode;
+class GLCamera;
 class QMenu;
 class QKeyEvent;
 class QContextMenuEvent;
@@ -30,14 +31,25 @@ class GLViewport : public QGLWidget
 Q_OBJECT
 
  public:
-    GLViewport(QWidget *parent = 0);
+    GLViewport(int, int, QWidget *parent = 0, dataPtr = NULL);
     ~GLViewport();
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
+    dataPtr getContext();
+
+    template<class T>
+    std::shared_ptr<T> Get(const char*) const;
+
+ public slots:
+    void paintCallback();
+    void keyCallback(QKeyEvent*);
 
  signals:
     void updateScore(int, int);
+    void init();
+    void paint();
+    void key(QKeyEvent*);
 
  protected slots:
     virtual void idleGL();
@@ -57,9 +69,6 @@ Q_OBJECT
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
     
-    template<class T>
-    std::shared_ptr<T> Get(const char*) const;
-
     QSize initialSize;
     QTimer timer;
     QMenu *popup;
@@ -71,7 +80,7 @@ Q_OBJECT
     glm::mat4 mvp;
 
     // Data Structure for Nodes
-    dataPtr glData;
+    dataPtr context;
     // Physics Engine
     std::shared_ptr<Dynamics> dynamics;
     
@@ -81,8 +90,8 @@ Q_OBJECT
 template<class T>
 std::shared_ptr<T> GLViewport::Get(const char* name) const 
 {
-    if( this->glData->count(name) == 1 )
-        return std::static_pointer_cast<T>(this->glData->find(name)->second);
+    if( this->context->count(name) == 1 )
+        return std::static_pointer_cast<T>(this->context->find(name)->second);
     else 
         std::cerr << "Node " <<name <<" was not found"<< std::endl;
     return NULL;

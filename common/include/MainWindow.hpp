@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow
 Q_OBJECT
 
  public:
-    MainWindow(QWidget *parent = 0, GLViewport *view = NULL);
+    MainWindow(QWidget *parent = 0, GLViewport *view = NULL, GLViewport *p1View = NULL, GLViewport *p2View = NULL);
     ~MainWindow();
 
     void resizeEvent(QResizeEvent*);
@@ -51,8 +51,8 @@ Q_OBJECT
     QPalette *palette;
     
     // Player options for dock widgets
-    QAction *p1puckSelect;
-    QAction *p2puckSelect;
+    QAction *child1Select;
+    QAction *child2Select;
    
  protected slots:
     void aboutCallback();     
@@ -66,6 +66,7 @@ Q_OBJECT
     void createActions();
     void createMenus();
     void createDockWindows();
+    void setChildViews(GLViewport*, GLViewport*);
 
     bool ok;
 };

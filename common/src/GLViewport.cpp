@@ -21,8 +21,11 @@
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
-GLViewport::GLViewport(QWidget *parent) : QGLWidget(QGLFormat(QGL::HasOverlay | QGL::DoubleBuffer | QGL::DepthBuffer), parent), initialSize(640, 480), timer(this), glData(new sceneData)
+GLViewport::GLViewport(int width, int height, QWidget *parent, dataPtr context) : QGLWidget(QGLFormat(QGL::HasOverlay | QGL::DoubleBuffer | QGL::DepthBuffer), parent), initialSize(width, height), timer(this)
 {
+    if(context == NULL)
+        this->context = dataPtr(new sceneData);
+    else this->context = context;
     this->setMouseTracking(true);
     this->setAutoBufferSwap(true);
     this->timer.setInterval(0);
@@ -63,6 +66,7 @@ void GLViewport::initializeGL()
         return;
     }
     timer.start();
+    emit init();
 }
 
 void GLViewport::paintGL()
@@ -71,6 +75,8 @@ void GLViewport::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     this->swapBuffers();
+
+    emit paint();
 }
 
 void GLViewport::resizeGL(int width, int height)
@@ -103,17 +109,16 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
             qApp->quit();
             break;
     } 
-
+    emit key(event);
 }
 
-void GLViewport::mousePressEvent(QMouseEvent *event)
+void GLViewport::mousePressEvent(QMouseEvent *)
 {
 }
 
-void GLViewport::updatePaddle(const char* paddle, int player)
+void GLViewport::updatePaddle(const char*, int)
 {
 }
-
 
 bool GLViewport::AddProgram(std::shared_ptr<GLProgram> program)
 {
@@ -126,9 +131,9 @@ bool GLViewport::AddProgram(std::shared_ptr<GLProgram> program)
 
 bool GLViewport::AddToContext(const std::shared_ptr<GLNode> node)
 {
-    if( this->glData->count(node->getName()) == 0 )
+    if( this->context->count(node->getName()) == 0 )
     {
-        this->glData->insert(GLPair(node->getName(), node));
+        this->context->insert(GLPair(node->getName(), node));
         return true;
     }
     return false;
@@ -155,12 +160,27 @@ void GLViewport::ViewContext()
 {
     std::cout<<"------------ Current Context -------------\n";
     std::map<std::string, std::shared_ptr<GLNode>>::const_iterator mi;
-    for (mi = this->glData->begin(); mi != this->glData->end(); ++mi)
+    for (mi = this->context->begin(); mi != this->context->end(); ++mi)
         std::cout<<mi->first<<std::endl;
 }
 
+dataPtr GLViewport::getContext()
+{
+    return this->context;
+}
 
 void GLViewport::quit()
 {
     qApp->quit();
 }
+
+void GLViewport::paintCallback()
+{
+    this->paintGL();
+}
+
+void GLViewport::keyCallback(QKeyEvent *event)
+{
+    this->keyPressEvent(event);
+}
+

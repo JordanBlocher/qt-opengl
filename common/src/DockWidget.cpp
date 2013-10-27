@@ -1,9 +1,7 @@
-#include <QtGui>
-#include <QObject>
 
 #include "DockWidget.hpp"
 
-DockWidget::DockWidget(QWidget *parent) : QWidget(parent)
+DockWidget::DockWidget(int width, int height, QWidget *parent) : QWidget(parent), initialSize(width, height)
 {
     QPushButton *button1 =
          new QPushButton(tr("Change Paddle"));
@@ -11,12 +9,12 @@ DockWidget::DockWidget(QWidget *parent) : QWidget(parent)
     QPushButton *button2 =
          new QPushButton(tr("Change Paddle"));
     button2->setMaximumWidth(100);
-    QHBoxLayout *layout = new QHBoxLayout;
-    layout->addWidget(button1);
-    layout->addSpacing(this->width() - 100);
-    layout->addWidget(button2);
+    this->layout = new QHBoxLayout;
+    this->layout->addWidget(button1, Qt::AlignLeft);
+    this->layout->addStretch(width);
+    this->layout->addWidget(button2, Qt::AlignRight);
 
-    setLayout(layout);
+    setLayout(this->layout);
  
     connect(button1, SIGNAL(clicked()), this, SLOT(player1()));
     connect(button2, SIGNAL(clicked()), this, SLOT(player2()));
@@ -33,6 +31,11 @@ void DockWidget::getPaddle(int player)
           emit updatePaddle(item.toStdString().c_str(), player); 
 }
 
+QSize DockWidget::sizeHint() const
+{
+    return initialSize;
+}
+
 void DockWidget::player1()
 {
     this->getPaddle(1);
@@ -43,14 +46,3 @@ void DockWidget::player2()
     this->getPaddle(2);
 }
 
-void DockWidget::changeEvent(QEvent *event)
-{
-    if (event->type()==QEvent::ActivationChange)
-    {
-        if(!isActiveWindow())
-            this->hide();
-        else
-            this->show();	
-
-    }		
-}

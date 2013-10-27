@@ -18,20 +18,21 @@ class GLScene : public GLViewport
     Q_OBJECT
 
  public:
-    GLScene(QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
+    GLScene(int, int, QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
+    std::shared_ptr<std::vector<std::shared_ptr<Entity>>> getEntities();
 
  protected slots:
-    void idleGL();
-    void updatePaddle(const char*, int);
+    virtual void idleGL();
+    virtual void updatePaddle(const char*, int);
 
  protected:
-    void initializeGL();
-    void paintGL();
-    void resizeGL(int, int);
-    float getDT();
-    void keyPressEvent(QKeyEvent*);
-    void mousePressEvent(QMouseEvent*);
-    void contextMenuEvent(QContextMenuEvent*);
+    virtual void initializeGL();
+    virtual void paintGL();
+    virtual void resizeGL(int, int);
+    virtual float getDT();
+    virtual void keyPressEvent(QKeyEvent*);
+    virtual void mousePressEvent(QMouseEvent*);
+    virtual void contextMenuEvent(QContextMenuEvent*);
 
     QColor background;
     QColor font;
@@ -43,12 +44,6 @@ class GLScene : public GLViewport
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
 
 };
-
-template <typename T> 
-int sgn(T val) 
-{
-    return (T(0) < val) - (val < T(0));
-}
 
 #endif 
 

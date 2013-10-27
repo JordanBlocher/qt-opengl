@@ -36,14 +36,12 @@
 
 #include "GLScene.hpp"
 
-
 const GLuint NUM_ATTRIBUTES = 3;
 
 using namespace std;
 
-GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
+GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
-
     this->dynamicModels = {"puck.obj", "sphere.obj","cube.obj",};
     this->staticModels = {"walls.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
@@ -53,8 +51,7 @@ GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), 
 
 void GLScene::initializeGL()
 {
-
-    GLViewport::initializeGL();
+   GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -267,6 +264,7 @@ void GLScene::paintGL()
        glUseProgram(0);
       
    }
+
 }
 
 void GLScene::updatePaddle(const char* paddle, int player)
@@ -369,6 +367,11 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     }
 
 
+}
+
+std::shared_ptr<std::vector<std::shared_ptr<Entity>>> GLScene::getEntities()
+{
+    return this->entities;
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)

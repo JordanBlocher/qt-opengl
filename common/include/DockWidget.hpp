@@ -2,6 +2,8 @@
 #define DOCKWIDGET_H
 
 #include <QWidget>
+#include <QObject>
+#include <QtGui>
 
 class QCheckBox;
 class QLabel;
@@ -12,7 +14,9 @@ class DockWidget : public QWidget
     Q_OBJECT
 
  public:
-    DockWidget(QWidget *parent = 0);
+    DockWidget(int, int, QWidget *parent = 0);
+
+    QSize sizeHint() const;
 
  protected slots:
     void getPaddle(int);
@@ -22,6 +26,10 @@ class DockWidget : public QWidget
  signals:
     void updatePaddle(const char*, int);
 
+ private:
+    QSize initialSize;
+
+    QHBoxLayout *layout;
 };
 
 #endif
