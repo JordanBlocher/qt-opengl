@@ -3,6 +3,7 @@
 #include "OverlayWidget.hpp"
 #include "DockWidget.hpp"
 #include "GLCamera.hpp"
+#include "MenuWidget.hpp"
 
 #include <QtGui>
 #include <QWidget>
@@ -18,6 +19,9 @@
 MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GLViewport *p2View) :
     QMainWindow(parent)
 {
+
+    this->layout = new QGridLayout;
+
     // Set up main window
     this->glView = view; //= ((view == NULL) ? new GLViewport(this) : view);
     setCentralWidget(glView);
@@ -25,11 +29,20 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
     glView->setFocus();
     setWindowTitle(tr("Air Hockey"));
     this->ok = true;
+    this->layout->addWidget(glView);
 
     // Create Transparent Overlay
     overlay = new OverlayWidget(centralWidget());
     overlay->setBackgroundWidget(this);
     overlay->resize(this->width(), overlay->size().height() + 20);
+    this->layout->addWidget(overlay);
+
+    // Create Main Menu
+    this->mainMenu = new MenuWidget(centralWidget());
+    this->mainMenu->resize(this->width() / 2.0, this->height() - 200);
+    this->layout->addWidget(mainMenu);
+
+    this->setLayout(layout);
 
     // Menu stuff
     this->createActions();
@@ -41,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
     this->getPlayer(this->p1, 1);
     this->getPlayer(this->p2, 2);
     this->createDockWindows();
+    //this->createMainMenu();
 
     // Set up child windows
     connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
@@ -92,6 +106,18 @@ void MainWindow::createMenus()
     this->help->addAction(aboutQt);
 }
 
+void MainWindow::createMainMenu()
+{
+    this->mainDock = new QDockWidget(NULL, this);
+    this->mainDock->setAllowedAreas(Qt::TopDockWidgetArea);
+    this->mainDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    this->qDock->setFixedHeight(this->height() - 200);
+    this->dock = new DockWidget(this->height() / 200, this->width() / 2, qDock);
+    this->qDock->setWidget(dock);
+
+    this->addDockWidget(Qt::BottomDockWidgetArea, qDock);
+  
+}
 
 QMenu* MainWindow::createPopupMenu()
 {

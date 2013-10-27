@@ -13,6 +13,9 @@ class OverlayWidget;
 class QResizeEvent;
 class QColor;
 class DockWidget;
+class MenuWidget;
+class QGridLayout;
+
 
 class MainWindow : public QMainWindow
 {
@@ -29,6 +32,8 @@ Q_OBJECT
 
     GLViewport *glView;
     OverlayWidget *overlay;
+    MenuWidget *mainMenu;
+    QDockWidget *mainDock;
 
     bool Ok();
 
@@ -45,6 +50,9 @@ Q_OBJECT
     QMenu *menu;
     QMenu *help;
     QAction *exit;
+    QAction *start;
+    QAction *single;
+    QAction *multi;
     QAction *about;
     QAction *aboutQt;
     QLabel *infoLabel;
@@ -67,8 +75,12 @@ Q_OBJECT
     void createMenus();
     void createDockWindows();
     void setChildViews(GLViewport*, GLViewport*);
+    void createMainMenu();
 
     bool ok;
+
+    QGridLayout *layout;
+
 };
 
 
