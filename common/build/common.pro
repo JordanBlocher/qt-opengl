@@ -72,7 +72,7 @@ INCLUDEPATH += ../include
 LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
 VERSION = 1.0
 QMAKE_CXXFLAGS += -std=c++0x -fopenmp -g
-QMAKE_CXX = g++-4.7
+QMAKE_CXX = g++-4.6
 
 CONFIG += debug staticlib
 

@@ -108,6 +108,7 @@ void GLScene::initializeGL()
     // Special puck settings
     puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
     puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+    puckPhys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
 
     // Merge models, add to entity list
     std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
