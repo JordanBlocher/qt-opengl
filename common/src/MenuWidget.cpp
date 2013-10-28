@@ -12,63 +12,63 @@
 #include <QMainWindow>
 #include <QPainter>
 #include <QLabel>
-#include <QDialog>
 #include <QPalette>
-#include <QDebug>
+#include <QAction>
+
 
 #define WAIT_MS 300
 
-MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent, Qt::SubWindow)
+MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
 {
     this->glView = static_cast<GLViewport*>( parent );
-    this->setWindowFlags(windowFlags() | Qt::SubWindow);
-    this->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    //this->setTransparent(true);
+    this->setTransparent(true);
+    this->setWindowFlags(Qt::WindowStaysOnTopHint);
     
-	buttons = new QGroupBox(tr("Options"));
     this->layout = new QVBoxLayout;
+    this->layout->setContentsMargins(140, 40, 0, 0);
 
     buttons[0] = new QPushButton(tr("Single Player"));
+    buttons[0]->setMaximumWidth(120);
     layout->addWidget(buttons[0]);
     buttons[1] = new QPushButton(tr("Multi Player"));
+    buttons[1]->setMaximumWidth(120);
     layout->addWidget(buttons[1]);
     buttons[2] = new QPushButton(tr("Quit"));
+    buttons[2]->setMaximumWidth(120);
     layout->addWidget(buttons[2]);
 
-    buttons->setLayout(layout);
     this->setLayout(layout);
 
+    this->createActions();
 }
 
 MenuWidget::~MenuWidget()
 {
 }
 
-void MenuWidget::setBackgroundWidget(MainWindow *widget)
-{
-    window = widget;
-    window->installEventFilter(this);
-}
-
-QDialog* MenuWidget::createDialog(const QString &windowTitle)
-{
-    QDialog *dialog = new QDialog(this, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-
-    dialog->setWindowTitle(windowTitle);
-    dialog->setLayout(new QVBoxLayout);
-    dialog->setWindowTitle(windowTitle);
-
-    dialog->setAttribute(Qt::WA_TranslucentBackground);
-    dialog->setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-    QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
-    dialog->setGraphicsEffect(opacityEffect);
-    opacityEffect->setOpacity(0);
-    return dialog;
-}
-
 void MenuWidget::show()
 {
     QWidget::show();
+}
+
+void MenuWidget::createActions()
+{
+    this->exit = new QAction(tr("&Quit"), this);
+    this->exit->setShortcuts(QKeySequence::Quit);
+    connect(this->buttons[2], SIGNAL(clicked()), glView, SLOT(quit()));
+
+    this->multi = new QAction(tr("&Multiplayer"), this);
+    connect(this->buttons[1], SIGNAL(clicked()), this, SLOT(multiplayer()));
+}
+
+void MenuWidget::multiplayer()
+{
+    emit playGame(2);
+}
+
+void MenuWidget::singleplayer()
+{
+    emit playGame(1);
 }
 
 void MenuWidget::setTransparent(bool transparent)
@@ -99,59 +99,21 @@ void MenuWidget::paintEvent(QPaintEvent *event)
     painter.eraseRect(event->rect());
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 24));
-    painter.drawText(this->width() / 2.0, 60, tr("Play Airhockey"));
+    painter.drawText(100, 40, tr("Play Airhockey"));
 }
 
-// Filter events from user
-// Returns false if the window is not grabbed
-bool MenuWidget::eventFilter(QObject *obj, QEvent *event)
+void MenuWidget::updatePaint()
 {
-    if (obj==window)
-    {
-        if (event->type() == QEvent::Show)
-            this->show();
-
-        if (event->type() == QEvent::Close)
-        {
-            window = NULL;
-            this->close();
-        }
-
-        if (event->type()==QEvent::WindowStateChange)
-        {
-            if (!window->isMinimized())
-            {
-                QWindowStateChangeEvent* state = static_cast<QWindowStateChangeEvent*>( event );
-                if (state->oldState() & Qt::WindowMinimized) 
-                {
-                    QTime dieTime= QTime::currentTime().addMSecs(WAIT_MS);
-                    while( QTime::currentTime() < dieTime );
-                }
-
-                this->show();
-            }
-            else this->hide();
-        }
-
-        if (event->type()==QEvent::ActivationChange)
-        {
-            if(!window->isActiveWindow() & !isActiveWindow() )
-                this->hide();
-            else this->show();
-        }
-    }
-
-    return false;
+    this->update();
+    this->hide();
+    this->show();
 }
 
-void MenuWidget::changeEvent(QEvent *event)
+void MenuWidget::toggle()
 {
-    if (event->type()==QEvent::ActivationChange)
-    {
-        if(!isActiveWindow() & !window->isActiveWindow() )
-            this->hide();
-        else
-            this->show();	
-
-    }		
+    if( this->isVisible())
+        this->hide();
+    else
+        this->show();
 }
+

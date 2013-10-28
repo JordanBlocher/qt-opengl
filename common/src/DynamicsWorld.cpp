@@ -3,11 +3,12 @@
 
 DynamicsWorld::DynamicsWorld(const char* name) : GLNode(name)
 {
-    this->collisionConfiguration = std::shared_ptr<btDefaultCollisionConfiguration>(new btDefaultCollisionConfiguration());
-    this->dispatcher = std::shared_ptr<btCollisionDispatcher>(new btCollisionDispatcher(this->collisionConfiguration.get()));
-    this->overlappingPairCache = std::shared_ptr<btDbvtBroadphase>(new btDbvtBroadphase());
-    this->solver = std::shared_ptr<btSequentialImpulseConstraintSolver>(new btSequentialImpulseConstraintSolver());
-    this->world = std::shared_ptr<btDiscreteDynamicsWorld>(
+    this->collisionConfiguration = std::unique_ptr<btDefaultCollisionConfiguration>(new btDefaultCollisionConfiguration());
+
+    this->dispatcher = std::unique_ptr<btCollisionDispatcher>(new btCollisionDispatcher(this->collisionConfiguration.get()));
+    this->overlappingPairCache = std::unique_ptr<btDbvtBroadphase>(new btDbvtBroadphase());
+    this->solver = std::unique_ptr<btSequentialImpulseConstraintSolver>(new btSequentialImpulseConstraintSolver());
+    this->world = std::unique_ptr<btDiscreteDynamicsWorld>(
     	               	     new btDiscreteDynamicsWorld( this->dispatcher.get(), 
     				         this->overlappingPairCache.get(),
     						 this->solver.get(),
@@ -17,6 +18,21 @@ DynamicsWorld::DynamicsWorld(const char* name) : GLNode(name)
 
 DynamicsWorld::~DynamicsWorld()
 {
+    for (int i=this->world->getNumCollisionObjects()-1; i>=0 ;i--)
+    {
+        btCollisionObject* obj = this->world->getCollisionObjectArray()[i];
+        btRigidBody* body = btRigidBody::upcast(obj);
+        if (body && body->getMotionState())
+        {
+            delete body->getMotionState();
+            this->world->removeCollisionObject( obj );
+        }
+    }
+    //world.reset();
+    solver.reset();
+    overlappingPairCache.reset();
+    dispatcher.reset();
+    collisionConfiguration.reset();
 }
 
 void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body)
@@ -29,8 +45,13 @@ void DynamicsWorld::AddConstraint(std::shared_ptr<btGeneric6DofConstraint> const
     this->world->addConstraint(constraint.get());
 }
 
-std::shared_ptr<btDiscreteDynamicsWorld> DynamicsWorld::GetWorld()
+std::unique_ptr<btDiscreteDynamicsWorld> DynamicsWorld::GetWorld()
 {
-   return this->world;
+   return std::move(this->world);
+}
+
+void DynamicsWorld::SetWorld(std::unique_ptr<btDiscreteDynamicsWorld> world)
+{
+    this->world = std::move(world);
 }
 

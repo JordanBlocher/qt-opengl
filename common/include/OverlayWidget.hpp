@@ -32,7 +32,6 @@ class OverlayWidget : public QWidget
 	virtual void show();
 	bool eventFilter(QObject*, QEvent*);	
     void paintEvent(QPaintEvent*);
-	QDialog* createDialog(const QString&);
 	void setTransparent(bool transparent);
 	void setOpacity(const float &opacity=0.8);
 

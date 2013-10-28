@@ -15,15 +15,16 @@ class DynamicsWorld : public GLNode
 
     void AddPhysicsBody(std::shared_ptr<btRigidBody>);
     void AddConstraint(std::shared_ptr<btGeneric6DofConstraint>);
-    std::shared_ptr<btDiscreteDynamicsWorld> GetWorld();
+    std::unique_ptr<btDiscreteDynamicsWorld> GetWorld();
+    void SetWorld(std::unique_ptr<btDiscreteDynamicsWorld> world);
 
 protected:
 
-    std::shared_ptr<btDiscreteDynamicsWorld> world;
-    std::shared_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-    std::shared_ptr<btCollisionDispatcher> dispatcher;
-    std::shared_ptr<btBroadphaseInterface> overlappingPairCache;
-    std::shared_ptr<btSequentialImpulseConstraintSolver> solver;
+    std::unique_ptr<btDiscreteDynamicsWorld> world;
+    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
+    std::unique_ptr<btCollisionDispatcher> dispatcher;
+    std::unique_ptr<btBroadphaseInterface> overlappingPairCache;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
 
 };
 

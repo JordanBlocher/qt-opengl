@@ -21,11 +21,17 @@ class GLScene : public GLViewport
     GLScene(int, int, QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> getEntities();
 
+ signals:
+    void updateScore(int, int);
+    void mainMenu();
+
  protected slots:
     virtual void idleGL();
     virtual void updatePaddle(const char*, int);
+    virtual void playGame(int);
 
  protected:
+    virtual void initGame();
     virtual void initializeGL();
     virtual void paintGL();
     virtual void resizeGL(int, int);

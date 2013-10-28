@@ -112,6 +112,11 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
     emit key(event);
 }
 
+void GLViewport::quit()
+{
+    qApp->quit();
+}
+
 void GLViewport::mousePressEvent(QMouseEvent *)
 {
 }
@@ -167,11 +172,6 @@ void GLViewport::ViewContext()
 dataPtr GLViewport::getContext()
 {
     return this->context;
-}
-
-void GLViewport::quit()
-{
-    qApp->quit();
 }
 
 void GLViewport::paintCallback()

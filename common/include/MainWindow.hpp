@@ -19,7 +19,7 @@ class QGridLayout;
 
 class MainWindow : public QMainWindow
 {
-Q_OBJECT
+    Q_OBJECT
 
  public:
     MainWindow(QWidget *parent = 0, GLViewport *view = NULL, GLViewport *p1View = NULL, GLViewport *p2View = NULL);
@@ -36,6 +36,11 @@ Q_OBJECT
     QDockWidget *mainDock;
 
     bool Ok();
+
+
+ signals:
+   void setPlayer(Player, int);
+   void playGame(int);
 
  protected:
     virtual QMenu* createPopupMenu();
@@ -65,21 +70,16 @@ Q_OBJECT
  protected slots:
     void aboutCallback();     
     void aboutQtCallback();
-    void getPlayer(Player&, int);
-
- signals:
-   void setPlayer(Player, int);
+    void getPlayer(int);
 
  private:
     void createActions();
     void createMenus();
     void createDockWindows();
     void setChildViews(GLViewport*, GLViewport*);
-    void createMainMenu();
 
     bool ok;
 
-    QGridLayout *layout;
 
 };
 

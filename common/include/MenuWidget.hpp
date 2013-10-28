@@ -12,6 +12,7 @@ class QEvent;
 class QLabel;
 class QVBoxLayout;
 class GLViewport;
+class QPushButton;
 
 class MenuWidget : public QWidget
 {
@@ -21,23 +22,33 @@ class MenuWidget : public QWidget
 	MenuWidget(QWidget *parent = 0);
 	~MenuWidget();
 
-	void setBackgroundWidget(MainWindow *backGroundWidget);	
+ signals:
+    void playGame(int);
 
  public slots:
+    void updatePaint();
+    void toggle();
 
  protected: 
-	virtual void changeEvent(QEvent*);
+    void createActions();
 	virtual void show();
-	bool eventFilter(QObject*, QEvent*);	
     void paintEvent(QPaintEvent*);
-	QDialog* createDialog(const QString&);
 	void setTransparent(bool transparent);
 	void setOpacity(const float &opacity=0.8);
+
+    QAction *single;
+    QAction *multi;
+    QAction *exit;
+
+ protected slots:
+    void multiplayer();
+    void singleplayer();
 
  private: 
 	MainWindow *window;
     QVBoxLayout *layout;
     GLViewport *glView;
+    QPushButton *buttons[3];
 };
 
 #endif 

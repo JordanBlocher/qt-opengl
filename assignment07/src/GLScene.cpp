@@ -45,9 +45,16 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->dynamicModels = {"puck.obj", "sphere.obj","cube.obj",};
     this->staticModels = {"walls.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
-    // Initialize Entity list
-    entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
 }
+
+void GLScene::playGame(int numPlayers)
+{
+}
+
+void GLScene::updatePaddle(const char* paddle, int player)
+{
+}
+
 
 void GLScene::initializeGL()
 {
@@ -55,119 +62,9 @@ void GLScene::initializeGL()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
-    string filename;
-
-    // Initialize Dynamics World
-    std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
-    this->AddToContext(world);
-
-    /****** Model Creation ******/
-    /* -------------------Table------------------- */
-    // Create the table gfxmodel
-    std::shared_ptr<GLModel> tableGfx(new GLModel("table.obj", "table", NUM_ATTRIBUTES));
-    tableGfx->CreateVAO();
-    tableGfx->setMatrix(glm::scale(tableGfx->Matrix(), glm::vec3(1.0f))); 
-    //tableGfx->setMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.5, 0.0)));
-
-    // Create the table physmodel
-    std::shared_ptr<GLModel> tableConst(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
-    tableConst->CreateVAO();
-    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst,btVector3(1.0f,1.0f,1.0f),
-                                            btQuaternion(0,0,0,1), btVector3(0,0,0),
-                                            0.0f, 0.0f, 1.0f));
-
-    // Add table to world 
-    world->AddPhysicsBody(tablePhys->GetRigidBody());
-
-    // Merge models, add to entity list
-    std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
-    entities->push_back(tableEnt);
-
-    /* -------------------Puck------------------- */
-    // Create the puck gfxmodel
-    std::shared_ptr<GLModel> puckGfx(new GLModel("puck.obj", "puck", NUM_ATTRIBUTES));
-    puckGfx->CreateVAO();
-    puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
-
-    // Create the puck physmodel
-    std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f),
-                                            btQuaternion(0,0,0,1), btVector3(0.0f,0.0f,-3.0f),
-                                            0.7f, 0.00f, 0.5f));
-
-    // Add puck to world 
-    world->AddPhysicsBody(puckPhys->GetRigidBody());
-
-    // Set up puck constraints
-    puckPhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
-                    btVector3(0.0f,1.0f,0.0f),btVector3(0.0f,0.0f,0.0f));
-
-    // Add constraints to world
-    world->AddConstraint(puckPhys->GetConstraint());
-
-    // Special puck settings
-    puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-    puckPhys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
-
-    // Merge models, add to entity list
-    std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
-    entities->push_back(puckEnt);
-
-    /* -------------------Sphere------------------- */
-    // Create the sphere gfxmodel
-    std::shared_ptr<GLModel> sphereGfx(new GLModel("sphere.obj", "sphere", NUM_ATTRIBUTES));
-    sphereGfx->CreateVAO();
-    sphereGfx->setMatrix(glm::scale(sphereGfx->Matrix(), glm::vec3(0.2f))); 
-
-    // Create the sphere physmodel
-    std::shared_ptr<PhysicsModel> spherePhys(new PhysicsModel("sphere",PhysicsModel::BODY::SPHERE, btVector3(0.1f,0.0f,0.0f),
-                                            btQuaternion(0,0,0,1), btVector3(0,0.0f,3.0f),
-                                            0.7f, 0.05f, 0.5f));
-
-    // Add sphere to world 
-    world->AddPhysicsBody(spherePhys->GetRigidBody());
-
-    // Set up sphere constraints
-    spherePhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
-                    btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
-
-    // Add constraints to world
-    world->AddConstraint(spherePhys->GetConstraint());
-
-    // Special sphere settings
-    spherePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    spherePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-
-    // Merge models, add to entity list
-    std::shared_ptr<Entity> sphereEnt(new Entity(sphereGfx, spherePhys));
-    entities->push_back(sphereEnt);
-
-    /* -------------------Cube------------------- */
-    // Create the cube gfxmodel
-   // std::shared_ptr<GLModel> cubeGfx(new GLModel("cube.obj", "cube", NUM_ATTRIBUTES));
-   // cubeGfx->CreateVAO();
-   // cubeGfx->setMatrix(glm::scale(cubeGfx->Matrix(), glm::vec3(0.5f,0.5f,0.5f))); 
-
-
-    // Create the cube physmodel
-   // std::shared_ptr<PhysicsModel> cubePhys(new PhysicsModel("cube",PhysicsModel::BODY::BOX,
-     //                                       btVector3(0.5f,0.5f,0.5f),btQuaternion(0,0,0,1),
-       //                                     btVector3(0,0,0), 0.0f, 0.05f, 1.0f));
-
-    // Add cube to world 
-   // world->AddPhysicsBody(cubePhys->GetRigidBody());
-
-    // Special cube settings
-   // cubePhys->GetRigidBody()->setCollisionFlags(cubePhys->GetRigidBody()->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
-  //  cubePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-  //  cubePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-
-    // Merge models, add to entity list
-    //std::shared_ptr<Entity> cubeEnt(new Entity(cubeGfx,cubePhys));
-    //entities->push_back(cubeEnt);
-
-    /****** Deep GPU Stuff ******/
+    
+    this->initGame();
+       /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
@@ -268,8 +165,98 @@ void GLScene::paintGL()
 
 }
 
-void GLScene::updatePaddle(const char* paddle, int player)
+void GLScene::initGame()
 {
+ 
+    // Initialize Entity list
+    entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
+
+    // Initialize Dynamics World
+    std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
+    this->AddToContext(world);
+
+
+    /****** Model Creation ******/
+    /* -------------------Table------------------- */
+    // Create the table gfxmodel
+    std::shared_ptr<GLModel> tableGfx(new GLModel("table.obj", "table", NUM_ATTRIBUTES));
+    tableGfx->CreateVAO();
+    tableGfx->setMatrix(glm::scale(tableGfx->Matrix(), glm::vec3(1.0f))); 
+    //tableGfx->setMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.5, 0.0)));
+
+    // Create the table physmodel
+    std::shared_ptr<GLModel> tableConst(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
+    tableConst->CreateVAO();
+    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst,btVector3(1.0f,1.0f,1.0f),
+                                            btQuaternion(0,0,0,1), btVector3(0,0,0),
+                                            0.0f, 0.0f, 1.0f));
+
+    // Add table to world 
+    world->AddPhysicsBody(tablePhys->GetRigidBody());
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
+    entities->push_back(tableEnt);
+
+    /* -------------------Puck------------------- */
+    // Create the puck gfxmodel
+    std::shared_ptr<GLModel> puckGfx(new GLModel("puck.obj", "puck", NUM_ATTRIBUTES));
+    puckGfx->CreateVAO();
+    puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
+
+    // Create the puck physmodel
+    std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f),
+                                            btQuaternion(0,0,0,1), btVector3(0.0f,0.0f,-3.0f),
+                                            0.7f, 0.00f, 0.5f));
+
+    // Add puck to world 
+    world->AddPhysicsBody(puckPhys->GetRigidBody());
+
+    // Set up puck constraints
+    puckPhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+                    btVector3(0.0f,1.0f,0.0f),btVector3(0.0f,0.0f,0.0f));
+
+    // Add constraints to world
+    world->AddConstraint(puckPhys->GetConstraint());
+
+    // Special puck settings
+    puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+    puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+    puckPhys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
+    entities->push_back(puckEnt);
+
+    /* -------------------Sphere------------------- */
+    // Create the sphere gfxmodel
+    std::shared_ptr<GLModel> sphereGfx(new GLModel("sphere.obj", "sphere", NUM_ATTRIBUTES));
+    sphereGfx->CreateVAO();
+    sphereGfx->setMatrix(glm::scale(sphereGfx->Matrix(), glm::vec3(0.2f))); 
+
+    // Create the sphere physmodel
+    std::shared_ptr<PhysicsModel> spherePhys(new PhysicsModel("sphere",PhysicsModel::BODY::SPHERE, btVector3(0.1f,0.0f,0.0f),
+                                            btQuaternion(0,0,0,1), btVector3(0,0.0f,3.0f),
+                                            0.7f, 0.05f, 0.5f));
+
+    // Add sphere to world 
+    world->AddPhysicsBody(spherePhys->GetRigidBody());
+
+    // Set up sphere constraints
+    spherePhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
+                    btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
+
+    // Add constraints to world
+    world->AddConstraint(spherePhys->GetConstraint());
+
+    // Special sphere settings
+    spherePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+    spherePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+
+    // Merge models, add to entity list
+    std::shared_ptr<Entity> sphereEnt(new Entity(sphereGfx, spherePhys));
+    entities->push_back(sphereEnt);
+
 }
 
 void GLScene::idleGL()
@@ -282,8 +269,9 @@ void GLScene::idleGL()
 
     // Get Discrete Dynamics World and update time step
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
-    std::shared_ptr<btDiscreteDynamicsWorld> world = dynamics->GetWorld();
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
     world->stepSimulation(dt/1.0f);
+    dynamics->SetWorld(std::move(world));
 
     // Update all of the fuck
     GLViewport::updateGL();
@@ -305,6 +293,7 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
+    return;
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
 
     // Let the superclass handle the events
@@ -364,6 +353,9 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             break;
         case (Qt::Key_L):
             entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            break;
+        case (Qt::Key_Escape):
+            emit mainMenu();
             break;
     }
 

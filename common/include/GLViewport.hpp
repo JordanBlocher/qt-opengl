@@ -44,16 +44,15 @@ Q_OBJECT
  public slots:
     void paintCallback();
     void keyCallback(QKeyEvent*);
+    void quit();
 
  signals:
-    void updateScore(int, int);
     void init();
     void paint();
     void key(QKeyEvent*);
 
  protected slots:
     virtual void idleGL();
-    virtual void quit();
     virtual void updatePaddle(const char*, int);
 
  protected: 

@@ -20,29 +20,24 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
     QMainWindow(parent)
 {
 
-    this->layout = new QGridLayout;
-
     // Set up main window
     this->glView = view; //= ((view == NULL) ? new GLViewport(this) : view);
     setCentralWidget(glView);
     glView->setFocusPolicy(Qt::StrongFocus);
-    glView->setFocus();
     setWindowTitle(tr("Air Hockey"));
     this->ok = true;
-    this->layout->addWidget(glView);
 
     // Create Transparent Overlay
-    overlay = new OverlayWidget(centralWidget());
+    overlay = new OverlayWidget(glView);
     overlay->setBackgroundWidget(this);
     overlay->resize(this->width(), overlay->size().height() + 20);
-    this->layout->addWidget(overlay);
 
     // Create Main Menu
-    this->mainMenu = new MenuWidget(centralWidget());
-    this->mainMenu->resize(this->width() / 2.0, this->height() - 200);
-    this->layout->addWidget(mainMenu);
-
-    this->setLayout(layout);
+    this->mainMenu = new MenuWidget(glView);
+    this->mainMenu->resize(this->width() /2.0, this->height() - 200);
+    this->mainMenu->setFocusPolicy(Qt::StrongFocus);
+    this->mainMenu->setFocus();
+    //setCentralWidget(mainMenu);
 
     // Menu stuff
     this->createActions();
@@ -50,22 +45,34 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
  
     // Connect user input for Player init
     connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int))); 
+    // Default Values
+    this->p1.name = "Player 1";
+    this->p1.score = 0;
+    emit setPlayer(this->p1, 1);
+    this->p2.name = "Player 2";
+    this->p2.score = 0;
+    emit setPlayer(this->p2, 2);
 
-    this->getPlayer(this->p1, 1);
-    this->getPlayer(this->p2, 2);
     this->createDockWindows();
-    //this->createMainMenu();
 
-    // Set up child windows
+    // Connections to dock windows
     connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
     connect( dock, SIGNAL(updatePaddle(const char*, int)), glView, SLOT(updatePaddle(const char*, int)));
+
+    // Connections to update score
     connect(glView, SIGNAL(paint()), p1View, SLOT(paintCallback()));
     connect(glView, SIGNAL(key(QKeyEvent*)), p1View, SLOT(keyCallback(QKeyEvent*)));
+
+    // Connections to main menu
+    connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
+    connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
+    connect(glView, SIGNAL(mainMenu()), mainMenu, SLOT(toggle()));
 
     p1View->setFocusPolicy(Qt::NoFocus);
     //    p2View->setFocusPolicy(Qt::NoFocus);
  
     this->setChildViews(p1View, p2View);
+
 }
 
 MainWindow::~MainWindow()
@@ -106,19 +113,6 @@ void MainWindow::createMenus()
     this->help->addAction(aboutQt);
 }
 
-void MainWindow::createMainMenu()
-{
-    this->mainDock = new QDockWidget(NULL, this);
-    this->mainDock->setAllowedAreas(Qt::TopDockWidgetArea);
-    this->mainDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    this->qDock->setFixedHeight(this->height() - 200);
-    this->dock = new DockWidget(this->height() / 200, this->width() / 2, qDock);
-    this->qDock->setWidget(dock);
-
-    this->addDockWidget(Qt::BottomDockWidgetArea, qDock);
-  
-}
-
 QMenu* MainWindow::createPopupMenu()
 {
     QMenu *menu = menuBar()->addMenu(tr(""));    
@@ -142,22 +136,50 @@ void MainWindow::createDockWindows()
     
 }
 
-void MainWindow::getPlayer(Player &p, int i)
+void MainWindow::getPlayer(int i)
 {
     bool ok;
-    QInputDialog *dialog = new QInputDialog();
-    QString name = dialog->getText(this, 
+    QInputDialog *dialog1 = new QInputDialog();
+    QString name = dialog1->getText(this, 
                     tr(std::string("Player" + std::to_string(i)).c_str()),
                     tr("Name:"), 
                     QLineEdit::Normal, QDir::home().dirName(),
                     &ok);
     if (ok && !name.isEmpty())
     {
-        p.name = name.toStdString();
-        p.score = 0;
-        emit setPlayer(p, i);
+        this->p1.name = name.toStdString();
+        this->p1.score = 0;
+        emit setPlayer(this->p1, 1);
     }
-    else ok = false;;
+    else ok = false;
+
+    if(i > 1)
+    {
+        QInputDialog *dialog2 = new QInputDialog();
+        QString name = dialog2->getText(this, 
+                    tr(std::string("Player" + std::to_string(i)).c_str()),
+                    tr("Name:"), 
+                    QLineEdit::Normal, QDir::home().dirName(),
+                    &ok);
+        if (ok && !name.isEmpty())
+        {
+            this->p2.name = name.toStdString();
+            this->p2.score = 0;
+        }
+        else ok = false;
+    }
+    else
+    {
+        this->p2.name = "Computer";
+        this->p2.score = 0;
+    }
+
+    emit setPlayer(this->p2, 2);
+
+    this->mainMenu->hide();
+
+    emit playGame(i);
+
 }
 
 void MainWindow::resizeEvent(QResizeEvent* )
@@ -165,6 +187,8 @@ void MainWindow::resizeEvent(QResizeEvent* )
     overlay->resize(this->width(), overlay->size().height());
     overlay->updatePaint(0, 1);
     overlay->updatePaint(0, 2);
+    this->mainMenu->move(glView->geometry().width()/2 -200, glView->geometry().height()/2 - 100);
+    mainMenu->updatePaint();
 }
 
 void MainWindow::changeEvent(QEvent *event)

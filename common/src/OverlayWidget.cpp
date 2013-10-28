@@ -41,22 +41,6 @@ void OverlayWidget::setBackgroundWidget(MainWindow *widget)
     window->installEventFilter(this);
 }
 
-QDialog* OverlayWidget::createDialog(const QString &windowTitle)
-{
-    QDialog *dialog = new QDialog(this, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-
-    dialog->setWindowTitle(windowTitle);
-    dialog->setLayout(new QVBoxLayout);
-    dialog->setWindowTitle(windowTitle);
-
-    dialog->setAttribute(Qt::WA_TranslucentBackground);
-    dialog->setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-    QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
-    dialog->setGraphicsEffect(opacityEffect);
-    opacityEffect->setOpacity(0);
-    return dialog;
-}
-
 void OverlayWidget::show()
 {
     QWidget::show();
