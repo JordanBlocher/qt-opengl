@@ -45,6 +45,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->dynamicModels = {"puck.obj", "sphere.obj","cube.obj",};
     this->staticModels = {"walls.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
+    this->update = true;
 }
 
 void GLScene::playGame(int numPlayers)
@@ -261,20 +262,23 @@ void GLScene::initGame()
 
 void GLScene::idleGL()
 {  
-    // Timer
-    float dt;
-    time = chrono::high_resolution_clock::now();
-    dt = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
-    this->start_time = chrono::high_resolution_clock::now();
+    if( update )
+    {
+        // Timer
+        float dt;
+        time = chrono::high_resolution_clock::now();
+        dt = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
+        this->start_time = chrono::high_resolution_clock::now();
 
-    // Get Discrete Dynamics World and update time step
-    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
-    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
-    world->stepSimulation(dt/1.0f);
-    dynamics->SetWorld(std::move(world));
+        // Get Discrete Dynamics World and update time step
+        std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+        std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+        world->stepSimulation(dt/1.0f);
+        dynamics->SetWorld(std::move(world));
 
-    // Update all of the fuck
-    GLViewport::updateGL();
+        // Update all of the poo
+        GLViewport::updateGL();
+    }
 }
 
 void GLScene::resizeGL(int width, int height)
@@ -293,7 +297,6 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    return;
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
 
     // Let the superclass handle the events
@@ -354,7 +357,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case (Qt::Key_L):
             entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
-        case (Qt::Key_Escape):
+        case (Qt::Key_Enter):
             emit mainMenu();
             break;
     }
@@ -374,7 +377,38 @@ void GLScene::mousePressEvent(QMouseEvent *event)
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)
 {
-    GLViewport::contextMenuEvent(event);
+    QAction *start = new QAction(tr("&Start"), this);
+    start->setStatusTip(tr("Start"));
+    connect(start, SIGNAL(triggered()), this, SLOT(start()));
+    
+    QAction *stop = new QAction(tr("&Pause"), this);
+    start->setStatusTip(tr("Pause"));
+    connect(stop, SIGNAL(triggered()), this, SLOT(stop()));
+
+    QMenu menu(this);    
+    menu.addAction(start);
+    menu.addAction(stop);
+    menu.exec(event->globalPos());
+}
+
+void GLScene::start()
+{
+    if(!this->update)
+    {
+        GLViewport::start_time = std::chrono::high_resolution_clock::now();
+        this->update = true;
+        this->time = std::chrono::high_resolution_clock::now();
+        GLViewport::timer.start();
+    }
+}
+
+void GLScene::stop()
+{
+    if(this->update)
+    {
+        this->update = false;
+        GLViewport::timer.stop();
+    }
 }
 
 

@@ -22,10 +22,13 @@ class GLScene : public GLViewport
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> getEntities();
 
  signals:
-    void updateScore(int, int);
+    // updateScore(score, player)
+    void updateScore(int, int); 
     void mainMenu();
 
  protected slots:
+    void start();
+    void stop();
     virtual void idleGL();
     virtual void updatePaddle(const char*, int);
     virtual void playGame(int);
@@ -42,6 +45,7 @@ class GLScene : public GLViewport
 
     QColor background;
     QColor font;
+    bool update;
 
     std::vector<std::string> staticModels;
     std::vector<std::string> dynamicModels;

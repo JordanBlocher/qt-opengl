@@ -177,6 +177,7 @@ void MainWindow::getPlayer(int i)
     emit setPlayer(this->p2, 2);
 
     this->mainMenu->hide();
+    glView->setFocus();
 
     emit playGame(i);
 

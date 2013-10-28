@@ -29,7 +29,6 @@ GLViewport::GLViewport(int width, int height, QWidget *parent, dataPtr context) 
     this->setMouseTracking(true);
     this->setAutoBufferSwap(true);
     this->timer.setInterval(0);
-    this->setFocusPolicy(Qt::ClickFocus);
     this->setContextMenuPolicy(Qt::DefaultContextMenu);
     this->background = Qt::black;
     this->font = Qt::white;
