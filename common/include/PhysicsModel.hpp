@@ -5,6 +5,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 class GLModel;
 
@@ -12,6 +13,7 @@ class PhysicsModel : public GLNode
 {
  public:
     enum BODY { CYLINDER, BOX, SPHERE };
+    enum COLLISION { STATIC, DYNAMIC };
     // Default shape constructor
     PhysicsModel(const char* name, const BODY type, const btVector3 scale, 
                 const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
@@ -20,7 +22,7 @@ class PhysicsModel : public GLNode
     // Custom shape constructor
     PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, 
                 const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
-                const float restitution);
+                const float restitution, COLLISION);
     ~PhysicsModel();
 
     void SetMotionState(const glm::vec3&);
@@ -34,7 +36,8 @@ class PhysicsModel : public GLNode
     std::shared_ptr<btGeneric6DofConstraint> GetConstraint();
 
 protected:
-    void initCustomShape(const std::shared_ptr<GLModel> model, const btVector3 scale);
+    void initCustomStaticShape(const std::shared_ptr<GLModel> model, const btVector3 scale);
+    void initCustomDynamicShape(const std::shared_ptr<GLModel> model, const btVector3 scale);
     void initStandardShape(const BODY type, const btVector3 scale);
 
     void initTransform(const btQuaternion orientation, const btVector3 centroid);
@@ -53,6 +56,7 @@ protected:
     std::shared_ptr<btDefaultMotionState> motionState;
    
     std::shared_ptr<btTriangleMesh> triangles;
+    std::shared_ptr<btConvexHullShape> hull;
 
     btTransform transform;
 

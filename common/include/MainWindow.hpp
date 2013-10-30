@@ -22,7 +22,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
  public:
-    MainWindow(QWidget *parent = 0, GLViewport *view = NULL, GLViewport *p1View = NULL, GLViewport *p2View = NULL);
+    MainWindow(QWidget *parent = 0, GLViewport *view = NULL);
     ~MainWindow();
 
     void resizeEvent(QResizeEvent*);
@@ -36,7 +36,6 @@ class MainWindow : public QMainWindow
     QDockWidget *mainDock;
 
     bool Ok();
-
 
  signals:
    void setPlayer(Player, int);
@@ -75,7 +74,6 @@ class MainWindow : public QMainWindow
  private:
     void createActions();
     void createMenus();
-    void createDockWindows();
     void setChildViews(GLViewport*, GLViewport*);
 
     bool ok;

@@ -28,7 +28,6 @@ DynamicsWorld::~DynamicsWorld()
             this->world->removeCollisionObject( obj );
         }
     }
-    //world.reset();
     solver.reset();
     overlappingPairCache.reset();
     dispatcher.reset();
@@ -43,6 +42,16 @@ void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body)
 void DynamicsWorld::AddConstraint(std::shared_ptr<btGeneric6DofConstraint> constraint)
 {
     this->world->addConstraint(constraint.get());
+}
+
+void DynamicsWorld::RemovePhysicsBody(std::shared_ptr<btRigidBody> body)
+{
+    this->world->removeRigidBody(body.get());
+}
+
+void DynamicsWorld::RemoveConstraint(std::shared_ptr<btGeneric6DofConstraint> constraint)
+{
+    this->world->removeConstraint(constraint.get());
 }
 
 std::unique_ptr<btDiscreteDynamicsWorld> DynamicsWorld::GetWorld()

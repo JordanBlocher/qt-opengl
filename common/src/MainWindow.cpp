@@ -1,7 +1,6 @@
 #include "MainWindow.hpp"
 #include "GLViewport.hpp"
 #include "OverlayWidget.hpp"
-#include "DockWidget.hpp"
 #include "GLCamera.hpp"
 #include "MenuWidget.hpp"
 
@@ -16,7 +15,7 @@
 #include <QColor>
 
 
-MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GLViewport *p2View) :
+MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     QMainWindow(parent)
 {
 
@@ -37,13 +36,12 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
     this->mainMenu->resize(this->width() /2.0, this->height() - 200);
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
-    //setCentralWidget(mainMenu);
 
     // Menu stuff
     this->createActions();
     this->createMenus();
  
-    // Connect user input for Player init
+    // Connections to display / user input
     connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int))); 
     // Default Values
     this->p1.name = "Player 1";
@@ -52,37 +50,18 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, GLViewport *p1View, GL
     this->p2.name = "Player 2";
     this->p2.score = 0;
     emit setPlayer(this->p2, 2);
-
-    this->createDockWindows();
-
-    // Connections to dock windows
     connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
-    connect( dock, SIGNAL(updatePaddle(const char*, int)), glView, SLOT(updatePaddle(const char*, int)));
-
-    // Connections to update score
-    connect(glView, SIGNAL(paint()), p1View, SLOT(paintCallback()));
-    connect(glView, SIGNAL(key(QKeyEvent*)), p1View, SLOT(keyCallback(QKeyEvent*)));
 
     // Connections to main menu
     connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
+    connect(mainMenu, SIGNAL(start()), glView, SLOT(resume()));
     connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
-    connect(glView, SIGNAL(mainMenu()), mainMenu, SLOT(toggle()));
-
-    p1View->setFocusPolicy(Qt::NoFocus);
-    //    p2View->setFocusPolicy(Qt::NoFocus);
- 
-    this->setChildViews(p1View, p2View);
+    connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
 
 }
 
 MainWindow::~MainWindow()
 {
-}
-
-void MainWindow::setChildViews(GLViewport *child1View, GLViewport *child2View)
-{
-    std::shared_ptr<GLCamera> camera1 = child1View->Get<GLCamera>("camera");
-    camera1->SetView(15.0f, -0.5f*M_PI, 0.4f*M_PI);
 }
 
 void MainWindow::createActions()
@@ -120,20 +99,6 @@ QMenu* MainWindow::createPopupMenu()
     menu->addAction(about);
 
     return menu;
-}
-
-// Dock window for player options
-void MainWindow::createDockWindows()
-{
-    this->qDock = new QDockWidget(NULL, this);
-    this->qDock->setAllowedAreas(Qt::BottomDockWidgetArea);
-    this->qDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    this->qDock->setFixedHeight(75);
-    this->dock = new DockWidget(75, this->width(), qDock);
-    this->qDock->setWidget(dock);
-
-    this->addDockWidget(Qt::BottomDockWidgetArea, qDock);
-    
 }
 
 void MainWindow::getPlayer(int i)
@@ -196,11 +161,6 @@ void MainWindow::changeEvent(QEvent *event)
 {
     if (event->type()==QEvent::ActivationChange)
     {
-        if(this->overlay->isVisible())
-            qDock->show();
-        else
-            qDock->hide();	
-
     }
 }
 

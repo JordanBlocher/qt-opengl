@@ -42,14 +42,11 @@ Q_OBJECT
     std::shared_ptr<T> Get(const char*) const;
 
  public slots:
-    void paintCallback();
-    void keyCallback(QKeyEvent*);
     void quit();
 
  signals:
-    void init();
-    void paint();
-    void key(QKeyEvent*);
+    virtual void start();
+    virtual void stop();
 
  protected slots:
     virtual void idleGL();

@@ -42,18 +42,26 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
-    this->dynamicModels = {"puck.obj", "sphere.obj","cube.obj",};
-    this->staticModels = {"walls.obj"};
+    this->puckTypes = {"Puck.obj"};
+    this->paddleTypes = {"Paddle.obj", "squarePaddle.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     this->update = true;
+    this->puckIndex = 1;
 }
 
 void GLScene::playGame(int numPlayers)
 {
+    this->numPlayers = numPlayers;
+    std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
+    this->AddToContext(camera2);
 }
 
-void GLScene::updatePaddle(const char* paddle, int player)
+void GLScene::changePaddle(int i)
 {
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+
+    dynamics->SetWorld(std::move(world));
 }
 
 
@@ -105,8 +113,6 @@ void GLScene::initializeGL()
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(frag_uniform);
     tprogram->SetUBO(vertex_uniform);
-
-    //this->SetScene(perspective);
 
 }
 
@@ -168,7 +174,6 @@ void GLScene::paintGL()
 
 void GLScene::initGame()
 {
- 
     // Initialize Entity list
     entities = std::shared_ptr<std::vector<std::shared_ptr<Entity>>>(new std::vector<std::shared_ptr<Entity>>);
 
@@ -176,87 +181,85 @@ void GLScene::initGame()
     std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
     this->AddToContext(world);
 
+    btQuaternion orientation = btQuaternion(0, 0, 0, 1);
+    btVector3 ones = btVector3(1.0f, 1.0f, 1.0f);
+    btVector3 zeros = btVector3(0.0f, 0.0f, 0.0f);
 
-    /****** Model Creation ******/
-    /* -------------------Table------------------- */
-    // Create the table gfxmodel
+    /****** STATIC ******/
+    // Table Model
     std::shared_ptr<GLModel> tableGfx(new GLModel("table.obj", "table", NUM_ATTRIBUTES));
     tableGfx->CreateVAO();
     tableGfx->setMatrix(glm::scale(tableGfx->Matrix(), glm::vec3(1.0f))); 
-    //tableGfx->setMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.5, 0.0)));
-
-    // Create the table physmodel
+    // Table Constraints
     std::shared_ptr<GLModel> tableConst(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
-    tableConst->CreateVAO();
-    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst,btVector3(1.0f,1.0f,1.0f),
-                                            btQuaternion(0,0,0,1), btVector3(0,0,0),
-                                            0.0f, 0.0f, 1.0f));
-
-    // Add table to world 
+    tableConst->LoadVertexData();
+    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst, ones, orientation, zeros, 0.0f, 0.0f, 0.5f, PhysicsModel::COLLISION::STATIC));
     world->AddPhysicsBody(tablePhys->GetRigidBody());
-
-    // Merge models, add to entity list
+    // Table entity
     std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
     entities->push_back(tableEnt);
 
-    /* -------------------Puck------------------- */
-    // Create the puck gfxmodel
-    std::shared_ptr<GLModel> puckGfx(new GLModel("puck.obj", "puck", NUM_ATTRIBUTES));
-    puckGfx->CreateVAO();
-    puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
+    /****** DYNAMIC (PADDLE) ******/
+    for(int i=0; i<paddleTypes.size(); i++)
+    {
+        //Create Models 
+        std::shared_ptr<GLModel> paddleGfx(new GLModel(paddleTypes[i].c_str(), "paddle", NUM_ATTRIBUTES));
+        paddleGfx->CreateVAO();
+        paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.2f))); 
 
-    // Create the puck physmodel
-    std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f),
-                                            btQuaternion(0,0,0,1), btVector3(0.0f,0.0f,-3.0f),
-                                            0.7f, 0.00f, 0.5f));
+        // Create Collision Objects
+        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
+        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.0f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
+        
+        // Initialize World
+        // Add rigid body and then constraint
+        world->AddPhysicsBody(paddle1Phys->GetRigidBody());
+        paddle1Phys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        world->AddConstraint(paddle1Phys->GetConstraint());
+        world->AddPhysicsBody(paddle2Phys->GetRigidBody());
+        paddle2Phys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        world->AddConstraint(paddle2Phys->GetConstraint());
 
-    // Add puck to world 
-    world->AddPhysicsBody(puckPhys->GetRigidBody());
+        // Set Restrictive Dynamics Constraints
+        paddle1Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+        paddle1Phys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+        paddle1Phys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
+        paddle2Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+        paddle2Phys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+        paddle2Phys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
 
-    // Set up puck constraints
-    puckPhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
-                    btVector3(0.0f,1.0f,0.0f),btVector3(0.0f,0.0f,0.0f));
+        // Merge models to entity list
+        std::shared_ptr<Entity> paddleEnt1(new Entity(paddleGfx, paddle1Phys));
+        entities->push_back(paddleEnt1);
+        std::shared_ptr<Entity> paddleEnt2(new Entity(paddleGfx, paddle2Phys));
+        entities->push_back(paddleEnt2);
+    }
+    
+    /****** DYNAMIC (PUCK) ******/
+    for(int i=0; i<puckTypes.size(); i++)
+    {
+        //Create Models 
+        std::shared_ptr<GLModel> puckGfx(new GLModel(puckTypes[i].c_str(), "puck", NUM_ATTRIBUTES));
+        puckGfx->CreateVAO();
+        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
 
-    // Add constraints to world
-    world->AddConstraint(puckPhys->GetConstraint());
+        // Create Collision Objects
+        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f));
+        // Initialize World
+        // Add rigid body and then constraint
+        world->AddPhysicsBody(puckPhys->GetRigidBody());
+        puckPhys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        world->AddConstraint(puckPhys->GetConstraint());
 
-    // Special puck settings
-    puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-    puckPhys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
+        // Set Restrictive Dynamics Constraints
+        puckPhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+        puckPhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
+        puckPhys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
 
-    // Merge models, add to entity list
-    std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
-    entities->push_back(puckEnt);
-
-    /* -------------------Sphere------------------- */
-    // Create the sphere gfxmodel
-    std::shared_ptr<GLModel> sphereGfx(new GLModel("sphere.obj", "sphere", NUM_ATTRIBUTES));
-    sphereGfx->CreateVAO();
-    sphereGfx->setMatrix(glm::scale(sphereGfx->Matrix(), glm::vec3(0.2f))); 
-
-    // Create the sphere physmodel
-    std::shared_ptr<PhysicsModel> spherePhys(new PhysicsModel("sphere",PhysicsModel::BODY::SPHERE, btVector3(0.1f,0.0f,0.0f),
-                                            btQuaternion(0,0,0,1), btVector3(0,0.0f,3.0f),
-                                            0.7f, 0.05f, 0.5f));
-
-    // Add sphere to world 
-    world->AddPhysicsBody(spherePhys->GetRigidBody());
-
-    // Set up sphere constraints
-    spherePhys->initConstraints(btVector3(0.0f,0.0f,0.0f),btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f),
-                    btVector3(1.0f,1.0f,1.0f),btVector3(0.0f,0.0f,0.0f));
-
-    // Add constraints to world
-    world->AddConstraint(spherePhys->GetConstraint());
-
-    // Special sphere settings
-    spherePhys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
-    spherePhys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
-
-    // Merge models, add to entity list
-    std::shared_ptr<Entity> sphereEnt(new Entity(sphereGfx, spherePhys));
-    entities->push_back(sphereEnt);
+        // Merge models to entity list
+        std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
+        entities->push_back(puckEnt);
+    }
 
 }
 
@@ -298,6 +301,7 @@ float GLScene::getDT()
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
+    //shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
@@ -334,31 +338,32 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             }
             break;            
        case (Qt::Key_W):
-            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
             break;
         case (Qt::Key_S):
-            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
             break;
         case (Qt::Key_A):
-            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
             break;
         case (Qt::Key_D):
-            entities->at(1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
         case (Qt::Key_I):
-            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
             break;
         case (Qt::Key_K):
-            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
             break;
         case (Qt::Key_J):
-            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
             break;
         case (Qt::Key_L):
-            entities->at(2)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
-        case (Qt::Key_Enter):
-            emit mainMenu();
+        case (Qt::Key_Space):
+            this->stop();
+            emit mainMenu(1);
             break;
     }
 
@@ -377,21 +382,10 @@ void GLScene::mousePressEvent(QMouseEvent *event)
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)
 {
-    QAction *start = new QAction(tr("&Start"), this);
-    start->setStatusTip(tr("Start"));
-    connect(start, SIGNAL(triggered()), this, SLOT(start()));
-    
-    QAction *stop = new QAction(tr("&Pause"), this);
-    start->setStatusTip(tr("Pause"));
-    connect(stop, SIGNAL(triggered()), this, SLOT(stop()));
-
-    QMenu menu(this);    
-    menu.addAction(start);
-    menu.addAction(stop);
-    menu.exec(event->globalPos());
+    GLViewport::contextMenuEvent(event);
 }
 
-void GLScene::start()
+void GLScene::resume()
 {
     if(!this->update)
     {
@@ -402,13 +396,21 @@ void GLScene::start()
     }
 }
 
-void GLScene::stop()
+void GLScene::pause()
 {
     if(this->update)
     {
         this->update = false;
         GLViewport::timer.stop();
     }
+}
+
+GLScene::~GLScene()
+{
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+    world.reset();
+    dynamics->SetWorld(std::move(world));
 }
 
 

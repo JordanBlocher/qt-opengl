@@ -19,16 +19,12 @@ int main(int argc, char *argv[])
 
     GLScene *glView = new GLScene(1200, 800, NULL, argc, argv);
 
-    GLScene *p1View = new GLScene(420, 280, NULL); 
-    p1View->setWindowTitle("Player 1");
-
-    MainWindow *window = new MainWindow(NULL, glView, p1View);
+    MainWindow *window = new MainWindow(NULL, glView);
 
 
     if (!window->Ok())
         return 0;
 
-    p1View->show();
     window->show();
 
     return app.exec();

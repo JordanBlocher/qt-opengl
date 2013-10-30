@@ -13,6 +13,7 @@ class QLabel;
 class QVBoxLayout;
 class GLViewport;
 class QPushButton;
+class QStackedLayout;
 
 class MenuWidget : public QWidget
 {
@@ -24,13 +25,15 @@ class MenuWidget : public QWidget
 
  signals:
     void playGame(int);
+    void changePaddle(int);
+    void start();
 
  public slots:
     void updatePaint();
-    void toggle();
+    void toggle(int);
 
  protected: 
-    void createActions();
+    void setConnections();
 	virtual void show();
     void paintEvent(QPaintEvent*);
 	void setTransparent(bool transparent);
@@ -41,14 +44,19 @@ class MenuWidget : public QWidget
     QAction *exit;
 
  protected slots:
+    void reset();
+    void resume();
     void multiplayer();
     void singleplayer();
+    void getPaddle();
 
  private: 
 	MainWindow *window;
-    QVBoxLayout *layout;
+    QStackedLayout *layout;
+    QVBoxLayout *mainLayout;
+    QVBoxLayout *optionsLayout;
     GLViewport *glView;
-    QPushButton *buttons[3];
+    QPushButton *buttons[6];
 };
 
 #endif 

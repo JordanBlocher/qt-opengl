@@ -31,6 +31,7 @@ class GLModel : public GLNode
     bool CreateVAO();
     glm::mat4 Matrix();
     void setMatrix(glm::mat4);
+    bool LoadVertexData();
 
     void Draw(std::shared_ptr<GLUniform>, GLuint);
     const std::vector<glm::vec3>& Positions(size_t);
@@ -42,6 +43,7 @@ class GLModel : public GLNode
  private:
     void Allocate();
     void AddAttributeData(const aiMesh*, unsigned int);
+    void AddVertexData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
 

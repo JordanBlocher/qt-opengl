@@ -65,7 +65,6 @@ void GLViewport::initializeGL()
         return;
     }
     timer.start();
-    emit init();
 }
 
 void GLViewport::paintGL()
@@ -74,8 +73,6 @@ void GLViewport::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     this->swapBuffers();
-
-    emit paint();
 }
 
 void GLViewport::resizeGL(int width, int height)
@@ -108,7 +105,6 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
             qApp->quit();
             break;
     } 
-    emit key(event);
 }
 
 void GLViewport::quit()
@@ -171,15 +167,5 @@ void GLViewport::ViewContext()
 dataPtr GLViewport::getContext()
 {
     return this->context;
-}
-
-void GLViewport::paintCallback()
-{
-    this->paintGL();
-}
-
-void GLViewport::keyCallback(QKeyEvent *event)
-{
-    this->keyPressEvent(event);
 }
 

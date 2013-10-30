@@ -108,6 +108,72 @@ bool GLModel::CreateVAO()
     return false;
 }
 
+// No VAO Created
+bool GLModel::LoadVertexData()
+{
+   //Clear
+    for(size_t i=0; i<this->positions->size(); i++)
+    {
+        this->positions->at(i).clear();
+        this->normals->at(i).clear();
+    }
+    for(size_t i=0; i<this->faces->size(); i++)
+        this->faces->at(i).clear();
+
+    Assimp::Importer Importer;
+     
+    const aiScene* scene = Importer.ReadFile(filename,
+                            aiProcess_Triangulate | 
+                            aiProcess_GenSmoothNormals | 
+                            aiProcess_FlipUVs | 
+                            aiProcess_JoinIdenticalVertices);
+    if (scene) 
+    {
+        this->faces->resize(scene->mNumMeshes);
+        this->positions->resize(scene->mNumMeshes);
+        for(unsigned int i=0; i<scene->mNumMeshes; i++)
+        {
+            const aiMesh* mesh = scene->mMeshes[i];
+            this->AddVertexData(mesh, i);
+        }
+        
+        return true;
+    }
+    else 
+    {
+        std::cerr << "[E] Could not load " << filename << std::endl;
+        std::cerr << Importer.GetErrorString() << std::endl;
+    }
+    
+    return false;
+}
+
+void GLModel::AddVertexData(const aiMesh* mesh, unsigned int index)
+{
+    this->e_size += mesh->mNumFaces * 3;
+    this->v_size += mesh->mNumVertices;
+
+    this->positions->at(index).resize(mesh->mNumVertices);
+    this->faces->at(index).resize(mesh->mNumFaces * 3);
+
+    // Populate the vertex attribute vectors
+    for (unsigned int i = 0 ; i < mesh->mNumVertices ; i++) 
+    {
+        const aiVector3D* pos = &(mesh->mVertices[i]);
+
+        this->positions->at(index).at(i) = glm::vec3(pos->x, pos->y, pos->z);
+    }
+
+    // Populate the index buffer
+    for (unsigned int i = 0 ; i < mesh->mNumFaces ; i++) 
+    {
+        const aiFace* face = &(mesh->mFaces[i]);
+        assert(face->mNumIndices == 3);
+        this->faces->at(index).at(3*i) = face->mIndices[0];
+        this->faces->at(index).at(3*i+1) = face->mIndices[1];
+        this->faces->at(index).at(3*i+2) = face->mIndices[2];
+    }
+}
 
 void GLModel::AddAttributeData(const aiMesh* mesh, unsigned int index)
 {

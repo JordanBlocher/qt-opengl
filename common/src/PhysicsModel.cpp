@@ -1,9 +1,7 @@
 #include "PhysicsModel.hpp"
 #include "GLModel.hpp"
 
-PhysicsModel::PhysicsModel(const char* name, const BODY type, const btVector3 scale, 
-                const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
-                const float restitution) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, const BODY type, const btVector3 scale, const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, const float restitution) : GLNode(name)
 {
     // Initialize the collision shape
     initStandardShape(type, scale);
@@ -16,12 +14,13 @@ PhysicsModel::PhysicsModel(const char* name, const BODY type, const btVector3 sc
 }
 
 // Constructor for custom convex triangle mesh (static so no constraints)
-PhysicsModel::PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, 
-                            const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
-                            const float restitution) : GLNode(name)
+PhysicsModel::PhysicsModel(const char* name, const std::shared_ptr<GLModel> model, const btVector3 scale, const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, const float restitution, COLLISION type) : GLNode(name)
 {
     // Initialize the collision shape
-    initCustomShape(model, scale);
+    if( type == STATIC)
+        initCustomStaticShape(model, scale);
+    else if ( type == DYNAMIC )
+        initCustomDynamicShape(model, scale);
 
     // Initialize the transform
     initTransform(orientation, centroid);
@@ -31,7 +30,7 @@ PhysicsModel::PhysicsModel(const char* name, const std::shared_ptr<GLModel> mode
 }
 
 // Creates custom model
-void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const btVector3 scale)
+void PhysicsModel::initCustomStaticShape(const std::shared_ptr<GLModel> model, const btVector3 scale)
 {		
 
     // Allocate memory for the mesh triangles
@@ -69,6 +68,41 @@ void PhysicsModel::initCustomShape(const std::shared_ptr<GLModel> model, const b
     this->collisionShape->setMargin(0.3);
 
 }
+
+// Creates custom model
+void PhysicsModel::initCustomDynamicShape(const std::shared_ptr<GLModel> model, const btVector3 scale)
+{		
+
+    // Allocate memory for the mesh hull
+    std::shared_ptr<btConvexHullShape> pointHull(new btConvexHullShape());
+
+    // Iterate over all of the elements
+    for(size_t i=0; i<model->Size(); i++)
+    {
+        // Iterate over all of the hull of the mesh
+        for(size_t j=0; j<model->Faces(i).size(); j++)
+        {
+            // Get a triangle
+            size_t t1 = model->Faces(i).at(j);
+            btVector3 a( model->Positions(i).at(t1).x*scale.getX(), 
+                model->Positions(i).at(t1).y*scale.getY(), 
+                model->Positions(i).at(t1).z*scale.getZ() );
+
+            // Add point
+            pointHull->addPoint(a);
+        }
+    }
+
+    // Build the shape
+    std::shared_ptr<btShapeHull> shape(new btShapeHull(pointHull.get()));
+    btScalar margin = pointHull.get()->getMargin();
+    shape->buildHull(margin);
+    this->hull = std::shared_ptr<btConvexHullShape>(new btConvexHullShape(shape.get()->getVertexPointer()[0],shape.get()->numVertices()));
+          
+    this->collisionShape = std::shared_ptr<btConvexHullShape>(this->hull);
+
+}
+
 
 // Creates default-type model
 void PhysicsModel::initStandardShape(const BODY type, const btVector3 scale)

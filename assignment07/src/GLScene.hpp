@@ -19,36 +19,39 @@ class GLScene : public GLViewport
 
  public:
     GLScene(int, int, QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
+    ~GLScene();
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> getEntities();
 
  signals:
     // updateScore(score, player)
     void updateScore(int, int); 
-    void mainMenu();
+    void mainMenu(int);
 
  protected slots:
-    void start();
-    void stop();
-    virtual void idleGL();
-    virtual void updatePaddle(const char*, int);
-    virtual void playGame(int);
+    void resume();
+    void pause();
+    void idleGL();
+    void changePaddle(int);
+    void playGame(int);
 
  protected:
-    virtual void initGame();
-    virtual void initializeGL();
-    virtual void paintGL();
-    virtual void resizeGL(int, int);
-    virtual float getDT();
-    virtual void keyPressEvent(QKeyEvent*);
-    virtual void mousePressEvent(QMouseEvent*);
-    virtual void contextMenuEvent(QContextMenuEvent*);
+    void initGame();
+    void initializeGL();
+    void paintGL();
+    void resizeGL(int, int);
+    float getDT();
+    void keyPressEvent(QKeyEvent*);
+    void mousePressEvent(QMouseEvent*);
+    void contextMenuEvent(QContextMenuEvent*);
 
     QColor background;
     QColor font;
     bool update;
+    int numPlayers;
+    int puckIndex;
 
-    std::vector<std::string> staticModels;
-    std::vector<std::string> dynamicModels;
+    std::vector<std::string> puckTypes;
+    std::vector<std::string> paddleTypes;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
