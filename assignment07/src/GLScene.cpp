@@ -47,6 +47,9 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     this->update = true;
     this->puckIndex = 1;
+    for(int index=0; index < 12; index++)
+        this->keyHeld[index] = false;
+
 }
 
 void GLScene::playGame(int numPlayers)
@@ -281,6 +284,9 @@ void GLScene::idleGL()
 
         // Update all of the poo
         GLViewport::updateGL();
+
+        // Update all of the physics dependent keys
+        updateKeys();
     }
 }
 
@@ -300,74 +306,113 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
     //shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
-
-    // Act on the key press event
-    switch(event->key())
+    
+    if(!event->isAutoRepeat())
     {
-        case (Qt::Key_Right):
-            // Move RIGHT
-            camera->moveCamera(GLCamera::CamDirection::Right);
-            break;    
-        case (Qt::Key_Left):
-            // Move LEFT
-            camera->moveCamera(GLCamera::CamDirection::Left);
-            break;
-        case (Qt::Key_Up):
-            // Forward if SHIFT, UP otherwise
-            if(event->modifiers() & Qt::ShiftModifier){
-                camera->moveCamera(GLCamera::CamDirection::Forward);
-            }
-            else
-            {
-                camera->moveCamera(GLCamera::CamDirection::Up);
-            }
-            break;
-        case (Qt::Key_Down):
-            // Backward if SHIFT, DOWN otherwise
-            if(event->modifiers() & Qt::ShiftModifier){
-                camera->moveCamera(GLCamera::CamDirection::Backward);
-            }
-            else
-            {
-                camera->moveCamera(GLCamera::CamDirection::Down);
-            }
-            break;            
-       case (Qt::Key_W):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
-            break;
-        case (Qt::Key_S):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
-            break;
-        case (Qt::Key_A):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
-            break;
-        case (Qt::Key_D):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
-            break;
-        case (Qt::Key_I):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
-            break;
-        case (Qt::Key_K):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
-            break;
-        case (Qt::Key_J):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
-            break;
-        case (Qt::Key_L):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
-            break;
-        case (Qt::Key_Space):
-            this->stop();
-            emit mainMenu(1);
-            break;
+        // Act on the key press event
+        switch(event->key())
+        {
+            case (Qt::Key_Right):
+                keyHeld[8] = true;
+                break;    
+            case (Qt::Key_Left):
+                keyHeld[9] = true;
+                break;
+            case (Qt::Key_Up):
+                keyHeld[10] = true;
+                break;
+            case (Qt::Key_Down):
+                keyHeld[11] = true;
+                break;            
+            case (Qt::Key_W):
+                keyHeld[0] = true;
+                break;
+            case (Qt::Key_S):
+                keyHeld[1] = true;
+                break;
+            case (Qt::Key_A):
+                keyHeld[2] = true;
+                break;
+            case (Qt::Key_D):
+                keyHeld[3] = true;
+                break;
+            case (Qt::Key_I):
+                keyHeld[4] = true;
+                break;
+            case (Qt::Key_K):
+                keyHeld[5] = true;
+                break;
+            case (Qt::Key_J):
+                keyHeld[6] = true;
+                break;
+            case (Qt::Key_L):
+                keyHeld[7] = true;
+                break;
+            case (Qt::Key_Escape):
+                if(this->update)
+                {
+                    this->pause();
+                }
+                else
+                {
+                    this->resume();
+                }
+                emit mainMenu(1);
+                break;
+        }
     }
 
+}
 
+void GLScene::keyReleaseEvent(QKeyEvent *event)
+{
+    if(!event->isAutoRepeat())
+    {
+        // Act on the key press event
+        switch(event->key())
+        {
+            case (Qt::Key_Right):
+                keyHeld[8] = false;
+                break;    
+            case (Qt::Key_Left):
+                keyHeld[9] = false;
+                break;
+            case (Qt::Key_Up):
+                keyHeld[10] = false;
+                break;
+            case (Qt::Key_Down):
+                keyHeld[11] = false;
+                break;            
+            case (Qt::Key_W):
+                keyHeld[0] = false;
+                break;
+            case (Qt::Key_S):
+                keyHeld[1] = false;
+                break;
+            case (Qt::Key_A):
+                keyHeld[2] = false;
+                break;
+            case (Qt::Key_D):
+                keyHeld[3] = false;
+                break;
+            case (Qt::Key_I):
+                keyHeld[4] = false;
+                break;
+            case (Qt::Key_K):
+                keyHeld[5] = false;
+                break;
+            case (Qt::Key_J):
+                keyHeld[6] = false;
+                break;
+            case (Qt::Key_L):
+                keyHeld[7] = false;
+                break;
+        }
+    }
 }
 
 std::shared_ptr<std::vector<std::shared_ptr<Entity>>> GLScene::getEntities()
@@ -403,6 +448,36 @@ void GLScene::pause()
         this->update = false;
         GLViewport::timer.stop();
     }
+}
+
+void GLScene::updateKeys()
+{
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
+
+    if(keyHeld[0]) // W
+        entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+    if(keyHeld[1]) // S
+        entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
+    if(keyHeld[2]) // A
+        entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+    if(keyHeld[3]) // D
+        entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+    if(keyHeld[4]) // I
+        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+    if(keyHeld[5]) // K
+        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
+    if(keyHeld[6]) // J
+        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+    if(keyHeld[7]) // L
+        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+    if(keyHeld[8]) // RG
+        camera->moveCamera(GLCamera::CamDirection::Right);
+    if(keyHeld[9]) // LF
+        camera->moveCamera(GLCamera::CamDirection::Left);
+    if(keyHeld[10]) // UP
+        camera->moveCamera(GLCamera::CamDirection::Up);
+    if(keyHeld[11]) // DW
+        camera->moveCamera(GLCamera::CamDirection::Down);
 }
 
 GLScene::~GLScene()
