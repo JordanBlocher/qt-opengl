@@ -169,6 +169,6 @@ void MenuWidget::toggle(int)
         this->hide();
     else
         this->show();
-    this->updatePaint();
+    //this->updatePaint();
 }
 

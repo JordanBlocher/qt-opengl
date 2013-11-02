@@ -27,6 +27,7 @@ class MainWindow : public QMainWindow
 
     void resizeEvent(QResizeEvent*);
     void keyPressEvent(QKeyEvent*);
+    void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
     void changeEvent(QEvent*);
 

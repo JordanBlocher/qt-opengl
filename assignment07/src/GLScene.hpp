@@ -43,8 +43,10 @@ class GLScene : public GLViewport
     void resizeGL(int, int);
     float getDT();
     void keyPressEvent(QKeyEvent*);
+    void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
     void contextMenuEvent(QContextMenuEvent*);
+    void updateKeys();
 
     QColor background;
     QColor font;
@@ -52,6 +54,7 @@ class GLScene : public GLViewport
     int numPlayers;
     int puckIndex;
     int paddleIndex;
+    bool keyHeld[12];// W S A D I K J L R RG LF UP DW
 
     std::vector<std::string> puckTypes;
     std::vector<std::string> paddleTypes;

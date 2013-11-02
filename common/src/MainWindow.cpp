@@ -170,6 +170,11 @@ void MainWindow::keyPressEvent(QKeyEvent* )
 {
 }
 
+void MainWindow::keyReleaseEvent(QKeyEvent* )
+{
+    
+}
+
 void MainWindow::mousePressEvent(QMouseEvent*)
 {
 }

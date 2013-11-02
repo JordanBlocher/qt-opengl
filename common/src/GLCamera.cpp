@@ -15,7 +15,7 @@ GLCamera::GLCamera(const char* name, QSize size)
 
     // Set the default camera angle
     this->radius  = 25.0f;
-    this->azimuth = (2.0f*M_PI)/10.0f;
+    this->azimuth = (6.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
 
