@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
 
     // Set up main window
     this->glView = view; //= ((view == NULL) ? new GLViewport(this) : view);
+    this->startState = view;
     setCentralWidget(glView);
     glView->setFocusPolicy(Qt::StrongFocus);
     setWindowTitle(tr("Air Hockey"));
@@ -57,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     connect(mainMenu, SIGNAL(start()), glView, SLOT(resume()));
     connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
     connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
+    connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
 
 }
 
@@ -142,6 +144,7 @@ void MainWindow::getPlayer(int i)
     emit setPlayer(this->p2, 2);
 
     this->mainMenu->hide();
+    glView = startState;
     glView->setFocus();
 
     emit playGame(i);
@@ -154,7 +157,6 @@ void MainWindow::resizeEvent(QResizeEvent* )
     overlay->updatePaint(0, 1);
     overlay->updatePaint(0, 2);
     this->mainMenu->move(glView->geometry().width()/2 -200, glView->geometry().height()/2 - 100);
-    mainMenu->updatePaint();
 }
 
 void MainWindow::changeEvent(QEvent *event)

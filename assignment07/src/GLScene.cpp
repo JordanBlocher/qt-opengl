@@ -43,25 +43,28 @@ using namespace std;
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
     this->puckTypes = {"Puck.obj"};
-    this->paddleTypes = {"Paddle.obj", "squarePaddle.obj"};
+    this->paddleTypes = {"Paddle.obj", "squarePaddle.obj", "trianglePaddle.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     this->update = true;
-    this->puckIndex = 1;
+    this->puckIndex = 7;
+    this->paddleIndex = 1;
 }
 
 void GLScene::playGame(int numPlayers)
 {
     this->numPlayers = numPlayers;
-    std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
-    this->AddToContext(camera2);
+    if(numPlayers > 1)
+    {
+        std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
+        this->AddToContext(camera2);
+    }
+    this->removeBodies();
+    this->addBodies();
 }
 
 void GLScene::changePaddle(int i)
 {
-    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
-    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
-
-    dynamics->SetWorld(std::move(world));
+    this->paddleIndex = 2*i + 1;
 }
 
 
@@ -124,51 +127,64 @@ void GLScene::paintGL()
     glClearColor(r, g, b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-    //Get view & projection matrices
-    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
-    glm::mat4 vp = camera->Projection() * camera->View();
-    
-    //Get UBOS
-    shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
-    shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
-    
-    //Get Programs
-    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
-    shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
-
-    // Iterate and draw over all of the models
-    for(int i=0; i<entities->size(); i++)
+    for(int i=0; i<numPlayers; i++)
     {
-       //Choose Model
-       std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->getPhysicsModel();
-       std::shared_ptr<GLModel> gmodel = entities->at(i)->getGraphicsModel();
-       glm::mat4 transform;
-       transform =  pmodel->GetTransform();
+        //Get view & projection matrices
+        shared_ptr<GLCamera> camera = this->Get<GLCamera>(string("camera" + to_string(i+1)).c_str() );
+        glm::mat4 vp = camera->Projection() * camera->View();
 
-       //Bind MVP
-       Uniform position = vuniform->Get(POSITION);
-       glEnableVertexAttribArray(V_INDEX);
-       glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-       glBufferSubData( GL_UNIFORM_BUFFER,
-                        position.offset,
-                        position.size,
-                        glm::value_ptr( vp * transform * gmodel->Matrix()));
-       glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glViewport(i * this->width()/(1.0*numPlayers), 0.0, this->width()/(1.0*numPlayers), this->height()); 
 
-       //Get Sampler
-       shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+        if(i == 0 && numPlayers == 2)
+            camera->SetView(18.0f, -M_PI, 0.4f*M_PI);
+        if(i == 1 && numPlayers == 2)
+            camera->SetView(18.0f, M_PI, 0.4f*M_PI);
+        
 
-       //Colors Program
-       glUseProgram(cprogram->getId());
-       gmodel->Draw(cuniform, cprogram->getId());
-       glUseProgram(0);
+        //Get UBOS
+        shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+        shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+        
+        //Get Programs
+        shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
+        shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
-       //Texture Program
-       glUseProgram(tprogram->getId());
-       gmodel->Draw(tuniform, tprogram->getId());
-       glUseProgram(0);
-      
-   }
+        // Iterate and draw over all of the models
+        vector<int> indices = {0, puckIndex, paddleIndex, paddleIndex+1};
+        for(int i=0; i<indices.size(); i++)
+        {
+           int index = indices[i];
+           //Choose Model
+           std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->getPhysicsModel();
+           std::shared_ptr<GLModel> gmodel = entities->at(index)->getGraphicsModel();
+           glm::mat4 transform;
+           transform =  pmodel->GetTransform();
+
+           //Bind MVP
+           Uniform position = vuniform->Get(POSITION);
+           glEnableVertexAttribArray(V_INDEX);
+           glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+           glBufferSubData( GL_UNIFORM_BUFFER,
+                            position.offset,
+                            position.size,
+                            glm::value_ptr( vp * transform * gmodel->Matrix()));
+           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+           //Get Sampler
+           shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+
+           //Colors Program
+           glUseProgram(cprogram->getId());
+           gmodel->Draw(cuniform, cprogram->getId());
+           glUseProgram(0);
+
+           //Texture Program
+           glUseProgram(tprogram->getId());
+           gmodel->Draw(tuniform, tprogram->getId());
+           glUseProgram(0);
+          
+       }
+    }
 
 }
 
@@ -180,6 +196,12 @@ void GLScene::initGame()
     // Initialize Dynamics World
     std::shared_ptr<DynamicsWorld> world(new DynamicsWorld("dynamics"));
     this->AddToContext(world);
+
+}
+
+void GLScene::addBodies()
+{
+    std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
 
     btQuaternion orientation = btQuaternion(0, 0, 0, 1);
     btVector3 ones = btVector3(1.0f, 1.0f, 1.0f);
@@ -205,7 +227,7 @@ void GLScene::initGame()
         //Create Models 
         std::shared_ptr<GLModel> paddleGfx(new GLModel(paddleTypes[i].c_str(), "paddle", NUM_ATTRIBUTES));
         paddleGfx->CreateVAO();
-        paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.2f))); 
+        paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
         std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
@@ -241,7 +263,7 @@ void GLScene::initGame()
         //Create Models 
         std::shared_ptr<GLModel> puckGfx(new GLModel(puckTypes[i].c_str(), "puck", NUM_ATTRIBUTES));
         puckGfx->CreateVAO();
-        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.2f))); 
+        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
         std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f));
@@ -259,6 +281,25 @@ void GLScene::initGame()
         // Merge models to entity list
         std::shared_ptr<Entity> puckEnt(new Entity(puckGfx, puckPhys));
         entities->push_back(puckEnt);
+    }
+
+}
+
+
+void GLScene::removeBodies()
+{
+    std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
+
+    size_t numEnts = entities->size();
+    if( numEnts == 0 )
+        return;
+    for(size_t i=numEnts - 1; i>0; i--)
+    {
+        std::shared_ptr<Entity> ent = entities->at(i);
+        entities->pop_back();
+        std::shared_ptr<PhysicsModel> physBody = ent->getPhysicsModel();
+        world->RemovePhysicsBody(physBody->GetRigidBody());
+        //world->RemoveConstraint(physBody->GetConstraint());
     }
 
 }
@@ -286,7 +327,18 @@ void GLScene::idleGL()
 
 void GLScene::resizeGL(int width, int height)
 {
-    GLViewport::resizeGL(width, height);
+    if(numPlayers > 1)
+    {
+        shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+        camera1->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
+        shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
+        camera2->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
+        camera1->SetView(18.0f, -M_PI, 0.4f*M_PI);
+        camera2->SetView(18.0f, M_PI, 0.4f*M_PI);
+  
+    }
+    else
+        GLViewport::resizeGL(width, height);
 }
 
 float GLScene::getDT()
@@ -300,8 +352,9 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
-    //shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+    
+   // shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
@@ -338,31 +391,31 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             }
             break;            
        case (Qt::Key_W):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
             break;
         case (Qt::Key_S):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
             break;
         case (Qt::Key_A):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
             break;
         case (Qt::Key_D):
-            entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
         case (Qt::Key_I):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
+            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*50);
             break;
         case (Qt::Key_K):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
+            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*50);
             break;
         case (Qt::Key_J):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
+            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*50);
             break;
         case (Qt::Key_L):
-            entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
+            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*50);
             break;
         case (Qt::Key_Space):
-            this->stop();
+            this->pause();
             emit mainMenu(1);
             break;
     }

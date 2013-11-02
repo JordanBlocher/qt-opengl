@@ -36,6 +36,8 @@ class GLScene : public GLViewport
 
  protected:
     void initGame();
+    void addBodies();
+    void removeBodies();
     void initializeGL();
     void paintGL();
     void resizeGL(int, int);
@@ -49,6 +51,7 @@ class GLScene : public GLViewport
     bool update;
     int numPlayers;
     int puckIndex;
+    int paddleIndex;
 
     std::vector<std::string> puckTypes;
     std::vector<std::string> paddleTypes;

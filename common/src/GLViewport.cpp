@@ -33,7 +33,7 @@ GLViewport::GLViewport(int width, int height, QWidget *parent, dataPtr context) 
     this->background = Qt::black;
     this->font = Qt::white;
 
-    std::shared_ptr<GLCamera> camera(new GLCamera("camera", this->initialSize));
+    std::shared_ptr<GLCamera> camera(new GLCamera("camera1", this->initialSize));
     this->AddToContext(camera);
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(idleGL()));
@@ -78,7 +78,7 @@ void GLViewport::paintGL()
 void GLViewport::resizeGL(int width, int height)
 {
     // Get access to the camera
-    std::shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
+    std::shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
 
     // Update the size of the viewport and store that
     glViewport( 0, 0, width, height);
@@ -95,8 +95,6 @@ void GLViewport::idleGL()
 
 void GLViewport::keyPressEvent(QKeyEvent *event)
 {
-    std::shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera");
-
     // Act on the key press event
     switch(event->key())
     {

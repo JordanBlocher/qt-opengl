@@ -375,7 +375,7 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
             glBufferSubData(GL_UNIFORM_BUFFER,
                      		funiform.offset,
                      		funiform.size,
-                            glm::value_ptr( glm::normalize(this->materials->at(this->mtlIndices.at(i)).diffuse) ));
+                            glm::value_ptr( this->materials->at(this->mtlIndices.at(i)).diffuse) );
         }
         
         if( (color && !texture) || (!color && texture) )

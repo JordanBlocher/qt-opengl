@@ -31,6 +31,7 @@ class MainWindow : public QMainWindow
     void changeEvent(QEvent*);
 
     GLViewport *glView;
+    GLViewport *startState;
     OverlayWidget *overlay;
     MenuWidget *mainMenu;
     QDockWidget *mainDock;

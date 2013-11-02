@@ -90,7 +90,7 @@ void MenuWidget::setConnections()
 void MenuWidget::getPaddle()
 {
       QStringList items;
-      items << tr("Circle") << tr("Square");
+      items << tr("Circle") << tr("Square") << tr("Triangle");
       bool ok;
       QString item = QInputDialog::getItem(this, tr("Change Paddle"), tr("Paddle Types:"), items, 0, false, &ok);
 
