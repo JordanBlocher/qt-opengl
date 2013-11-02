@@ -24,7 +24,7 @@ class PhysicsModel : public GLNode
                 const btQuaternion orientation, const btVector3 centroid, const float mass, const float friction, 
                 const float restitution, COLLISION);
     ~PhysicsModel();
-
+    
     void SetMotionState(const glm::vec3&);
     void initConstraints(const btVector3 origin, const btVector3 linearLowerLimit, const btVector3 linearUpperLimit, 
                                     const btVector3 angularLowerLimit, const btVector3 angularUpperLimit);

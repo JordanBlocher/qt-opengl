@@ -25,7 +25,7 @@
 #include <GLBufferObject.hpp>
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
-#include <GLPrint.hpp>
+#include <GLCamera.hpp>
 
 #include "GLScene.hpp"
 
@@ -39,27 +39,21 @@ const GLuint COLOR_OFFSET = 0;
 
 using namespace std;
 
-GLScene::GLScene(QWidget *parent, int argc, char* argv[]) : GLViewport(parent), update(true), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
+GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), update(true), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {
     this->modelpath = argv[1];
     if(argc > 2)
         this->materialpath = argv[2];
     this->setContextMenuPolicy(Qt::DefaultContextMenu);    
-    // Projection matrix (needed by resize)
-    shared_ptr<GLTransform> perspective(new GLTransform("projection"));
-    this->AddToContext(perspective);
 }
 
 void GLScene::initializeGL()
 {
- 
     GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
-    string filename;
-
+    
     //Models
     shared_ptr<GLModel> model(new GLModel(this->modelpath.c_str(), "model", NUM_ATTRIBUTES));
 
@@ -69,56 +63,42 @@ void GLScene::initializeGL()
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
+    shared_ptr<GLShader> tvertex(new GLShader("tvertex.glsl", GL_VERTEX_SHADER, "texvshader"));
+    shared_ptr<GLShader> tfragment(new GLShader("tfragment.glsl", GL_FRAGMENT_SHADER, "texfshader"));
 
-    //Program
+    //Programs
     shared_ptr<GLProgram> cprogram(new GLProgram("color_program"));
+    shared_ptr<GLProgram> tprogram(new GLProgram("texture_program"));
     
     //Add Shaders
-    if( !cprogram->AddShader(vertex) )
-        std::cout << "Failed to attach vertex shader" << std::endl;
-    if( !cprogram->AddShader(fragment) )
-        std::cout << "Failed to attach fragment shader" << std::endl;
-
-
-    //Bind attribute index
-    //cprogram->SetAttributeIndex("v_position", V_INDEX);
-    //tprogram->SetAttributeIndex("v_position", V_INDEX);
-    //tprogram->SetAttributeIndex("v_uv", UV_INDEX);
-
-    // View matrix (eye pos, focus point, up)
-    shared_ptr<GLTransform> view( new GLTransform("view", glm::lookAt(
-                                    glm::vec3(0.0, 8.0, -16.0),
-                                    glm::vec3(0.0, 0.0, 0.0),
-                                    glm::vec3(0.0, 1.0, 0.0))));
-    this->AddToContext(view);
-
-    // Set Projection matrix
-    shared_ptr<GLTransform> projection = this->Get<GLTransform>("projection");
-    projection->Set(glm::perspective(
-                    FOV, 
-                    float(this->size().width())
-                    /float(this->size().height()),
-                    SENSOR_DISTANCE,
-                    FOCAL_DISTANCE) );
+    cprogram->AddShader(vertex); 
+    cprogram->AddShader(fragment); 
+    tprogram->AddShader(tvertex); 
+    tprogram->AddShader(tfragment); 
 
     //Add Program
     if( this->AddProgram(cprogram) )
-        this->AddToContext(cprogram);
+        this->AddToContext( cprogram );
+    if( this->AddProgram(tprogram) )
+        this->AddToContext( tprogram );
     
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
-    vertex_uniform->CreateUBO(1, cprogram->getId(), POSITION_OFFSET, GL_STATIC_DRAW);
+    vertex_uniform->CreateUBO(1, cprogram->getId(), POSITION, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
     
     std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
-    frag_uniform->CreateUBO(1, cprogram->getId(), COLOR_OFFSET, GL_STREAM_DRAW);
+    frag_uniform->CreateUBO(1, cprogram->getId(), COLOR, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
 
-    //Set UBOs to Share
+    //Add Sampler
+    std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
+    this->AddToContext(texture_uniform);
+
+    //Set UBOs t Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(frag_uniform);
-
-    //this->SetScene(perspective);
+    tprogram->SetUBO(vertex_uniform);
 
 }
 
@@ -131,9 +111,8 @@ void GLScene::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
     //Get view & projection matrices
-    shared_ptr<GLTransform> projection = this->Get<GLTransform>("projection");
-    shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-    glm::mat4 vp = projection->Matrix() * view->Matrix();
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    glm::mat4 vp = camera1->Projection() * camera1->View();
     
     //Choose Model
     shared_ptr<GLModel> model = this->Get<GLModel>("model");
@@ -143,6 +122,7 @@ void GLScene::paintGL()
     shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
     
     //Get Programs
+    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
     shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
     //Bind MVP
@@ -154,11 +134,22 @@ void GLScene::paintGL()
                      position.size,
                      glm::value_ptr( vp * model->Matrix() ));
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+   
+    //Get Sampler
+    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+
 
     //Colors Program
     glUseProgram(cprogram->getId());
     model->Draw(cuniform, cprogram->getId());
     glUseProgram(0);
+    
+    //Texture Program
+    glUseProgram(tprogram->getId());
+    model->Draw(tuniform, tprogram->getId());
+    glUseProgram(0);
+          
+
 }
 
 void GLScene::idleGL()
@@ -172,8 +163,6 @@ void GLScene::idleGL()
 void GLScene::resizeGL(int width, int height)
 {
     GLViewport::resizeGL(width, height);
-    shared_ptr<GLTransform> projection = this->Get<GLTransform>("projection");
-    projection->Set(glm::perspective(FOV, float(width)/float(height), SENSOR_DISTANCE, FOCAL_DISTANCE));
 }
 
 float GLScene::getDT()
@@ -187,37 +176,44 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    if( (event->key() == Qt::Key_Right))
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    
+    GLViewport::keyPressEvent(event);
+
+    // Act on the key press event
+    switch(event->key())
     {
-        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set(glm::rotate( view->Matrix() * glm::mat4(1.0f), 15.0f, glm::vec3(0.0, 1.0, 0.0)) );
+        case (Qt::Key_Right):
+            // Move RIGHT
+            camera1->moveCamera(GLCamera::CamDirection::Right);
+            break;    
+        case (Qt::Key_Left):
+            // Move LEFT
+            camera1->moveCamera(GLCamera::CamDirection::Left);
+            break;
+        case (Qt::Key_Up):
+            // Forward if SHIFT, UP otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera1->moveCamera(GLCamera::CamDirection::Forward);
+            }
+            else
+            {
+                camera1->moveCamera(GLCamera::CamDirection::Up);
+            }
+            break;
+        case (Qt::Key_Down):
+            // Backward if SHIFT, DOWN otherwise
+            if(event->modifiers() & Qt::ShiftModifier){
+                camera1->moveCamera(GLCamera::CamDirection::Backward);
+            }
+            else
+            {
+                camera1->moveCamera(GLCamera::CamDirection::Down);
+            }
+            break;            
     }
-    else if( (event->key() == Qt::Key_Left))
-    {
-        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set(glm::rotate( view->Matrix() * glm::mat4(1.0f), -15.0f, glm::vec3(0.0, 1.0, 0.0)) );
-    }
-    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Up)
-    {
-        shared_ptr<GLModel> model = this->Get<GLModel>("model");
-        model->setMatrix( glm::scale(glm::mat4(1.0f), glm::vec3(1.25, 1.25, 1.25)) * model->Matrix());
-    }
-    else if( (event->modifiers() & Qt::ShiftModifier) && event->key() == Qt::Key_Down)
-    {
-        shared_ptr<GLModel> model = this->Get<GLModel>("model");
-        model->setMatrix( glm::scale(glm::mat4(1.0f), glm::vec3(1.0/1.25, 1.0/1.25, 1.0/1.25)) * model->Matrix());
-    }
-    else if( (event->key() == Qt::Key_Up))
-    {
-        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -2.0, 4.0)) * view->Matrix());
-    }
-    else if( (event->key() == Qt::Key_Down))
-    {
-        shared_ptr<GLTransform> view = this->Get<GLTransform>("view");
-        view->Set( glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 2.0, -4.0)) * view->Matrix());
-    }
-        GLViewport::keyPressEvent(event);
+
+
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)
@@ -241,7 +237,7 @@ void GLScene::contextMenuEvent(QContextMenuEvent *event)
     menu.exec(event->globalPos());
 }
 
-void GLScene::start()
+void GLScene::resume()
 {
     if(!this->update)
     {
@@ -252,7 +248,7 @@ void GLScene::start()
     }
 }
 
-void GLScene::stop()
+void GLScene::pause()
 {
     if(this->update)
     {
@@ -261,3 +257,10 @@ void GLScene::stop()
     }
 }
 
+void GLScene::playGame(int)
+{
+}
+
+void GLScene::changePaddle(int)
+{
+}

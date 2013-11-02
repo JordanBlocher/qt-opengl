@@ -34,6 +34,7 @@ DynamicsWorld::~DynamicsWorld()
     collisionConfiguration.reset();
 }
 
+
 void DynamicsWorld::AddPhysicsBody(std::shared_ptr<btRigidBody> body)
 {
     this->world->addRigidBody(body.get());
@@ -44,14 +45,18 @@ void DynamicsWorld::AddConstraint(std::shared_ptr<btGeneric6DofConstraint> const
     this->world->addConstraint(constraint.get());
 }
 
-void DynamicsWorld::RemovePhysicsBody(std::shared_ptr<btRigidBody> body)
+void DynamicsWorld::RemoveDynamicPhysics(std::shared_ptr<PhysicsModel> body)
 {
-    this->world->removeRigidBody(body.get());
+    this->world->removeConstraint(body->GetConstraint().get());
+    body->GetConstraint().reset();
+    this->world->removeRigidBody(body->GetRigidBody().get());
+    body->GetRigidBody().reset();
 }
 
-void DynamicsWorld::RemoveConstraint(std::shared_ptr<btGeneric6DofConstraint> constraint)
+void DynamicsWorld::RemoveStaticPhysics(std::shared_ptr<PhysicsModel> body)
 {
-    this->world->removeConstraint(constraint.get());
+    this->world->removeRigidBody(body->GetRigidBody().get());
+    body->GetRigidBody().reset();
 }
 
 std::unique_ptr<btDiscreteDynamicsWorld> DynamicsWorld::GetWorld()

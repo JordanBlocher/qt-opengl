@@ -58,8 +58,12 @@ void GLScene::playGame(int numPlayers)
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
         this->AddToContext(camera2);
     }
-    this->removeBodies();
-    this->addBodies();
+    this->removeDynamicBodies();
+    this->addDynamicBodies();
+    GLViewport::start_time = std::chrono::high_resolution_clock::now();
+    this->time = std::chrono::high_resolution_clock::now();
+    GLViewport::timer.start();
+    this->resume();
 }
 
 void GLScene::changePaddle(int i)
@@ -76,6 +80,8 @@ void GLScene::initializeGL()
     glDepthFunc(GL_LESS);
     
     this->initGame();
+    this->addStaticBodies();
+
        /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
@@ -199,10 +205,9 @@ void GLScene::initGame()
 
 }
 
-void GLScene::addBodies()
+void GLScene::addStaticBodies()
 {
     std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
-
     btQuaternion orientation = btQuaternion(0, 0, 0, 1);
     btVector3 ones = btVector3(1.0f, 1.0f, 1.0f);
     btVector3 zeros = btVector3(0.0f, 0.0f, 0.0f);
@@ -220,6 +225,16 @@ void GLScene::addBodies()
     // Table entity
     std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
     entities->push_back(tableEnt);
+
+}
+
+void GLScene::addDynamicBodies()
+{
+    std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
+    btQuaternion orientation = btQuaternion(0, 0, 0, 1);
+    btVector3 ones = btVector3(1.0f, 1.0f, 1.0f);
+    btVector3 zeros = btVector3(0.0f, 0.0f, 0.0f);
+
 
     /****** DYNAMIC (PADDLE) ******/
     for(int i=0; i<paddleTypes.size(); i++)
@@ -286,10 +301,9 @@ void GLScene::addBodies()
 }
 
 
-void GLScene::removeBodies()
+void GLScene::removeDynamicBodies()
 {
     std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
-
     size_t numEnts = entities->size();
     if( numEnts == 0 )
         return;
@@ -297,11 +311,8 @@ void GLScene::removeBodies()
     {
         std::shared_ptr<Entity> ent = entities->at(i);
         entities->pop_back();
-        std::shared_ptr<PhysicsModel> physBody = ent->getPhysicsModel();
-        world->RemovePhysicsBody(physBody->GetRigidBody());
-        //world->RemoveConstraint(physBody->GetConstraint());
+        world->RemoveDynamicPhysics(ent->getPhysicsModel());
     }
-
 }
 
 void GLScene::idleGL()
@@ -334,7 +345,7 @@ void GLScene::resizeGL(int width, int height)
         shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
         camera2->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
         camera1->SetView(18.0f, -M_PI, 0.4f*M_PI);
-        camera2->SetView(18.0f, M_PI, 0.4f*M_PI);
+        camera2->SetView(1.0f, M_PI, 0.4f*M_PI);
   
     }
     else

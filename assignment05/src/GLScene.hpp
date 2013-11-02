@@ -19,11 +19,17 @@ class GLScene : public GLViewport
     Q_OBJECT
 
  public:
-    GLScene(QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
+    GLScene(int, int, QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
+
+ signals:
+    void mainMenu(int);
+    void updateScore(int, int);
 
  protected slots:
-    void start();
-    void stop();
+    void playGame(int);
+    void changePaddle(int);
+    void resume();
+    void pause();
     void idleGL();
 
  protected:

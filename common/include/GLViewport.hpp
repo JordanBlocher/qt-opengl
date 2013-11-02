@@ -45,8 +45,6 @@ Q_OBJECT
     void quit();
 
  signals:
-    virtual void start();
-    virtual void stop();
 
  protected slots:
     virtual void idleGL();

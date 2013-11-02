@@ -2,6 +2,7 @@
 #define DYNAMICSWORLD_H
 
 #include "GLNode.hpp"
+#include "PhysicsModel.hpp"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -15,8 +16,8 @@ class DynamicsWorld : public GLNode
 
     void AddPhysicsBody(std::shared_ptr<btRigidBody>);
     void AddConstraint(std::shared_ptr<btGeneric6DofConstraint>);
-    void RemovePhysicsBody(std::shared_ptr<btRigidBody>);
-    void RemoveConstraint(std::shared_ptr<btGeneric6DofConstraint>);
+    void RemoveDynamicPhysics(std::shared_ptr<PhysicsModel>);
+    void RemoveStaticPhysics(std::shared_ptr<PhysicsModel>);
     std::unique_ptr<btDiscreteDynamicsWorld> GetWorld();
     void SetWorld(std::unique_ptr<btDiscreteDynamicsWorld> world);
 

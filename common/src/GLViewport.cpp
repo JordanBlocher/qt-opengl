@@ -64,7 +64,6 @@ void GLViewport::initializeGL()
         qApp->quit();
         return;
     }
-    timer.start();
 }
 
 void GLViewport::paintGL()
@@ -166,4 +165,6 @@ dataPtr GLViewport::getContext()
 {
     return this->context;
 }
+
+
 
