@@ -527,13 +527,13 @@ void GLScene::updateKeys()
     if(keyHeld[3]) // D
         entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
     if(keyHeld[4]) // I
-        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+        entities->at(this->puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
     if(keyHeld[5]) // K
-        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
+        entities->at(this->puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
     if(keyHeld[6]) // J
-        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+        entities->at(this->puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
     if(keyHeld[7]) // L
-        entities->at(puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+        entities->at(this->puckIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
     if(keyHeld[8]) // RG
         camera->moveCamera(GLCamera::CamDirection::Right);
     if(keyHeld[9]) // LF
