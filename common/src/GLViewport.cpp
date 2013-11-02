@@ -97,11 +97,17 @@ void GLViewport::keyPressEvent(QKeyEvent *event)
     // Act on the key press event
     switch(event->key())
     {
-        case (Qt::Key_Escape):
+        case (Qt::Key_C):
             // Close the qApp
-            qApp->quit();
+            if(event->modifiers() & Qt::ControlModifier)
+                qApp->quit();
             break;
     } 
+}
+
+void GLViewport::keyReleaseEvent(QKeyEvent *event)
+{
+
 }
 
 void GLViewport::quit()

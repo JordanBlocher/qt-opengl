@@ -15,7 +15,7 @@ GLCamera::GLCamera(const char* name, QSize size)
 
     // Set the default camera angle
     this->radius  = 25.0f;
-    this->azimuth = (2.0f*M_PI)/10.0f;
+    this->azimuth = (6.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
 
@@ -61,31 +61,31 @@ void GLCamera::moveCamera(GLCamera::CamDirection direction)
     switch(direction)
     {
         case (CamDirection::Up):
-            if(zenith >= ((4.0f*M_PI)/10.0f))
+            if(zenith >= ((24.0f*M_PI)/50.0f))
             {
                 zenith = ((5.0f*M_PI)/10.0f);
             }
             else
             {
-                zenith += (M_PI/10.0f);
+                zenith += (M_PI/50.0f);
             }
             break;
         case (CamDirection::Down):
-            if(zenith <= ((2.0f*M_PI)/10.0f))
+            if(zenith <= ((2.0f*M_PI)/50.0f))
             {
-                zenith = ((1.0*M_PI)/10.0f);
+                zenith = ((1.0*M_PI)/50.0f);
             }
             else
             {
-                zenith -= (M_PI/10.0f);
+                zenith -= (M_PI/50.0f);
             }
             break;
         case (CamDirection::Left):
-            azimuth += (M_PI/10.0f);
+            azimuth += (M_PI/50.0f);
             azimuth -= ((int)(azimuth/(2.0f*M_PI))*(2.0f*M_PI));
             break;
         case (CamDirection::Right):
-            azimuth -= (M_PI/10.0f);
+            azimuth -= (M_PI/50.0f);
             azimuth -= ((int)(azimuth/(2.0f*M_PI))*(2.0f*M_PI));
             break;
         case (CamDirection::Forward):

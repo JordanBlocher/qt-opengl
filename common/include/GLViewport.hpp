@@ -55,6 +55,7 @@ Q_OBJECT
     virtual void paintGL();
     virtual void resizeGL(int, int);
     virtual void keyPressEvent(QKeyEvent*);
+    virtual void keyReleaseEvent(QKeyEvent*);
     virtual void mousePressEvent(QMouseEvent*);
     virtual void contextMenuEvent(QContextMenuEvent*);
 
