@@ -299,11 +299,8 @@ void GLScene::removeBodies()
     {
         std::shared_ptr<Entity> ent = entities->at(i);
         entities->pop_back();
-        std::shared_ptr<PhysicsModel> physBody = ent->getPhysicsModel();
-        //world->RemovePhysicsBody(physBody->GetRigidBody());
-        //world->RemoveConstraint(physBody->GetConstraint());
+        world->RemoveDynamicPhysics(ent->getPhysicsModel());
     }
-
 }
 
 void GLScene::idleGL()
@@ -340,7 +337,6 @@ void GLScene::resizeGL(int width, int height)
         camera2->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
         camera1->SetView(18.0f, -M_PI, 0.4f*M_PI);
         camera2->SetView(18.0f, M_PI, 0.4f*M_PI);
-  
     }
     else
         GLViewport::resizeGL(width, height);
