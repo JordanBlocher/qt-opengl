@@ -60,6 +60,9 @@ void GLScene::playGame(int numPlayers)
     shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
     camera1->SetView(18.0f, M_PI, 0.4f*M_PI);
 
+    this->player1Score = 0;
+    this->player2Score = 0;
+
     if(numPlayers > 1)
     {
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
@@ -280,10 +283,10 @@ void GLScene::addDynamicBodies()
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(paddle1Phys->GetRigidBody());
-        paddle1Phys->initConstraints(zeros, btVector3(-4,1,1), btVector3(3.0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle1Phys->initConstraints(zeros, btVector3(-3.6,1,1), btVector3(3.0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle1Phys->GetConstraint());
         world->AddPhysicsBody(paddle2Phys->GetRigidBody());
-        paddle2Phys->initConstraints(zeros, btVector3(-3,1,1), btVector3(4,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle2Phys->initConstraints(zeros, btVector3(-3,1,1), btVector3(3.6,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle2Phys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -329,7 +332,7 @@ void GLScene::addDynamicBodies()
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(puckPhys->GetRigidBody());
-        puckPhys->initConstraints(zeros, btVector3(-6.8,1,-6.8), btVector3(6.8,0,6.8), btVector3(0.0f,1.0f,0.0f), zeros);
+        puckPhys->initConstraints(zeros, btVector3(-7.5,1,-7.5), btVector3(7.5,0,7.5), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(puckPhys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -364,6 +367,7 @@ void GLScene::idleGL()
 {  
     if( update )
     {
+        bool newRound = false;
         // Timer
         float dt;
         time = chrono::high_resolution_clock::now();
@@ -381,6 +385,38 @@ void GLScene::idleGL()
 
         // Update all of the physics dependent keys
         updateKeys();
+
+        // Print the position of the puck
+        btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+        if(puckPos.getX() > 7.0f)
+        {
+            player1Score++;
+            emit updateScore(player1Score,1);
+            newRound = true;
+        }
+        else if(puckPos.getX() < -7.0f)
+        {
+            player2Score++;
+            emit updateScore(player2Score,2);
+            newRound = true;
+        }
+
+        if (newRound)
+        {
+            // Reset the puck position
+            this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(0,0,0));
+            this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+            this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+
+            // Reset the paddle positions
+            this->entities->at(this->paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
+            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
+            this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+            this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+
+        }
     }
 }
 

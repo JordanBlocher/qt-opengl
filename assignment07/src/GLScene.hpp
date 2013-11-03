@@ -55,6 +55,7 @@ class GLScene : public GLViewport
     int numPlayers;
     int puckIndex;
     int paddleIndex;
+    int player1Score, player2Score;
     bool keyHeld[12];// W S A D I K J L R RG LF UP DW
     
     std::vector<std::string> puckTypes;
