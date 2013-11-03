@@ -58,6 +58,9 @@ void GLScene::playGame(int numPlayers)
     if(numPlayers > 1)
     {
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
+        shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+        camera2->SetView(18.0f, 2.0*M_PI, 0.40f*M_PI);
+        camera->SetView(18.0f, M_PI, 0.4f*M_PI);
         this->AddToContext(camera2);
     }
     this->removeBodies();
@@ -137,12 +140,6 @@ void GLScene::paintGL()
 
         glViewport(i * this->width()/(1.0*numPlayers), 0.0, this->width()/(1.0*numPlayers), this->height()); 
 
-        if(i == 0 && numPlayers == 2)
-            camera->SetView(18.0f, -M_PI, 0.4f*M_PI);
-        if(i == 1 && numPlayers == 2)
-            camera->SetView(18.0f, M_PI, 0.4f*M_PI);
-        
-
         //Get UBOS
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
         shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
@@ -217,7 +214,7 @@ void GLScene::addBodies()
     // Table Constraints
     std::shared_ptr<GLModel> tableConst(new GLModel("walls.obj", "table", NUM_ATTRIBUTES));
     tableConst->LoadVertexData();
-    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst, ones, orientation, zeros, 0.0f, 0.0f, 0.5f, PhysicsModel::COLLISION::STATIC));
+    std::shared_ptr<PhysicsModel> tablePhys(new PhysicsModel("table",tableConst, ones, orientation, zeros, 0.0f, 1.0f, 0.5f, PhysicsModel::COLLISION::STATIC));
     world->AddPhysicsBody(tablePhys->GetRigidBody());
     // Table entity
     std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
@@ -230,18 +227,17 @@ void GLScene::addBodies()
         std::shared_ptr<GLModel> paddleGfx(new GLModel(paddleTypes[i].c_str(), "paddle", NUM_ATTRIBUTES));
         paddleGfx->CreateVAO();
         paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.3f))); 
-
         // Create Collision Objects
-        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
-        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.0f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
+        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
+        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
         
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(paddle1Phys->GetRigidBody());
-        paddle1Phys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle1Phys->initConstraints(zeros, btVector3(-7,1,1), btVector3(0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle1Phys->GetConstraint());
         world->AddPhysicsBody(paddle2Phys->GetRigidBody());
-        paddle2Phys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle2Phys->initConstraints(zeros, btVector3(0,1,1), btVector3(7,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle2Phys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -268,11 +264,11 @@ void GLScene::addBodies()
         puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
-        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 0.00f, 0.5f));
+        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.01f, 0.00f, 0.5f));
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(puckPhys->GetRigidBody());
-        puckPhys->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
+        puckPhys->initConstraints(zeros, btVector3(-7.5,1,-7.5), btVector3(7.5,0,7.5), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(puckPhys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -335,8 +331,6 @@ void GLScene::resizeGL(int width, int height)
         camera1->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
         shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
         camera2->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
-        camera1->SetView(18.0f, -M_PI, 0.4f*M_PI);
-        camera2->SetView(18.0f, M_PI, 0.4f*M_PI);
     }
     else
         GLViewport::resizeGL(width, height);
@@ -353,9 +347,6 @@ float GLScene::getDT()
 
 void GLScene::keyPressEvent(QKeyEvent *event)
 {
-    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
-    
-   // shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
@@ -502,19 +493,16 @@ void GLScene::pause()
 void GLScene::updateKeys()
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+    shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     if(keyHeld[0]) // W
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
-
     if(keyHeld[1]) // S
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
-
     if(keyHeld[2]) // A
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
-
     if(keyHeld[3]) // D
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
-
     if(keyHeld[4]) // I
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
     if(keyHeld[5]) // K
@@ -524,14 +512,25 @@ void GLScene::updateKeys()
     if(keyHeld[7]) // L
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
     if(keyHeld[8]) // RG
+    {
         camera->moveCamera(GLCamera::CamDirection::Right);
+        camera2->moveCamera(GLCamera::CamDirection::Right);
+    }
     if(keyHeld[9]) // LF
+    {
         camera->moveCamera(GLCamera::CamDirection::Left);
+        camera2->moveCamera(GLCamera::CamDirection::Left);
+    }
     if(keyHeld[10]) // UP
+    {
         camera->moveCamera(GLCamera::CamDirection::Up);
+        camera2->moveCamera(GLCamera::CamDirection::Up);
+    }
     if(keyHeld[11]) // DW
+    {
         camera->moveCamera(GLCamera::CamDirection::Down);
-}
+        camera2->moveCamera(GLCamera::CamDirection::Down);
+}   }
 
 GLScene::~GLScene()
 {

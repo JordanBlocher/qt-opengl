@@ -42,7 +42,6 @@ void GLCamera::SetView(float radius, float azimuth, float zenith)
     this->radius = radius;
     this->azimuth = azimuth;
     this->zenith = zenith;
-
     updateView();
 }
 
@@ -125,25 +124,6 @@ void GLCamera::updateView()
     eyeX = radius * sin (zenith) * cos (azimuth);
     eyeZ = radius * sin (zenith) * sin (azimuth);
     eyeY = radius * cos (zenith);
-
-    // Do the cross product manually for some reason
-    upX = (-eyeX*eyeZ);
-    upY = (eyeZ*eyeY);
-    upZ = ((-eyeX*eyeX) - (eyeY*eyeY));
-    magnitude = sqrt((upX*upX) + (upY*upY) + (upZ*upZ));
-
-    // Make that into a unit vector
-    upX /= magnitude;
-    upY /= magnitude;
-    upZ /= magnitude;
-
-    // If upside down, flip
-    if (upZ < 0)
-    {
-        upX = -upX;
-        upY = -upY;
-        upZ = -upZ;   
-    }
 
     // Set us up the view
     this->view = (glm::lookAt(
