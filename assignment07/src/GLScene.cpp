@@ -300,7 +300,7 @@ void GLScene::removeBodies()
         std::shared_ptr<Entity> ent = entities->at(i);
         entities->pop_back();
         std::shared_ptr<PhysicsModel> physBody = ent->getPhysicsModel();
-        world->RemovePhysicsBody(physBody->GetRigidBody());
+        //world->RemovePhysicsBody(physBody->GetRigidBody());
         //world->RemoveConstraint(physBody->GetConstraint());
     }
 
@@ -508,21 +508,25 @@ void GLScene::updateKeys()
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
 
     if(keyHeld[0]) // W
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
-    if(keyHeld[1]) // S
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
-    if(keyHeld[2]) // A
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
-    if(keyHeld[3]) // D
+
+    if(keyHeld[1]) // S
         entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+
+    if(keyHeld[2]) // A
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
+
+    if(keyHeld[3]) // D
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+
     if(keyHeld[4]) // I
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
-    if(keyHeld[5]) // K
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
-    if(keyHeld[6]) // J
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
-    if(keyHeld[7]) // L
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+    if(keyHeld[5]) // K
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+    if(keyHeld[6]) // J
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+    if(keyHeld[7]) // L
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
     if(keyHeld[8]) // RG
         camera->moveCamera(GLCamera::CamDirection::Right);
     if(keyHeld[9]) // LF
