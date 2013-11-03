@@ -36,8 +36,9 @@ class GLScene : public GLViewport
 
  protected:
     void initGame();
-    void addBodies();
-    void removeBodies();
+    void addStaticBodies();
+    void addDynamicBodies();
+    void removeDynamicBodies();
     void initializeGL();
     void paintGL();
     void resizeGL(int, int);

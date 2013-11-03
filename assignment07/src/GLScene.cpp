@@ -54,6 +54,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
 
 void GLScene::playGame(int numPlayers)
 {
+    this->puckIndex = 7;
+    this->paddleIndex = 1;
     this->numPlayers = numPlayers;
     if(numPlayers > 1)
     {
@@ -63,13 +65,23 @@ void GLScene::playGame(int numPlayers)
         camera->SetView(18.0f, M_PI, 0.4f*M_PI);
         this->AddToContext(camera2);
     }
-    this->removeBodies();
-    this->addBodies();
+    this->removeDynamicBodies();
+    this->addDynamicBodies();
+    this->update = false;
+    this->resume();
 }
 
 void GLScene::changePaddle(int i)
 {
+    std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+
     this->paddleIndex = 2*i + 1;
+
+    std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
+    //paddle1->translate(paddle1Old->getCenterOfMassPosition());
+    std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+    //paddle2->translate(paddle2Old->getCenterOfMassPosition());
 }
 
 
@@ -81,6 +93,7 @@ void GLScene::initializeGL()
     glDepthFunc(GL_LESS);
     
     this->initGame();
+    this->addStaticBodies();
        /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
@@ -198,7 +211,7 @@ void GLScene::initGame()
 
 }
 
-void GLScene::addBodies()
+void GLScene::addStaticBodies()
 {
     std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
 
@@ -220,6 +233,17 @@ void GLScene::addBodies()
     std::shared_ptr<Entity> tableEnt(new Entity(tableGfx,tablePhys));
     entities->push_back(tableEnt);
 
+}
+
+void GLScene::addDynamicBodies()
+{
+    std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
+
+    btQuaternion orientation = btQuaternion(0, 0, 0, 1);
+    btVector3 ones = btVector3(1.0f, 1.0f, 1.0f);
+    btVector3 zeros = btVector3(0.0f, 0.0f, 0.0f);
+
+
     /****** DYNAMIC (PADDLE) ******/
     for(int i=0; i<paddleTypes.size(); i++)
     {
@@ -228,8 +252,13 @@ void GLScene::addBodies()
         paddleGfx->CreateVAO();
         paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.3f))); 
         // Create Collision Objects
+<<<<<<< HEAD
         std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
         std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
+=======
+        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.00f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
+        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.0f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
+>>>>>>> jordan
         
         // Initialize World
         // Add rigid body and then constraint
@@ -264,7 +293,11 @@ void GLScene::addBodies()
         puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
+<<<<<<< HEAD
         std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.01f, 0.00f, 0.5f));
+=======
+        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.00f, 0.5f));
+>>>>>>> jordan
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(puckPhys->GetRigidBody());
@@ -284,7 +317,7 @@ void GLScene::addBodies()
 }
 
 
-void GLScene::removeBodies()
+void GLScene::removeDynamicBodies()
 {
     std::shared_ptr<DynamicsWorld> world = this->Get<DynamicsWorld>("dynamics");
 
