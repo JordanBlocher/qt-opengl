@@ -56,14 +56,21 @@ void GLScene::playGame(int numPlayers)
 {
     this->puckIndex = 7;
     this->paddleIndex = 1;
-    this->numPlayers = numPlayers;
+    this->numPlayers = numPlayers;       
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    camera1->SetView(18.0f, M_PI, 0.4f*M_PI);
+
     if(numPlayers > 1)
     {
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
-        shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
         camera2->SetView(18.0f, 2.0*M_PI, 0.40f*M_PI);
-        camera->SetView(18.0f, M_PI, 0.4f*M_PI);
+        camera1->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
+        camera2->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
         this->AddToContext(camera2);
+    }
+    else
+    {
+        GLViewport::resizeGL(this->width(), this->height());
     }
     this->removeDynamicBodies();
     this->addDynamicBodies();
@@ -76,12 +83,27 @@ void GLScene::changePaddle(int i)
     std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
     std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
 
+    paddle1Old->setCollisionFlags( paddle1Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    paddle2Old->setCollisionFlags( paddle2Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+    paddle1Old->setLinearVelocity(btVector3(0,0,0));
+    paddle1Old->setAngularVelocity(btVector3(0,0,0));
+    paddle2Old->setLinearVelocity(btVector3(0,0,0));
+    paddle2Old->setAngularVelocity(btVector3(0,0,0));
+
     this->paddleIndex = 2*i + 1;
 
     std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
     //paddle1->translate(paddle1Old->getCenterOfMassPosition());
     std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
     //paddle2->translate(paddle2Old->getCenterOfMassPosition());
+
+    paddle1->setCollisionFlags( paddle1->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    paddle2->setCollisionFlags( paddle2->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+    this->entities->at(paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
+    this->entities->at(paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
+
 }
 
 
@@ -252,30 +274,39 @@ void GLScene::addDynamicBodies()
         paddleGfx->CreateVAO();
         paddleGfx->setMatrix(glm::scale(paddleGfx->Matrix(), glm::vec3(0.3f))); 
         // Create Collision Objects
-<<<<<<< HEAD
-        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
-        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
-=======
-        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.00f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
-        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.0f, 0.5f, PhysicsModel::COLLISION::DYNAMIC));
->>>>>>> jordan
+        std::shared_ptr<PhysicsModel> paddle1Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(-3.0f,0.0f,0.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
+        std::shared_ptr<PhysicsModel> paddle2Phys(new PhysicsModel("paddle", paddleGfx, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(3.0f,0.0f,0.0f), 0.7f, 5000.0f, 0.0f, PhysicsModel::COLLISION::DYNAMIC));
         
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(paddle1Phys->GetRigidBody());
-        paddle1Phys->initConstraints(zeros, btVector3(-7,1,1), btVector3(0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle1Phys->initConstraints(zeros, btVector3(-4,1,1), btVector3(3.0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle1Phys->GetConstraint());
         world->AddPhysicsBody(paddle2Phys->GetRigidBody());
-        paddle2Phys->initConstraints(zeros, btVector3(0,1,1), btVector3(7,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle2Phys->initConstraints(zeros, btVector3(-3,1,1), btVector3(4,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle2Phys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
-        paddle1Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
         paddle1Phys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
         paddle1Phys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
-        paddle2Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
         paddle2Phys->GetRigidBody()->setLinearFactor(btVector3(1,0,1));
         paddle2Phys->GetRigidBody()->setAngularFactor(btVector3(0,1,0));
+
+        paddle1Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+        paddle2Phys->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
+
+
+        if(i > 0)
+        {
+            paddle1Phys->GetRigidBody()->setCollisionFlags( paddle1Phys->GetRigidBody()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+            paddle2Phys->GetRigidBody()->setCollisionFlags( paddle2Phys->GetRigidBody()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        }
+        else
+        {
+            paddle1Phys->GetRigidBody()->setCollisionFlags( paddle1Phys->GetRigidBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+            paddle2Phys->GetRigidBody()->setCollisionFlags( paddle2Phys->GetRigidBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        }
+    
 
         // Merge models to entity list
         std::shared_ptr<Entity> paddleEnt1(new Entity(paddleGfx, paddle1Phys));
@@ -293,15 +324,12 @@ void GLScene::addDynamicBodies()
         puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
-<<<<<<< HEAD
-        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,-3.0f), 0.01f, 0.00f, 0.5f));
-=======
-        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.7f, 0.00f, 0.5f));
->>>>>>> jordan
+        std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.01f, 0.00f, 0.5f));
+
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(puckPhys->GetRigidBody());
-        puckPhys->initConstraints(zeros, btVector3(-7.5,1,-7.5), btVector3(7.5,0,7.5), btVector3(0.0f,1.0f,0.0f), zeros);
+        puckPhys->initConstraints(zeros, btVector3(-6.8,1,-6.8), btVector3(6.8,0,6.8), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(puckPhys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -526,44 +554,72 @@ void GLScene::pause()
 void GLScene::updateKeys()
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
-    shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
 
     if(keyHeld[0]) // W
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[1]) // S
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[2]) // A
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
     if(keyHeld[3]) // D
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[4]) // I
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*10);
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[5]) // K
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*10);
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[6]) // J
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*10);
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[7]) // L
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*10);
-    if(keyHeld[8]) // RG
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
+
+
+    entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(0.92f * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+    entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(0.92f * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+
+    if(numPlayers > 1)
     {
-        camera->moveCamera(GLCamera::CamDirection::Right);
-        camera2->moveCamera(GLCamera::CamDirection::Right);
+        shared_ptr<GLCamera> camera2 = this->Get<GLCamera>("camera2");
+        if(keyHeld[8]) // RG
+        {
+            camera->moveCamera(GLCamera::CamDirection::Right);
+            camera2->moveCamera(GLCamera::CamDirection::Right);
+        }
+        if(keyHeld[9]) // LF
+        {
+            camera->moveCamera(GLCamera::CamDirection::Left);
+            camera2->moveCamera(GLCamera::CamDirection::Left);
+        }
+        if(keyHeld[10]) // UP
+        {
+            camera->moveCamera(GLCamera::CamDirection::Up);
+            camera2->moveCamera(GLCamera::CamDirection::Up);
+        }
+        if(keyHeld[11]) // DW
+        {
+            camera->moveCamera(GLCamera::CamDirection::Down);
+            camera2->moveCamera(GLCamera::CamDirection::Down);
+        }
     }
-    if(keyHeld[9]) // LF
+    else
     {
-        camera->moveCamera(GLCamera::CamDirection::Left);
-        camera2->moveCamera(GLCamera::CamDirection::Left);
+        if(keyHeld[8]) // RG
+        {
+            camera->moveCamera(GLCamera::CamDirection::Right);
+        }
+        if(keyHeld[9]) // LF
+        {
+            camera->moveCamera(GLCamera::CamDirection::Left);
+        }
+        if(keyHeld[10]) // UP
+        {
+            camera->moveCamera(GLCamera::CamDirection::Up);
+        }
+        if(keyHeld[11]) // DW
+        {
+            camera->moveCamera(GLCamera::CamDirection::Down);
+        }  
     }
-    if(keyHeld[10]) // UP
-    {
-        camera->moveCamera(GLCamera::CamDirection::Up);
-        camera2->moveCamera(GLCamera::CamDirection::Up);
-    }
-    if(keyHeld[11]) // DW
-    {
-        camera->moveCamera(GLCamera::CamDirection::Down);
-        camera2->moveCamera(GLCamera::CamDirection::Down);
-}   }
+}
 
 GLScene::~GLScene()
 {

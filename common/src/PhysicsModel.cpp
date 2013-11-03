@@ -208,6 +208,13 @@ void PhysicsModel::SetTransform(btTransform newTransform)
     this->rigidBody->getMotionState()->setWorldTransform(newTransform);
 }
 
+void PhysicsModel::SetPosition(btVector3 newPos)
+{
+    btTransform transform = this->rigidBody->getCenterOfMassTransform();
+    transform.setOrigin(newPos);
+    this->rigidBody->setCenterOfMassTransform(transform);
+}
+
 std::shared_ptr<btRigidBody> PhysicsModel::GetRigidBody()
 {
     return this->rigidBody;
