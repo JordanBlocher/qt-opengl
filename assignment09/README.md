@@ -1,4 +1,4 @@
-Assignment 08: Bullet Physics Engine
+Assignment 09: Air Hockey
 ====================================
 
 Use Instructions
