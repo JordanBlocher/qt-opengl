@@ -303,10 +303,10 @@ void GLScene::addDynamicBodies()
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(paddle1Phys->GetRigidBody());
-        paddle1Phys->initConstraints(zeros, btVector3(-3.6,1,1), btVector3(3.0,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle1Phys->initConstraints(zeros, btVector3(-3.6,1,-3.4), btVector3(3.0,0,3.4), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle1Phys->GetConstraint());
         world->AddPhysicsBody(paddle2Phys->GetRigidBody());
-        paddle2Phys->initConstraints(zeros, btVector3(-3,1,1), btVector3(3.6,0,0), btVector3(0.0f,1.0f,0.0f), zeros);
+        paddle2Phys->initConstraints(zeros, btVector3(-3,1,-3.4), btVector3(3.6,0,3.4), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(paddle2Phys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -344,7 +344,7 @@ void GLScene::addDynamicBodies()
         //Create Models 
         std::shared_ptr<GLModel> puckGfx(new GLModel(puckTypes[i].c_str(), "puck", NUM_ATTRIBUTES));
         puckGfx->CreateVAO();
-        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
+        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(1.0f))); 
 
         // Create Collision Objects
         std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.01f, 0.00f, 0.5f));
@@ -352,7 +352,7 @@ void GLScene::addDynamicBodies()
         // Initialize World
         // Add rigid body and then constraint
         world->AddPhysicsBody(puckPhys->GetRigidBody());
-        puckPhys->initConstraints(zeros, btVector3(-7.5,1,-7.5), btVector3(7.5,0,7.5), btVector3(0.0f,1.0f,0.0f), zeros);
+        puckPhys->initConstraints(zeros, btVector3(-7.5,1,-3.4), btVector3(7.5,0,3.4), btVector3(0.0f,1.0f,0.0f), zeros);
         world->AddConstraint(puckPhys->GetConstraint());
 
         // Set Restrictive Dynamics Constraints
@@ -410,138 +410,17 @@ void GLScene::idleGL()
         entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
-
-        btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-        btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-        btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-
-        if(puckPosition.distance(paddle1Pos) < 0.5f || puckPosition.distance(paddle2Pos) < 0.5f)
-        {
-            if(!playingBg)
-            {
-                emit playSound(2);
-                playingBg = true;
-            }
-        }
-        else
-        {
-            playingBg = false;
-        }
-
+        // Make sure game props are behaving
+        this->monitorProps();
 
         // Handle AI stuff
         if(aiOnline)
         {
-            // Define needed variables
-            std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
-            btVector3 targetPosition;
-            btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-            btVector3 forceVector;
-            btVector3 goal = btVector3(7.0f, 0,0);
-
-            // If puck is on other side, try to stay at half way on this side and in middle of field.
-            if (puckPosition.getX() < 0.0)
-            {
-                // Get in the middle of my field
-                targetPosition.setX(3.5f);
-
-                // Calculate the midpoint z between the puck and the goal
-                targetPosition.setZ(-(puckPosition.getZ()/(puckPosition.getX()-3.5)));
-
-                forceVector = targetPosition - currentPos;
-
-            }
-            // If puck is within threshold, try to block and hit
-            else if (puckPosition.getX() > 1.0f)
-            {
-                // Define ideal guard stance
-                btVector3 idealGuard;
-
-                // If puck is closer to goal than paddle, move toward goal
-                if(currentPos.distance(goal) > puckPosition.distance(goal))
-                {
-                    idealGuard = btVector3(6.8f,0,0);
-                    forceVector = idealGuard - currentPos;
-
-                }
-                // If the puck is moving pretty slow, just smack it
-                else if(puck->getLinearVelocity().length2() < 36)
-                {
-                    forceVector = (puckPosition - currentPos);
-                }
-                // If paddle is closer to goal than puck and is fast, then ideal guard is just the position between the puck and the goal
-                else //if(currentPos.distance(goal) > puckPosition.distance(goal))
-                {
-                    idealGuard = btVector3(currentPos.getX(), 0, -(puckPosition.getZ()/(puckPosition.getX()-currentPos.getX())));
-                    forceVector = idealGuard - currentPos;
-
-                }
-                // If not almost between puck and goal, fix that
-
-            }
-            // Otherwise, head straight toward the puck
-            else
-            {
-                forceVector = (puckPosition - currentPos);
-            }
-
-
-            // Apply forces
-            forceVector.normalize();
-
-
-            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
-
-
+            this->invokeAI();
         }
 
-        // Check if either player has scored.
-        btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-        if(puckPos.getX() > 7.0f)
-        {
-            // Play goal sound
-            emit playSound(0);
-
-            player1Score++;
-            emit updateScore(player1Score,1);
-            newRound = true;
-
-        }
-        else if(puckPos.getX() < -7.0f)
-        {
-            // Play goal sound
-            emit playSound(0);
-
-            player2Score++;
-            emit updateScore(player2Score,2);
-            newRound = true;
-
-
-        }
-
-        // If a players's score is over the threshold, end the game
-        if (player1Score > 4 || player2Score > 4)
-        {
-            // Call end round signal
-            emit endGame();
-        }
-        else 
-        if (newRound)
-        {
-            // Reset the puck position
-            this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(0,0,0));
-            this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-            this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
-
-            // Reset the paddle positions
-            this->entities->at(this->paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
-            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
-            this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-            this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
-            this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
-
-        }
+        // Check score stuff
+        this->monitorScore();
     }
 }
 
@@ -691,10 +570,8 @@ std::shared_ptr<std::vector<std::shared_ptr<Entity>>> GLScene::getEntities()
 
 void GLScene::mousePressEvent(QMouseEvent *event)
 {
-    //GLViewport::mousePressEvent(event);
-
     // Check if single player and this is a left click
-    if((numPlayers == 1) && (event->button() == Qt::LeftButton))
+    if((numPlayers == 1))
     {
         GLint viewport[4];
         GLdouble modelview[16];
@@ -750,8 +627,11 @@ void GLScene::mousePressEvent(QMouseEvent *event)
             this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
             entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
         }
-    }
-    
+    }    
+}
+void GLScene::mouseMoveEvent(QMouseEvent *event)
+{
+
 }
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)
@@ -866,3 +746,152 @@ GLScene::~GLScene()
     dynamics->SetWorld(std::move(world));
 }
 
+void GLScene::monitorScore()
+{
+    // Check if either player has scored.
+    btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    bool newRound = false;
+
+    // Check if puck is score
+    if(puckPos.getX() > 7.0f)
+    {
+        // Play goal sound
+        emit playSound(0);
+
+        player1Score++;
+        emit updateScore(player1Score,1);
+        newRound = true;
+
+    }
+    else if(puckPos.getX() < -7.0f)
+    {
+        // Play goal sound
+        emit playSound(0);
+
+        player2Score++;
+        emit updateScore(player2Score,2);
+        newRound = true;
+
+    }
+
+    // If in goal, reset location of items
+    if (newRound)
+    {
+        // Reset the puck position
+        this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+
+        // Reset the paddle positions
+        this->entities->at(this->paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
+        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
+        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+
+    }
+
+    // If a players's score is over the threshold, end the game
+    if (player1Score > 4 || player2Score > 4)
+    {
+        // Call end round signal
+        emit endGame();
+    }
+    
+}
+
+void GLScene::invokeAI()
+{
+    // Define needed variables
+    btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
+   
+    btVector3 targetPosition;
+    btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 forceVector;
+    btVector3 goal = btVector3(7.0f, 0,0);
+
+    // If puck is on other side, try to stay at half way on this side and in middle of field.
+    if (puckPosition.getX() < 0.0)
+    {
+        // Get in the middle of my field
+        targetPosition.setX(3.5f);
+
+        // Calculate the midpoint z between the puck and the goal
+        targetPosition.setZ(-(puckPosition.getZ()/(puckPosition.getX()-3.5)));
+
+        forceVector = targetPosition - currentPos;
+
+    }
+    // If puck is within threshold, try to block and hit
+    else if (puckPosition.getX() > 1.0f)
+    {
+        // Define ideal guard stance
+        btVector3 idealGuard;
+
+        // If puck is closer to goal than paddle, move toward goal
+        if(currentPos.distance(goal) > puckPosition.distance(goal))
+        {
+            idealGuard = btVector3(6.8f,0,0);
+            forceVector = idealGuard - currentPos;
+
+        }
+        // If the puck is moving pretty slow, just smack it
+        else if(puck->getLinearVelocity().length2() < 36)
+        {
+            forceVector = (puckPosition - currentPos);
+        }
+        // If paddle is closer to goal than puck and is fast, then ideal guard is just the position between the puck and the goal
+        else //if(currentPos.distance(goal) > puckPosition.distance(goal))
+        {
+            idealGuard = btVector3(currentPos.getX(), 0, -(puckPosition.getZ()/(puckPosition.getX()-currentPos.getX())));
+            forceVector = idealGuard - currentPos;
+
+        }
+
+    }
+    // Otherwise, head straight toward the puck
+    else
+    {
+        forceVector = (puckPosition - currentPos);
+    }
+
+    // Apply forces
+    forceVector.normalize();
+    entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
+}
+
+void GLScene::monitorProps()
+{
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1 = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2 = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody();
+
+    btVector3 puckPos = puck->getCenterOfMassPosition();
+    btVector3 paddle1Pos = paddle1->getCenterOfMassPosition();
+    btVector3 paddle2Pos = paddle2->getCenterOfMassPosition();
+
+    // Play the puck smacking sound if in contact with a paddle
+    if(puckPos.distance(paddle1Pos) < 0.5f || puckPos.distance(paddle2Pos) < 0.5f)
+    {
+        if(!playingBg)
+        {
+            emit playSound(2);
+            playingBg = true;
+        }
+    }
+    else
+    {
+        playingBg = false;
+    }
+
+    // Damp puck if it is going hypersonic
+    if(puck->getLinearVelocity().length2() > 625)
+    {
+        puck->setLinearVelocity(25*puck->getLinearVelocity()/puck->getLinearVelocity().length());
+    }
+
+}

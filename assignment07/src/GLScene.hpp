@@ -53,8 +53,13 @@ class GLScene : public GLViewport
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
+    void mouseMoveEvent(QMouseEvent*);
     void contextMenuEvent(QContextMenuEvent*);
     void updateKeys();
+
+    void monitorProps();
+    void invokeAI();
+    void monitorScore();
 
     QColor background;
     QColor font;

@@ -63,6 +63,8 @@ Q_OBJECT
     virtual void keyPressEvent(QKeyEvent*);
     virtual void keyReleaseEvent(QKeyEvent*);
     virtual void mousePressEvent(QMouseEvent*);
+    virtual void mouseMoveEvent(QMouseEvent*);
+
     virtual void contextMenuEvent(QContextMenuEvent*);
 
     bool AddProgram(std::shared_ptr<GLProgram>);

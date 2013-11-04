@@ -198,6 +198,10 @@ void MainWindow::mousePressEvent(QMouseEvent*)
 {
 }
 
+void MainWindow::mouseMoveEvent(QMouseEvent*)
+{
+}
+
 void MainWindow::aboutCallback()
 {
     this->infoLabel->setText(tr("<b>Help|About</b>")); 

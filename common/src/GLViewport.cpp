@@ -118,6 +118,10 @@ void GLViewport::mousePressEvent(QMouseEvent *)
 {
 }
 
+void GLViewport::mouseMoveEvent(QMouseEvent *)
+{
+}
+
 void GLViewport::updatePaddle(const char*, int)
 {
 }
