@@ -149,19 +149,19 @@ void MenuWidget::paintEvent(QPaintEvent *event)
     painter.setPen(Qt::darkCyan);
     painter.setFont(QFont("Arial", 24));
     if(this->layout->currentIndex() == 0)   
-        painter.drawText(100, 40, tr("Play Airhockey"));
+        painter.drawText(this->geometry().width()/2 - 100, 40, tr("Play Airhockey"));
     if(this->layout->currentIndex() == 1)   
-        painter.drawText(100, 40, tr("Options Menu"));
+        painter.drawText(this->geometry().width()/2 - 100, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
     {
         painter.setFont(QFont("Arial", 28, QFont::Bold, QFont::SmallCaps));
-        painter.drawText(100, 40, tr("Game Over"));
+        painter.drawText(this->geometry().width()/2 - 100, 40, tr("Game Over"));
         painter.setPen(Qt::darkGray);
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
-            painter.drawText(100, 80, std::string(glView->p1.name + "  Won!").c_str());
+            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p1.name + "  Won!").c_str());
         else if(glView->p2.winner)
-            painter.drawText(100, 80, std::string(glView->p2.name + "  Won!").c_str());
+            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p2.name + "  Won!").c_str());
     }
 }
 
