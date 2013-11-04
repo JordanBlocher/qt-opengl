@@ -43,13 +43,12 @@ class MainWindow : public QMainWindow
    void setPlayer(Player, int);
    void playGame(int);
    void playSound();
+   void pause();
 
  protected:
     virtual QMenu* createPopupMenu();
 
     // Initialize Game
-    Player p1;
-    Player p2;
     DockWidget *dock;
     QDockWidget *qDock;
 
@@ -73,6 +72,8 @@ class MainWindow : public QMainWindow
     void aboutCallback();     
     void aboutQtCallback();
     void getPlayer(int);
+    void updateScore(int, int);
+    void endGame();
 
  private:
     void createActions();

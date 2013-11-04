@@ -31,6 +31,7 @@ class GLScene : public GLViewport
     void updateScore(int, int); 
     void mainMenu(int);
     void playSound(int soundNum);
+    void endGame();
 
  protected slots:
     void resume();
@@ -63,6 +64,7 @@ class GLScene : public GLViewport
     int paddleIndex;
     int player1Score, player2Score;
     bool keyHeld[12];// W S A D I K J L R RG LF UP DW
+    bool aiOnline;
     
     std::vector<std::string> puckTypes;
     std::vector<std::string> paddleTypes;

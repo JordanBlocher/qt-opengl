@@ -43,18 +43,13 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     this->createMenus();
  
     // Connections to display / user input
-    connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int))); 
-
-    // Default Values
-    this->p1.name = "Player 1";
-    this->p1.score = 0;
-    emit setPlayer(this->p1, 1);
-    this->p2.name = "Player 2";
-    this->p2.score = 0;
-    emit setPlayer(this->p2, 2);
-
-    // Connect signal to update score
-    connect(glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
+    glView->p1.name = "Player 1";
+    glView->p1.score = 0;
+    emit setPlayer(glView->p1, 1);
+    glView->p2.name = "Player 2";
+    glView->p2.score = 0;
+    emit setPlayer(glView->p2, 2);
+    connect( glView, SIGNAL(updateScore(int, int)), this, SLOT(updateScore(int, int)));
 
     // Connections to main menu
     connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
@@ -62,6 +57,8 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
     connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
     connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
+    connect(glView, SIGNAL(endGame()), this, SLOT(endGame()));
+    connect(this, SIGNAL(pause()), glView, SLOT(pause()));
 
 }
 
@@ -117,9 +114,10 @@ void MainWindow::getPlayer(int i)
                     &ok);
     if (ok && !name.isEmpty())
     {
-        this->p1.name = name.toStdString();
-        this->p1.score = 0;
-        emit setPlayer(this->p1, 1);
+        glView->p1.name = name.toStdString();
+        glView->p1.score = 0;
+        glView->p1.winner = false;
+        emit setPlayer(glView->p1, 1);
     }
     else ok = false;
 
@@ -133,18 +131,19 @@ void MainWindow::getPlayer(int i)
                     &ok);
         if (ok && !name.isEmpty())
         {
-            this->p2.name = name.toStdString();
-            this->p2.score = 0;
+            glView->p2.name = name.toStdString();
+            glView->p2.score = 0;
         }
         else ok = false;
     }
     else
     {
-        this->p2.name = "Computer";
-        this->p2.score = 0;
+        glView->p2.name = "Computer";
+        glView->p2.score = 0;
+        glView->p2.winner = false;
     }
 
-    emit setPlayer(this->p2, 2);
+    emit setPlayer(glView->p2, 2);
 
     this->mainMenu->hide();
     glView->setFocus();
@@ -153,11 +152,28 @@ void MainWindow::getPlayer(int i)
 
 }
 
+void MainWindow::updateScore(int player, int score)
+{
+    if(player == 1)
+        glView->p1.score = score;
+    else 
+        glView->p2.score = score;
+}
+
+void MainWindow::endGame()
+{
+    glView->pause();
+    if(glView->p1.score > glView->p2.score)
+        glView->p1.winner = true;
+    if(glView->p1.score < glView->p2.score)
+        glView->p2.winner = true;
+    mainMenu->toggle(2);
+    mainMenu->updatePaint();
+}
+
 void MainWindow::resizeEvent(QResizeEvent* )
 {
     overlay->resize(this->width(), overlay->size().height());
-    overlay->updatePaint(0, 1);
-    overlay->updatePaint(0, 2);
     this->mainMenu->move(glView->geometry().width()/2 -200, glView->geometry().height()/2 - 100);
 }
 
