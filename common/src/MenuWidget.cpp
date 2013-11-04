@@ -146,10 +146,13 @@ void MenuWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.eraseRect(event->rect());
-    painter.setPen(Qt::darkCyan);
-    painter.setFont(QFont("Arial", 24));
+    painter.setBrush(QBrush(Qt::white));
+     QRectF rectangle(5.0, 5.0, this->geometry().width()-10, this->geometry().height()-10);
+    painter.drawRect(rectangle);
+    painter.setPen(Qt::darkGray);
+    painter.setFont(QFont("Trebuchet", 24));
     if(this->layout->currentIndex() == 0)   
-        painter.drawText(this->geometry().width()/2 - 100, 40, tr("Play Airhockey"));
+        painter.drawText(this->geometry().width()/2 - 90, 40, tr("Air Hockey!"));
     if(this->layout->currentIndex() == 1)   
         painter.drawText(this->geometry().width()/2 - 100, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
