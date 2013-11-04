@@ -83,25 +83,32 @@ void GLScene::playGame(int numPlayers)
 
     if(numPlayers > 1)
     {
-
+        // Make a new camera
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
 
+        // Make sure that this is the camera we want (wont work if this is our second time)
         if(!this->AddToContext(camera2))
         {
             camera2 = this->Get<GLCamera>("camera2");
         }
+
+        // Initialize all the camera stuffs.
         camera1->SetView(18.0f, 1.0*M_PI, 0.40f*M_PI);
         camera2->SetView(18.0f, 2.0*M_PI, 0.40f*M_PI);
         camera1->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
         camera2->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
-        this->AddToContext(camera2);
+
+        // AI off by default for multiplayer
         aiOnline = false;
     }
     else
     {
+        // Rescale the original viewport
         GLViewport::resizeGL(this->width(), this->height());
         aiOnline = true;
     }
+
+    // Do some cleaning
     this->removeDynamicBodies();
     this->addDynamicBodies();
     this->update = false;
@@ -110,27 +117,34 @@ void GLScene::playGame(int numPlayers)
 
 void GLScene::changePaddle(int i)
 {
+    // Get the old paddle
     std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
     std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
 
+    // Make the old paddle a ghost
     paddle1Old->setCollisionFlags( paddle1Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
     paddle2Old->setCollisionFlags( paddle2Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
+    // Set the old paddle vel to 0
     paddle1Old->setLinearVelocity(btVector3(0,0,0));
     paddle1Old->setAngularVelocity(btVector3(0,0,0));
     paddle2Old->setLinearVelocity(btVector3(0,0,0));
     paddle2Old->setAngularVelocity(btVector3(0,0,0));
 
+    // Move to the next paddle
     this->paddleIndex = 2*i + 1;
 
+    // Get the new paddles
     std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
     //paddle1->translate(paddle1Old->getCenterOfMassPosition());
     std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
     //paddle2->translate(paddle2Old->getCenterOfMassPosition());
 
+    // De-ghost the new paddles
     paddle1->setCollisionFlags( paddle1->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
     paddle2->setCollisionFlags( paddle2->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
+    // Move the new paddles into position.
     this->entities->at(paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
     this->entities->at(paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
 
@@ -394,7 +408,6 @@ void GLScene::idleGL()
 {  
     if( update )
     {
-        bool newRound = false;
         // Timer
         float dt;
         time = chrono::high_resolution_clock::now();
@@ -433,6 +446,7 @@ void GLScene::idleGL()
 
 void GLScene::resizeGL(int width, int height)
 {
+    // Resize (depending on player count)
     if(numPlayers > 1)
     {
         shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
@@ -459,6 +473,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
     
+    // Dont let spammys happen
     if(!event->isAutoRepeat())
     {
         // Act on the key press event
@@ -525,6 +540,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
 
 void GLScene::keyReleaseEvent(QKeyEvent *event)
 {
+    // Dont let spammys happen
     if(!event->isAutoRepeat())
     {
         // Act on the key press event
@@ -734,14 +750,12 @@ void GLScene::updateKeys()
 
 void GLScene::playSoundSlot(int soundNum)
 {
-    //if(mediaObject->state() != Phonon::PlayingState && mediaObject->state() != Phonon::LoadingState )
-    //{
-        mediaObject->stop();
-        mediaObject->clearQueue();
-        mediaObject->setCurrentSource(sources[soundNum]);
-        mediaObject->play();
-    //}
-
+    // Play the sounds after some maintenance
+    // ---- By the way, this has some sort of cpu leak, watch out guys.
+    mediaObject->stop();
+    mediaObject->clearQueue();
+    mediaObject->setCurrentSource(sources[soundNum]);
+    mediaObject->play();
 }
 
 
@@ -765,6 +779,7 @@ void GLScene::monitorScore()
         // Play goal sound
         emit playSound(0);
 
+        // Increment score and tell the other guy to fix the round
         player1Score++;
         emit updateScore(player1Score,1);
         newRound = true;
@@ -775,6 +790,7 @@ void GLScene::monitorScore()
         // Play goal sound
         emit playSound(0);
 
+        // Increment score and tell the other guy to fix the round
         player2Score++;
         emit updateScore(player2Score,2);
         newRound = true;
