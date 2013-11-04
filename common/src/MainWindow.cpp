@@ -152,12 +152,13 @@ void MainWindow::getPlayer(int i)
 
 }
 
-void MainWindow::updateScore(int player, int score)
+void MainWindow::updateScore(int score, int player)
 {
     if(player == 1)
         glView->p1.score = score;
     else 
         glView->p2.score = score;
+    overlay->updatePaint();
 }
 
 void MainWindow::endGame()

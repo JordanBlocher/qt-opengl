@@ -24,7 +24,6 @@
 MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
 {
     this->glView = static_cast<GLViewport*>( parent );
-    this->setTransparent(true);
     this->setWindowFlags(Qt::WindowStaysOnTopHint);
     
     this->layout = new QStackedLayout;
@@ -61,10 +60,12 @@ MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
 
     // Game Over widget
     QWidget* gameOver = new QWidget;
-    this->gameOverLayout = new QVBoxLayout(options);
+    this->gameOverLayout = new QVBoxLayout(gameOver);
     this->gameOverLayout->setContentsMargins(140, 40, 0, 0);
     buttons[6] = new QPushButton(tr("Main Menu"));
     buttons[6]->setMaximumWidth(120);
+//    QSpacerItem *spacer = new QSpacerItem(80, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+  //  gameOverLayout->addItem(spacer);
     gameOverLayout->addWidget(buttons[6]);
 
     // Set up stacked menu
@@ -134,29 +135,6 @@ void MenuWidget::resume()
     emit start();
 }
 
-void MenuWidget::setTransparent(bool transparent)
-{
-    if (transparent)
-    {
-        setAttribute(Qt::WA_TranslucentBackground);
-        setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-        setOpacity();
-    }
-    else
-    {
-        setAttribute(Qt::WA_TranslucentBackground,false);
-        setWindowFlags(windowFlags() & ~Qt::FramelessWindowHint);
-    }
-   
-}
-
-void MenuWidget::setOpacity(const float &opacity)
-{
-    QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
-    this->setGraphicsEffect(opacityEffect);
-    opacityEffect->setOpacity(opacity);
-}
-
 void MenuWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -169,16 +147,15 @@ void MenuWidget::paintEvent(QPaintEvent *event)
         painter.drawText(100, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
     {
+        painter.setFont(QFont("Arial", 28, QFont::Bold, QFont::SmallCaps));
         painter.setPen(Qt::red);
         painter.drawText(100, 40, tr("Game Over"));
-        painter.setFont(QFont("Arial", 24, QFont::Bold, QFont::SmallCaps));
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
-            painter.drawText(100, 120, std::string(glView->p1.name + "Won!").c_str());
+            painter.drawText(100, 80, std::string(glView->p1.name + "  Won!").c_str());
         else if(glView->p2.winner)
-            painter.drawText(100, 120, std::string(glView->p2.name + "Won!").c_str());
-        else
-            painter.drawText(100, 120, tr("It's a tie!"));
-
+            painter.drawText(100, 80, std::string(glView->p2.name + "  Won!").c_str());
     }
 }
 

@@ -57,7 +57,7 @@ class MenuWidget : public QWidget
     QVBoxLayout *optionsLayout;
     QVBoxLayout *gameOverLayout;
     GLViewport *glView;
-    QPushButton *buttons[6];
+    QPushButton *buttons[7];
 };
 
 #endif 

@@ -42,7 +42,7 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
-    this->puckTypes = {"Puck.obj"};
+    this->puckTypes = {"puck.obj"};
     this->paddleTypes = {"Paddle.obj", "squarePaddle.obj", "trianglePaddle.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     this->update = true;
