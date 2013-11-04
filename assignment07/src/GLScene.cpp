@@ -436,6 +436,9 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 }
                 emit mainMenu(1);
                 break;
+            case (Qt::Key_Q):
+                emit endGame();
+                break;
         }
     }
 

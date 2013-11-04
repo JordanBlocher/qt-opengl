@@ -16,6 +16,7 @@
 #include <QAction>
 #include <QStackedLayout>
 #include <QInputDialog>
+#include <QSpacerItem>
 
 
 #define WAIT_MS 300
@@ -58,9 +59,18 @@ MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
     buttons[5]->setMaximumWidth(120);
     optionsLayout->addWidget(buttons[5]);
 
+    // Game Over widget
+    QWidget* gameOver = new QWidget;
+    this->gameOverLayout = new QVBoxLayout(options);
+    this->gameOverLayout->setContentsMargins(140, 40, 0, 0);
+    buttons[6] = new QPushButton(tr("Main Menu"));
+    buttons[6]->setMaximumWidth(120);
+    gameOverLayout->addWidget(buttons[6]);
+
     // Set up stacked menu
     this->layout->addWidget(main);
     this->layout->addWidget(options);
+    this->layout->addWidget(gameOver);
 
     this->layout->setCurrentIndex(0);
     this->setLayout(layout);
@@ -85,6 +95,7 @@ void MenuWidget::setConnections()
     connect(this->buttons[3], SIGNAL(clicked()), this, SLOT(getPaddle()));
     connect(this->buttons[4], SIGNAL(clicked()), this, SLOT(resume()));
     connect(this->buttons[5], SIGNAL(clicked()), this, SLOT(reset()));
+    connect(this->buttons[6], SIGNAL(clicked()), this, SLOT(reset()));
 }
 
 void MenuWidget::getPaddle()
@@ -152,7 +163,23 @@ void MenuWidget::paintEvent(QPaintEvent *event)
     painter.eraseRect(event->rect());
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 24));
-    painter.drawText(100, 40, tr("Play Airhockey"));
+    if(this->layout->currentIndex() == 0)   
+        painter.drawText(100, 40, tr("Play Airhockey"));
+    if(this->layout->currentIndex() == 1)   
+        painter.drawText(100, 40, tr("Options Menu"));
+    if(this->layout->currentIndex() == 2)   
+    {
+        painter.setPen(Qt::red);
+        painter.drawText(100, 40, tr("Game Over"));
+        painter.setFont(QFont("Arial", 24, QFont::Bold, QFont::SmallCaps));
+        if(glView->p1.winner)
+            painter.drawText(100, 120, std::string(glView->p1.name + "Won!").c_str());
+        else if(glView->p2.winner)
+            painter.drawText(100, 120, std::string(glView->p2.name + "Won!").c_str());
+        else
+            painter.drawText(100, 120, tr("It's a tie!"));
+
+    }
 }
 
 void MenuWidget::updatePaint()
@@ -162,9 +189,9 @@ void MenuWidget::updatePaint()
     this->show();
 }
 
-void MenuWidget::toggle(int)
+void MenuWidget::toggle(int i)
 {
-    this->layout->setCurrentIndex(1);
+    this->layout->setCurrentIndex(i);
     if( this->isVisible())
         this->hide();
     else

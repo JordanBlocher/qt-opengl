@@ -24,8 +24,7 @@ class OverlayWidget : public QWidget
 	void setBackgroundWidget(MainWindow *backGroundWidget);	
 
  public slots:
-    void updatePaint(int, int);
-    void setPlayer(Player, int);
+    void updatePaint();
 
  protected: 
 	virtual void changeEvent(QEvent*);
@@ -39,8 +38,6 @@ class OverlayWidget : public QWidget
 	MainWindow *window;
     QHBoxLayout *layout;
     GLViewport *glView;
-    Player p1;
-    Player p2;
 };
 
 #endif 
