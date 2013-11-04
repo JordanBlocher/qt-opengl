@@ -51,7 +51,7 @@ isEmpty(_IMAGE_MAGICK_ROOT) {
 
 
 TEMPLATE = app
-TARGET = ../bin/assignment07
+TARGET = ../bin/assignment09
 DEPENDPATH += ../src/* ../../common/include/* ../../common/src/*
 INCLUDEPATH += ../src ../../common/include 
 LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lGLU -lphonon
