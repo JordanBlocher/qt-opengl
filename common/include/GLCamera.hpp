@@ -5,6 +5,8 @@
 
 #include <QWidget>
 
+#include <glm/glm.hpp>
+
 class GLCamera : public GLNode
 {
  
@@ -16,9 +18,11 @@ public:
     void SetProjection(glm::mat4);
     void SetView(float radius, float azimuth, float zenith);
     void moveCamera(CamDirection direction);
+    glm::vec3 getCameraPosition();
 
     glm::mat4 Projection();
     glm::mat4 View();
+
 
 protected:
 
@@ -26,6 +30,7 @@ protected:
     float sensorDistance;
     float focusDistance;
     float radius, azimuth, zenith;
+    float eyeX,eyeY,eyeZ;
 
     glm::mat4 projection;
     glm::mat4 view;

@@ -18,7 +18,6 @@ GLCamera::GLCamera(const char* name, QSize size)
     this->azimuth = (4.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
-
     this->SetProjection(glm::perspective(
                             this->fov, 
                             float(size.width())/float(size.height()),
@@ -53,6 +52,11 @@ glm::mat4 GLCamera::Projection()
 glm::mat4 GLCamera::View()
 {
     return this->view;
+}
+
+glm::vec3 GLCamera::getCameraPosition()
+{
+    return glm::vec3(eyeX, eyeY, eyeZ);
 }
 
 void GLCamera::moveCamera(GLCamera::CamDirection direction)
@@ -116,9 +120,7 @@ void GLCamera::moveCamera(GLCamera::CamDirection direction)
 void GLCamera::updateView()
 {
     // Declare function variables
-    float eyeX, eyeY, eyeZ;
-    float upX, upY, upZ;
-    float magnitude;
+    //float eyeX, eyeY, eyeZ;
 
     // Calculate the eye position
     eyeX = radius * sin (zenith) * cos (azimuth);

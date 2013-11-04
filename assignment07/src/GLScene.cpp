@@ -559,7 +559,61 @@ std::shared_ptr<std::vector<std::shared_ptr<Entity>>> GLScene::getEntities()
 
 void GLScene::mousePressEvent(QMouseEvent *event)
 {
-    GLViewport::mousePressEvent(event);
+    //GLViewport::mousePressEvent(event);
+
+    // Check if single player and this is a left click
+    if((numPlayers == 1) && (event->button() == Qt::LeftButton))
+    {
+        GLint viewport[4];
+        GLdouble modelview[16];
+        GLdouble projection[16];
+        GLdouble windowX, windowY, depth;
+        GLdouble nearposX, nearposY, nearposZ;
+        GLdouble farposX, farposY, farposZ;
+        float worldX, worldY, worldZ;
+
+        shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+
+
+        // Ask GL for the current modelview, projection, and viewport matricies
+        glGetIntegerv( GL_VIEWPORT, viewport );
+
+        windowX = (GLdouble)event->x();
+        windowY = viewport[3] - (float)event->y();
+        glm::mat4 cammodelview = camera->View();
+        glm::mat4 camProjection = camera->Projection();
+
+        for(int i =0; i<4; i++)
+        {
+            for(int j=0; j < 4; j++)
+            {
+                projection[4*i + j] = camProjection[i][j];
+            }
+        }
+
+        for(int i =0; i<4; i++)
+        {
+            for(int j=0; j < 4; j++)
+            {
+                modelview[4*i+j] = cammodelview[i][j];
+            }
+        }
+
+        gluUnProject( windowX, windowY, 0, modelview, projection, viewport, &nearposX, &nearposY, &nearposZ);
+        gluUnProject( windowX, windowY, 1, modelview, projection, viewport, &farposX, &farposY, &farposZ);
+
+        glm::vec3 eyePos = camera->getCameraPosition();
+
+        // Find the Y intercept from the eye position
+        worldX = (-eyePos.y/(farposY - nearposY))*(farposX - nearposX) + eyePos.x;
+        worldY = 0;
+        worldZ = (-eyePos.y/(farposY - nearposY))*(farposZ - nearposZ) + eyePos.z;
+
+
+        this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(worldX,0,worldZ));
+
+    }
+    
 }
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)

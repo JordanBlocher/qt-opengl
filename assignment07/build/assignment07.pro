@@ -51,7 +51,7 @@ TEMPLATE = app
 TARGET = ../bin/assignment07
 DEPENDPATH += ../src/* ../../common/include/* ../../common/src/*
 INCLUDEPATH += ../src ../../common/include 
-LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lGLU
 QMAKE_CXX = g++-4.6
 QMAKE_CXXFLAGS += -std=c++0x
 
