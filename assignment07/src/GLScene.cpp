@@ -70,10 +70,12 @@ void GLScene::playGame(int numPlayers)
         camera1->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
         camera2->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
         this->AddToContext(camera2);
+        aiOnline = false;
     }
     else
     {
         GLViewport::resizeGL(this->width(), this->height());
+        aiOnline = true;
     }
     this->removeDynamicBodies();
     this->addDynamicBodies();
@@ -386,7 +388,83 @@ void GLScene::idleGL()
         // Update all of the physics dependent keys
         updateKeys();
 
-        // Print the position of the puck
+        // Apply carefully calibrated space friction to the paddles (8% reduction in speed per phys tick)
+        entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+
+        // Handle AI stuff
+        if(aiOnline)
+        {
+            // Define needed variables
+            std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
+            btVector3 targetPosition;
+            btVector3 puckPosition = puck->getCenterOfMassPosition();
+            btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+            btVector3 forceVector;
+            btVector3 goal = btVector3(7.0f, 0,0);
+
+            // If puck is on other side, try to stay at half way on this side and in middle of field.
+            if (puckPosition.getX() < 0.0)
+            {
+                // Get in the middle of my field
+                targetPosition.setX(3.5f);
+
+                // Calculate the midpoint z between the puck and the goal
+                targetPosition.setZ(-(puckPosition.getZ()/(puckPosition.getX()-3.5)));
+
+                forceVector = targetPosition - currentPos;
+                std::cout << "idle guard\n";
+
+
+            }
+            // If puck is within threshold, try to block and hit
+            else if (puckPosition.getX() > 1.0f)
+            {
+                // Define ideal guard stance
+                btVector3 idealGuard;
+
+                // If puck is closer to goal than paddle, move toward goal
+                if(currentPos.distance(goal) > puckPosition.distance(goal))
+                {
+                    idealGuard = btVector3(6.8f,0,0);
+                    std::cout << "toward goal\n";
+                    forceVector = idealGuard - currentPos;
+
+                }
+                // If the puck is moving pretty slow, just smack it
+                else if(puck->getLinearVelocity().length2() < 36)
+                {
+                    forceVector = (puckPosition - currentPos);
+                }
+                // If paddle is closer to goal than puck and is fast, then ideal guard is just the position between the puck and the goal
+                else //if(currentPos.distance(goal) > puckPosition.distance(goal))
+                {
+                    idealGuard = btVector3(currentPos.getX(), 0, -(puckPosition.getZ()/(puckPosition.getX()-currentPos.getX())));
+                    std::cout << "btwn puck and goal\n";
+                    forceVector = idealGuard - currentPos;
+
+                }
+                // If not almost between puck and goal, fix that
+
+            }
+            // Otherwise, head straight toward the puck
+            else
+            {
+                std::cout << "attack\n";
+                forceVector = (puckPosition - currentPos);
+            }
+
+
+            // Apply forces
+            forceVector.normalize();
+
+
+            entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
+
+
+        }
+
+        // Check if either player has scored.
         btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
         if(puckPos.getX() > 7.0f)
         {
@@ -401,6 +479,13 @@ void GLScene::idleGL()
             newRound = true;
         }
 
+        // If a players's score is over the threshold, end the game
+        //if (player1Score > 4 || player2Score > 4)
+        //{
+            // Call end round signal
+            //emit endGame()
+        //}
+        //else 
         if (newRound)
         {
             // Reset the puck position
@@ -500,6 +585,10 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 }
                 emit mainMenu(1);
                 break;
+            case (Qt::Key_Space):
+                if(numPlayers > 1)
+                    aiOnline = !aiOnline;
+                break;
         }
     }
 
@@ -571,15 +660,16 @@ void GLScene::mousePressEvent(QMouseEvent *event)
         GLdouble nearposX, nearposY, nearposZ;
         GLdouble farposX, farposY, farposZ;
         float worldX, worldY, worldZ;
-
         shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
-
 
         // Ask GL for the current modelview, projection, and viewport matricies
         glGetIntegerv( GL_VIEWPORT, viewport );
 
+        // Grab information about the click location
         windowX = (GLdouble)event->x();
         windowY = viewport[3] - (float)event->y();
+
+        // Get the camera information & convert it to the form unproject expects
         glm::mat4 cammodelview = camera->View();
         glm::mat4 camProjection = camera->Projection();
 
@@ -599,19 +689,24 @@ void GLScene::mousePressEvent(QMouseEvent *event)
             }
         }
 
+        // Unproject for the near frame and the far frame
         gluUnProject( windowX, windowY, 0, modelview, projection, viewport, &nearposX, &nearposY, &nearposZ);
         gluUnProject( windowX, windowY, 1, modelview, projection, viewport, &farposX, &farposY, &farposZ);
 
+        // Grab the physical location of the camera
         glm::vec3 eyePos = camera->getCameraPosition();
 
-        // Find the Y intercept from the eye position
+        // Get the click location from the raytrace and the camera location
         worldX = (-eyePos.y/(farposY - nearposY))*(farposX - nearposX) + eyePos.x;
         worldY = 0;
         worldZ = (-eyePos.y/(farposY - nearposY))*(farposZ - nearposZ) + eyePos.z;
 
-
-        this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(worldX,0,worldZ));
-
+        // Move paddle1 into position (probably temporary)
+        if(worldX > -10 && worldX < 10 && worldZ < 8 && worldZ > -8)
+        {
+            this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
+            entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
+        }
     }
     
 }
@@ -661,10 +756,6 @@ void GLScene::updateKeys()
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[7]) // L
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
-
-
-    entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(0.92f * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
-    entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(0.92f * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
     if(numPlayers > 1)
     {
