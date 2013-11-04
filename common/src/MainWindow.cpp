@@ -44,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
  
     // Connections to display / user input
     connect( this, SIGNAL(setPlayer(Player, int)), overlay, SLOT(setPlayer(Player, int))); 
+
     // Default Values
     this->p1.name = "Player 1";
     this->p1.score = 0;
@@ -51,7 +52,9 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     this->p2.name = "Player 2";
     this->p2.score = 0;
     emit setPlayer(this->p2, 2);
-    connect( glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
+
+    // Connect signal to update score
+    connect(glView, SIGNAL(updateScore(int, int)), overlay, SLOT(updatePaint(int, int)));
 
     // Connections to main menu
     connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));

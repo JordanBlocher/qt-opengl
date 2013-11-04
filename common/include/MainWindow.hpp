@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow
  signals:
    void setPlayer(Player, int);
    void playGame(int);
+   void playSound();
 
  protected:
     virtual QMenu* createPopupMenu();

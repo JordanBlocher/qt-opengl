@@ -6,7 +6,6 @@
 #include <QWidget>
 #include <QKeyEvent>
 #include <QContextMenuEvent>
-#include <QAction>
 #include <QMenu>
 #include <QPainter>
 #include <QPalette>
@@ -48,12 +47,31 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->update = true;
     this->puckIndex = 7;
     this->paddleIndex = 1;
+    this->playingBg = false;
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
-}
 
+    // Setup Phonon
+    audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+    mediaObject = new Phonon::MediaObject(this);
+    metaInformationResolver = new Phonon::MediaObject(this);
+    mediaObject->setTickInterval(1000);
+    Phonon::createPath(mediaObject, audioOutput);
+
+    // Add sounds to list
+    sources.append(Phonon::MediaSource("ding.mp3"));
+    sources.append(Phonon::MediaSource("start.mp3"));
+    sources.append(Phonon::MediaSource("hit.mp3"));
+
+    // Connect signals to play sound
+    connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));  
+
+}
 void GLScene::playGame(int numPlayers)
 {
+    // PLay starting sound
+    emit playSound(1);
+
     this->puckIndex = 7;
     this->paddleIndex = 1;
     this->numPlayers = numPlayers;       
@@ -390,15 +408,24 @@ void GLScene::idleGL()
         btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
         if(puckPos.getX() > 7.0f)
         {
+            // Play goal sound
+            emit playSound(0);
+
             player1Score++;
             emit updateScore(player1Score,1);
             newRound = true;
+
         }
         else if(puckPos.getX() < -7.0f)
         {
+            // Play goal sound
+            emit playSound(0);
+
             player2Score++;
             emit updateScore(player2Score,2);
             newRound = true;
+
+
         }
 
         if (newRound)
@@ -711,6 +738,13 @@ void GLScene::updateKeys()
     }
 }
 
+void GLScene::playSoundSlot(int soundNum)
+{
+    mediaObject->setCurrentSource(sources[soundNum]);
+    mediaObject->play();
+}
+
+
 GLScene::~GLScene()
 {
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
@@ -718,5 +752,4 @@ GLScene::~GLScene()
     world.reset();
     dynamics->SetWorld(std::move(world));
 }
-
 

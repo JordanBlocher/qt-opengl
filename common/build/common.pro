@@ -5,6 +5,8 @@
 # add opengl functionality
 QT += opengl
 
+# add phonon
+QT += phonon
 
 # ---------- Set Me! ------------
 _BOOST_ROOT = /usr/include
@@ -69,7 +71,7 @@ TEMPLATE = lib
 TARGET = ../lib/qglcommon
 DEPENDPATH += ../include/* ../src/*
 INCLUDEPATH += ../include
-LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath
+LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lphonon
 VERSION = 1.0
 QMAKE_CXXFLAGS += -std=c++0x -fopenmp -g
 QMAKE_CXX = g++-4.6

@@ -4,10 +4,14 @@
 #include <Entity.hpp>
 
 #include <GLViewport.hpp>
+#include <phonon/AudioOutput>
+#include <phonon/MediaObject>
+#include <phonon/MediaSource>
+#include <phonon/VideoWidget>
+#include <phonon/VideoPlayer>
 
 #include <chrono>
 #include <vector>
-
 
 class QKeyEvent;
 class QContextMenuEvent;
@@ -26,6 +30,7 @@ class GLScene : public GLViewport
     // updateScore(score, player)
     void updateScore(int, int); 
     void mainMenu(int);
+    void playSound(int soundNum);
 
  protected slots:
     void resume();
@@ -33,6 +38,7 @@ class GLScene : public GLViewport
     void idleGL();
     void changePaddle(int);
     void playGame(int);
+    void playSoundSlot(int soundNum);    
 
  protected:
     void initGame();
@@ -64,6 +70,14 @@ class GLScene : public GLViewport
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
 
+    // Phonon
+    Phonon::MediaObject *mediaObject;
+    Phonon::MediaObject *metaInformationResolver;
+    Phonon::AudioOutput *audioOutput;
+    QList<Phonon::MediaSource> sources;
+
+    bool playingBg;
+    qint64 bgSeekTime;
 };
 
 #endif 

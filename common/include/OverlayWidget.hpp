@@ -41,6 +41,7 @@ class OverlayWidget : public QWidget
     GLViewport *glView;
     Player p1;
     Player p2;
+
 };
 
 #endif 
