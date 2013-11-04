@@ -19,6 +19,7 @@ class QColor;
 
 class GLScene : public GLViewport
 {
+    
     Q_OBJECT
 
  public:

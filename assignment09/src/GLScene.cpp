@@ -898,7 +898,7 @@ void GLScene::monitorProps()
     btVector3 paddle2Pos = paddle2->getCenterOfMassPosition();
 
     // Play the puck smacking sound if in contact with a paddle
-    if(puckPos.distance(paddle1Pos) < 0.5f || puckPos.distance(paddle2Pos) < 0.5f)
+    if(puckPos.distance(paddle1Pos) < 0.6f || puckPos.distance(paddle2Pos) < 0.6f)
     {
         if(!playingBg)
         {

@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
 
     MainWindow *window = new MainWindow(NULL, glView);
 
-
     if (!window->Ok())
         return 0;
 
