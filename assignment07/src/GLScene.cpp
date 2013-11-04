@@ -410,13 +410,20 @@ void GLScene::idleGL()
         entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
+
+        btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+        btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+        btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+
+        if(puckPosition.distance(paddle1Pos) < 0.7f || puckPosition.distance(paddle2Pos) < 0.7f)
+            emit playSound(2);
+
         // Handle AI stuff
         if(aiOnline)
         {
             // Define needed variables
             std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
             btVector3 targetPosition;
-            btVector3 puckPosition = puck->getCenterOfMassPosition();
             btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
             btVector3 forceVector;
             btVector3 goal = btVector3(7.0f, 0,0);
@@ -431,8 +438,6 @@ void GLScene::idleGL()
                 targetPosition.setZ(-(puckPosition.getZ()/(puckPosition.getX()-3.5)));
 
                 forceVector = targetPosition - currentPos;
-                std::cout << "idle guard\n";
-
 
             }
             // If puck is within threshold, try to block and hit
@@ -445,7 +450,6 @@ void GLScene::idleGL()
                 if(currentPos.distance(goal) > puckPosition.distance(goal))
                 {
                     idealGuard = btVector3(6.8f,0,0);
-                    std::cout << "toward goal\n";
                     forceVector = idealGuard - currentPos;
 
                 }
@@ -458,7 +462,6 @@ void GLScene::idleGL()
                 else //if(currentPos.distance(goal) > puckPosition.distance(goal))
                 {
                     idealGuard = btVector3(currentPos.getX(), 0, -(puckPosition.getZ()/(puckPosition.getX()-currentPos.getX())));
-                    std::cout << "btwn puck and goal\n";
                     forceVector = idealGuard - currentPos;
 
                 }
@@ -468,7 +471,6 @@ void GLScene::idleGL()
             // Otherwise, head straight toward the puck
             else
             {
-                std::cout << "attack\n";
                 forceVector = (puckPosition - currentPos);
             }
 
