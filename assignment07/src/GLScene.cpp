@@ -6,7 +6,6 @@
 #include <QWidget>
 #include <QKeyEvent>
 #include <QContextMenuEvent>
-#include <QAction>
 #include <QMenu>
 #include <QPainter>
 #include <QPalette>
@@ -48,12 +47,31 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->update = true;
     this->puckIndex = 7;
     this->paddleIndex = 1;
+    this->playingBg = false;
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
-}
 
+    // Setup Phonon
+    audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+    mediaObject = new Phonon::MediaObject(this);
+    metaInformationResolver = new Phonon::MediaObject(this);
+    mediaObject->setTickInterval(1000);
+    Phonon::createPath(mediaObject, audioOutput);
+
+    // Add sounds to list
+    sources.append(Phonon::MediaSource("ding.mp3"));
+    sources.append(Phonon::MediaSource("start.mp3"));
+    sources.append(Phonon::MediaSource("hit.mp3"));
+
+    // Connect signals to play sound
+    connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));  
+
+}
 void GLScene::playGame(int numPlayers)
 {
+    // PLay starting sound
+    emit playSound(1);
+
     this->puckIndex = 7;
     this->paddleIndex = 1;
     this->numPlayers = numPlayers;       
@@ -392,13 +410,31 @@ void GLScene::idleGL()
         entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
         entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
+
+        btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+        btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+        btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+
+        if(puckPosition.distance(paddle1Pos) < 0.5f || puckPosition.distance(paddle2Pos) < 0.5f)
+        {
+            if(!playingBg)
+            {
+                emit playSound(2);
+                playingBg = true;
+            }
+        }
+        else
+        {
+            playingBg = false;
+        }
+
+
         // Handle AI stuff
         if(aiOnline)
         {
             // Define needed variables
             std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
             btVector3 targetPosition;
-            btVector3 puckPosition = puck->getCenterOfMassPosition();
             btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
             btVector3 forceVector;
             btVector3 goal = btVector3(7.0f, 0,0);
@@ -413,8 +449,6 @@ void GLScene::idleGL()
                 targetPosition.setZ(-(puckPosition.getZ()/(puckPosition.getX()-3.5)));
 
                 forceVector = targetPosition - currentPos;
-                std::cout << "idle guard\n";
-
 
             }
             // If puck is within threshold, try to block and hit
@@ -427,7 +461,6 @@ void GLScene::idleGL()
                 if(currentPos.distance(goal) > puckPosition.distance(goal))
                 {
                     idealGuard = btVector3(6.8f,0,0);
-                    std::cout << "toward goal\n";
                     forceVector = idealGuard - currentPos;
 
                 }
@@ -440,7 +473,6 @@ void GLScene::idleGL()
                 else //if(currentPos.distance(goal) > puckPosition.distance(goal))
                 {
                     idealGuard = btVector3(currentPos.getX(), 0, -(puckPosition.getZ()/(puckPosition.getX()-currentPos.getX())));
-                    std::cout << "btwn puck and goal\n";
                     forceVector = idealGuard - currentPos;
 
                 }
@@ -450,7 +482,6 @@ void GLScene::idleGL()
             // Otherwise, head straight toward the puck
             else
             {
-                std::cout << "attack\n";
                 forceVector = (puckPosition - currentPos);
             }
 
@@ -468,15 +499,24 @@ void GLScene::idleGL()
         btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
         if(puckPos.getX() > 7.0f)
         {
+            // Play goal sound
+            emit playSound(0);
+
             player1Score++;
             emit updateScore(player1Score,1);
             newRound = true;
+
         }
         else if(puckPos.getX() < -7.0f)
         {
+            // Play goal sound
+            emit playSound(0);
+
             player2Score++;
             emit updateScore(player2Score,2);
             newRound = true;
+
+
         }
 
         // If a players's score is over the threshold, end the game
@@ -588,6 +628,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             case (Qt::Key_Space):
                 if(numPlayers > 1)
                     aiOnline = !aiOnline;
+                break;
             case (Qt::Key_Q):
                 emit endGame();
                 break;
@@ -804,6 +845,19 @@ void GLScene::updateKeys()
     }
 }
 
+void GLScene::playSoundSlot(int soundNum)
+{
+    //if(mediaObject->state() != Phonon::PlayingState && mediaObject->state() != Phonon::LoadingState )
+    //{
+        mediaObject->stop();
+        mediaObject->clearQueue();
+        mediaObject->setCurrentSource(sources[soundNum]);
+        mediaObject->play();
+    //}
+
+}
+
+
 GLScene::~GLScene()
 {
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
@@ -811,5 +865,4 @@ GLScene::~GLScene()
     world.reset();
     dynamics->SetWorld(std::move(world));
 }
-
 

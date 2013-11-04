@@ -5,6 +5,9 @@
 # add opengl functionality
 QT += opengl
 
+# add phonon
+QT += phonon
+
 # ---------- Set Me! ------------
 _BULLET_ROOT = /usr/include/bullet
 _IMAGE_MAGICK_ROOT = /usr/include/ImageMagick
@@ -51,7 +54,7 @@ TEMPLATE = app
 TARGET = ../bin/assignment07
 DEPENDPATH += ../src/* ../../common/include/* ../../common/src/*
 INCLUDEPATH += ../src ../../common/include 
-LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lGLU
+LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lGLU -lphonon
 QMAKE_CXX = g++-4.6
 QMAKE_CXXFLAGS += -std=c++0x
 

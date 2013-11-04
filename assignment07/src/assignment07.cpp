@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 {
 
     QApplication app(argc, argv);
+    app.setApplicationName("AirHockey");
     QPalette palette = app.palette();
     palette.setColor(QPalette::Window, QColor::fromRgbF(0.0, 0.0, 0.2));
     palette.setColor(QPalette::WindowText, Qt::white);

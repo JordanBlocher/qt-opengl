@@ -140,3 +140,5 @@ void OverlayWidget::changeEvent(QEvent *event)
 
     }		
 }
+
+
