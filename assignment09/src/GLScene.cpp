@@ -83,8 +83,13 @@ void GLScene::playGame(int numPlayers)
 
     if(numPlayers > 1)
     {
-        std::cout << "sdfsd" << std::endl;
+
         std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
+
+        if(!this->AddToContext(camera2))
+        {
+            camera2 = this->Get<GLCamera>("camera2");
+        }
         camera1->SetView(18.0f, 1.0*M_PI, 0.40f*M_PI);
         camera2->SetView(18.0f, 2.0*M_PI, 0.40f*M_PI);
         camera1->SetProjection(glm::perspective(45.0f, float(this->width()/2.0f)/float(this->height()), 0.01f, 100.0f)); 
