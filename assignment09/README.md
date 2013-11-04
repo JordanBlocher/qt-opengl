@@ -15,6 +15,7 @@ Controls
 - IJKL: Controls the movement of player two's paddle
 - Left click: controlls the movement of the paddle in single player mode
 - Arrow keys: Controls the movement of the camera's spherical coordinates in relation to the world's origin
+- Space bar: toggles the AI on/off in multiplayer mode
 - Ctrl+q or Ctrl+c closes the program
 - You must click inside of the window to use the controls
 
