@@ -415,8 +415,19 @@ void GLScene::idleGL()
         btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
         btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
 
-        if(puckPosition.distance(paddle1Pos) < 0.7f || puckPosition.distance(paddle2Pos) < 0.7f)
-            emit playSound(2);
+        if(puckPosition.distance(paddle1Pos) < 0.5f || puckPosition.distance(paddle2Pos) < 0.5f)
+        {
+            if(!playingBg)
+            {
+                emit playSound(2);
+                playingBg = true;
+            }
+        }
+        else
+        {
+            playingBg = false;
+        }
+
 
         // Handle AI stuff
         if(aiOnline)
@@ -617,6 +628,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             case (Qt::Key_Space):
                 if(numPlayers > 1)
                     aiOnline = !aiOnline;
+                break;
             case (Qt::Key_Q):
                 emit endGame();
                 break;
@@ -835,8 +847,14 @@ void GLScene::updateKeys()
 
 void GLScene::playSoundSlot(int soundNum)
 {
-    mediaObject->setCurrentSource(sources[soundNum]);
-    mediaObject->play();
+    //if(mediaObject->state() != Phonon::PlayingState && mediaObject->state() != Phonon::LoadingState )
+    //{
+        mediaObject->stop();
+        mediaObject->clearQueue();
+        mediaObject->setCurrentSource(sources[soundNum]);
+        mediaObject->play();
+    //}
+
 }
 
 

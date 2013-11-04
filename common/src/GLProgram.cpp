@@ -13,6 +13,7 @@ GLProgram::GLProgram(std::shared_ptr<GLShader> vertex, std::shared_ptr<GLShader>
     this->id = glCreateProgram();
     this->AddShader(vertex);
     this->AddShader(fragment);
+    glXSwapIntervalEXT(-1);
 }
 
 GLProgram::~GLProgram()
