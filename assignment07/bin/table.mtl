@@ -19,7 +19,6 @@ Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Ka grey.png
 
 
 newmtl ID5
@@ -30,8 +29,6 @@ Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Ka blue.png
-
 
 newmtl ID53
 Ns 96.078431
@@ -41,6 +38,5 @@ Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Ka white.png
 
 
