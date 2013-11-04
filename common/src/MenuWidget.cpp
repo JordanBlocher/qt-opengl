@@ -18,11 +18,14 @@
 #include <QInputDialog>
 #include <QSpacerItem>
 
-
 #define WAIT_MS 300
 
 MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
 {
+    QPalette palette(this->palette());
+    palette.setColor(QPalette::Background, Qt::red);
+    this->setAutoFillBackground(true);
+    this->setPalette(palette);
     this->glView = static_cast<GLViewport*>( parent );
     this->setWindowFlags(Qt::WindowStaysOnTopHint);
     
@@ -139,7 +142,7 @@ void MenuWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.eraseRect(event->rect());
-    painter.setPen(Qt::white);
+    painter.setPen(Qt::darkCyan);
     painter.setFont(QFont("Arial", 24));
     if(this->layout->currentIndex() == 0)   
         painter.drawText(100, 40, tr("Play Airhockey"));
@@ -148,9 +151,8 @@ void MenuWidget::paintEvent(QPaintEvent *event)
     if(this->layout->currentIndex() == 2)   
     {
         painter.setFont(QFont("Arial", 28, QFont::Bold, QFont::SmallCaps));
-        painter.setPen(Qt::red);
         painter.drawText(100, 40, tr("Game Over"));
-        painter.setPen(Qt::white);
+        painter.setPen(Qt::darkGray);
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
             painter.drawText(100, 80, std::string(glView->p1.name + "  Won!").c_str());
