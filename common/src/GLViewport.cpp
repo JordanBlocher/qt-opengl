@@ -1,4 +1,3 @@
-#include "GLNode.hpp"
 #include "GLViewport.hpp"
 #include "GLProgram.hpp"
 #include "GLCamera.hpp"
@@ -170,6 +169,10 @@ void GLViewport::ViewContext()
 dataPtr GLViewport::getContext()
 {
     return this->context;
+}
+
+void GLViewport::pause()
+{
 }
 
 

@@ -1,6 +1,8 @@
 #ifndef QGLVIEW_H
 #define QGLVIEW_H
 
+#include "GLNode.hpp"
+
 #include <glm/glm.hpp>
 #include <memory>
 #include <chrono>
@@ -14,7 +16,6 @@
 #include <string>
 
 class GLProgram;
-class GLNode;
 class GLCamera;
 class QMenu;
 class QKeyEvent;
@@ -22,6 +23,7 @@ class QContextMenuEvent;
 class QColor;
 class QPalette;
 struct Dynamics;
+struct Player;
 
 typedef std::map<std::string, std::shared_ptr<GLNode>> sceneData;
 typedef std::shared_ptr<sceneData> dataPtr;
@@ -41,8 +43,12 @@ Q_OBJECT
     template<class T>
     std::shared_ptr<T> Get(const char*) const;
 
+    Player p1;
+    Player p2;
+
  public slots:
     void quit();
+    virtual void pause();
 
  signals:
 

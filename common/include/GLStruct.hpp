@@ -32,6 +32,7 @@ struct Player
     std::string name;
     int score;
     std::string puck;
+    bool winner;
 };
 
 #endif

@@ -480,12 +480,12 @@ void GLScene::idleGL()
         }
 
         // If a players's score is over the threshold, end the game
-        //if (player1Score > 4 || player2Score > 4)
-        //{
+        if (player1Score > 4 || player2Score > 4)
+        {
             // Call end round signal
-            //emit endGame()
-        //}
-        //else 
+            emit endGame();
+        }
+        else 
         if (newRound)
         {
             // Reset the puck position
@@ -588,6 +588,8 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             case (Qt::Key_Space):
                 if(numPlayers > 1)
                     aiOnline = !aiOnline;
+            case (Qt::Key_Q):
+                emit endGame();
                 break;
         }
     }

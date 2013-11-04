@@ -26,6 +26,7 @@ class GLScene : public GLViewport
     // updateScore(score, player)
     void updateScore(int, int); 
     void mainMenu(int);
+    void endGame();
 
  protected slots:
     void resume();
