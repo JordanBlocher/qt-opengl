@@ -344,7 +344,7 @@ void GLScene::addDynamicBodies()
         //Create Models 
         std::shared_ptr<GLModel> puckGfx(new GLModel(puckTypes[i].c_str(), "puck", NUM_ATTRIBUTES));
         puckGfx->CreateVAO();
-        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(1.0f))); 
+        puckGfx->setMatrix(glm::scale(puckGfx->Matrix(), glm::vec3(0.3f))); 
 
         // Create Collision Objects
         std::shared_ptr<PhysicsModel> puckPhys(new PhysicsModel("puck",PhysicsModel::BODY::CYLINDER, btVector3(0.2f,0.01f,0.2f), orientation, btVector3(0.0f,0.0f,0.0f), 0.01f, 0.00f, 0.5f));
@@ -895,3 +895,4 @@ void GLScene::monitorProps()
     }
 
 }
+
