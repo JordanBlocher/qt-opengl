@@ -58,13 +58,23 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     mediaObject->setTickInterval(1000);
     Phonon::createPath(mediaObject, audioOutput);
 
+    audioOutput2 = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+    mediaObject2 = new Phonon::MediaObject(this);
+    metaInformationResolver2 = new Phonon::MediaObject(this);
+    mediaObject2->setTickInterval(1000);
+    Phonon::createPath(mediaObject2, audioOutput2);
+
     // Add sounds to list
     sources.append(Phonon::MediaSource("ding.mp3"));
     sources.append(Phonon::MediaSource("start.mp3"));
     sources.append(Phonon::MediaSource("hit.mp3"));
+    sources.append(Phonon::MediaSource("beats.wav"));
 
     // Connect signals to play sound
-    connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));  
+    connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));
+    connect(this, SIGNAL(playSound2(int)), this, SLOT(playSoundSlot2(int)));
+
+
 
 }
 void GLScene::playGame(int numPlayers)
@@ -72,25 +82,29 @@ void GLScene::playGame(int numPlayers)
     // PLay starting sound
     emit playSound(1);
 
+    emit playSound2(1);
+
     this->puckIndex = 7;
     this->paddleIndex = 1;
     this->numPlayers = numPlayers;       
     shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
     camera1->SetView(18.0f, M_PI, 0.4f*M_PI);
+    std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
 
     this->player1Score = 0;
     this->player2Score = 0;
-
-    if(numPlayers > 1)
-    {
-        // Make a new camera
-        std::shared_ptr<GLCamera> camera2(new GLCamera("camera2", this->initialSize));
 
         // Make sure that this is the camera we want (wont work if this is our second time)
         if(!this->AddToContext(camera2))
         {
             camera2 = this->Get<GLCamera>("camera2");
         }
+
+
+    if(numPlayers > 1)
+    {
+        // Make a new camera
+
 
         // Initialize all the camera stuffs.
         camera1->SetView(18.0f, 1.0*M_PI, 0.40f*M_PI);
@@ -757,7 +771,15 @@ void GLScene::playSoundSlot(int soundNum)
     mediaObject->setCurrentSource(sources[soundNum]);
     mediaObject->play();
 }
-
+void GLScene::playSoundSlot2(int soundNum)
+{
+    // Play the sounds after some maintenance
+    // ---- By the way, this has some sort of cpu leak, watch out guys.
+    mediaObject2->stop();
+    mediaObject2->clearQueue();
+    mediaObject2->setCurrentSource(sources[3]);
+    mediaObject2->play();
+}
 
 GLScene::~GLScene()
 {

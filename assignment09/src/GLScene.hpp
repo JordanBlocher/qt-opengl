@@ -9,6 +9,7 @@
 #include <phonon/MediaSource>
 #include <phonon/VideoWidget>
 #include <phonon/VideoPlayer>
+#include <QSound>
 
 #include <chrono>
 #include <vector>
@@ -32,6 +33,7 @@ class GLScene : public GLViewport
     void updateScore(int, int); 
     void mainMenu(int);
     void playSound(int soundNum);
+    void playSound2(int soundNum);
     void endGame();
 
  protected slots:
@@ -41,6 +43,8 @@ class GLScene : public GLViewport
     void changePaddle(int);
     void playGame(int);
     void playSoundSlot(int soundNum);    
+    void playSoundSlot2(int soundNum);   
+
 
  protected:
     void initGame();
@@ -84,8 +88,12 @@ class GLScene : public GLViewport
     Phonon::AudioOutput *audioOutput;
     QList<Phonon::MediaSource> sources;
 
+    Phonon::MediaObject *mediaObject2;
+    Phonon::MediaObject *metaInformationResolver2;
+    Phonon::AudioOutput *audioOutput2;
+    QList<Phonon::MediaSource> sources2;
+
     bool playingBg;
-    qint64 bgSeekTime;
 };
 
 #endif 
