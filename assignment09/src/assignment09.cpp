@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     GLScene *glView = new GLScene(1200, 800, NULL, argc, argv);
 
     MainWindow *window = new MainWindow(NULL, glView);
-
     if (!window->Ok())
         return 0;
 

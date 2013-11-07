@@ -48,6 +48,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->puckIndex = 7;
     this->paddleIndex = 1;
     this->playingBg = false;
+    this->numPlayers = 0;
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
@@ -64,6 +65,12 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     mediaObject2->setTickInterval(1000);
     Phonon::createPath(mediaObject2, audioOutput2);
 
+    // Setup audio outputs
+    for(int i = 0; i < 5; i++)
+    {
+
+    }
+
     // Add sounds to list
     sources.append(Phonon::MediaSource("ding.mp3"));
     sources.append(Phonon::MediaSource("start.mp3"));
@@ -73,9 +80,6 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     // Connect signals to play sound
     connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));
     connect(this, SIGNAL(playSound2(int)), this, SLOT(playSoundSlot2(int)));
-
-
-
 }
 void GLScene::playGame(int numPlayers)
 {
@@ -460,6 +464,7 @@ void GLScene::idleGL()
 
 void GLScene::resizeGL(int width, int height)
 {
+        std::cout << "RESIZIN " << numPlayers << std::endl;
     // Resize (depending on player count)
     if(numPlayers > 1)
     {
@@ -469,7 +474,9 @@ void GLScene::resizeGL(int width, int height)
         camera2->SetProjection(glm::perspective(45.0f, float(width/2.0)/float(height), 0.01f, 100.0f)); 
     }
     else
+    {
         GLViewport::resizeGL(width, height);
+    }
 }
 
 float GLScene::getDT()

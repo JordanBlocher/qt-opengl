@@ -145,7 +145,6 @@ void MainWindow::getPlayer(int i)
         glView->p2.score = 0;
         glView->p2.winner = false;
     }
-
     emit setPlayer(glView->p2, 2);
 
     this->mainMenu->hide();

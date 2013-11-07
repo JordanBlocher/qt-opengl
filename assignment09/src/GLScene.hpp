@@ -87,13 +87,16 @@ class GLScene : public GLViewport
     Phonon::MediaObject *metaInformationResolver;
     Phonon::AudioOutput *audioOutput;
     QList<Phonon::MediaSource> sources;
+    QList<Phonon::AudioOutput> soundOutputs;
+    QList<Phonon::MediaObject> mediaObjects;
 
     Phonon::MediaObject *mediaObject2;
     Phonon::MediaObject *metaInformationResolver2;
     Phonon::AudioOutput *audioOutput2;
-    QList<Phonon::MediaSource> sources2;
 
     bool playingBg;
+
+
 };
 
 #endif 
