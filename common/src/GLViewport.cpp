@@ -145,6 +145,23 @@ bool GLViewport::AddToContext(const std::shared_ptr<GLNode> node)
     return false;
 }
 
+bool GLViewport::RemoveFromContext(const char* name)
+{
+    if( this->context->count(name) != 0 )
+    {
+        this->context->erase(name);
+        return true;
+    }
+    return false;
+}
+
+bool GLViewport::Contains(const char* name)
+{
+    if( this->context->count(name) != 0 )
+        return true;
+    return false;
+}
+
 void GLViewport::SetScene(const std::shared_ptr<GLNode> node)
 {
     this->glScene = node;

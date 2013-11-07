@@ -45,6 +45,9 @@ Q_OBJECT
 
     Player p1;
     Player p2;
+    QColor background;
+    QColor font;
+
 
  public slots:
     void quit();
@@ -69,16 +72,15 @@ Q_OBJECT
 
     bool AddProgram(std::shared_ptr<GLProgram>);
     bool AddToContext(const std::shared_ptr<GLNode>);
+    bool RemoveFromContext(const char*);
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
+    bool Contains(const char*);
     
     QSize initialSize;
     QTimer timer;
     QMenu *popup;
-    QColor background;
-    QColor font;
-
-    std::shared_ptr<GLNode> glScene;
+     std::shared_ptr<GLNode> glScene;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
     glm::mat4 mvp;
 

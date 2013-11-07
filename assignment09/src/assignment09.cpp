@@ -3,9 +3,8 @@
 #include <QColor>
 
 #include <MainWindow.hpp>
-#include <OverlayWidget.hpp>
-#include <GLCamera.hpp>
 
+#include "GameMenu.hpp"
 #include "GLScene.hpp"
 
 int main(int argc, char *argv[])
@@ -19,8 +18,9 @@ int main(int argc, char *argv[])
     app.setPalette(palette);
 
     GLScene *glView = new GLScene(1200, 800, NULL, argc, argv);
+    GameMenu *menu = new GameMenu(glView);
 
-    MainWindow *window = new MainWindow(NULL, glView);
+    MainWindow *window = new MainWindow(NULL, glView, menu, "Air Hockey");
     if (!window->Ok())
         return 0;
 

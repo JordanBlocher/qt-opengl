@@ -26,31 +26,22 @@ class MenuWidget : public QWidget
  signals:
     void playGame(int);
     void changePaddle(int);
-    void start();
+    void resume();
 
  public slots:
-    void updatePaint();
-    void toggle(int);
+    virtual void updatePaint();
+    virtual void toggle(int);
 
  protected: 
-    void setConnections();
+    virtual void setConnections();
 	virtual void show();
-    void paintEvent(QPaintEvent*);
-	void setTransparent(bool transparent);
-	void setOpacity(const float &opacity=0.8);
-
-    QAction *single;
-    QAction *multi;
-    QAction *exit;
+    virtual void paintEvent(QPaintEvent*);
 
  protected slots:
-    void reset();
-    void resume();
-    void multiplayer();
-    void singleplayer();
-    void getPaddle();
+    virtual void reset();
+    virtual void unpause();
 
- private: 
+ protected: 
 	MainWindow *window;
     QStackedLayout *layout;
     QVBoxLayout *mainLayout;

@@ -22,7 +22,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
  public:
-    MainWindow(QWidget *parent = 0, GLViewport *view = NULL);
+    MainWindow(QWidget *parent = 0, GLViewport *view = NULL, MenuWidget *menu = NULL, const char* = "");
     ~MainWindow();
 
     void resizeEvent(QResizeEvent*);
@@ -71,6 +71,8 @@ class MainWindow : public QMainWindow
     QAction *child2Select;
    
  protected slots:
+    void setConnections(int);
+    void scoreBoard();
     void aboutCallback();     
     void aboutQtCallback();
     void getPlayer(int);
@@ -80,9 +82,9 @@ class MainWindow : public QMainWindow
  private:
     void createActions();
     void createMenus();
-    void setChildViews(GLViewport*, GLViewport*);
 
     bool ok;
+    QString name;
 
 
 };

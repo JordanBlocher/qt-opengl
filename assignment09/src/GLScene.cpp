@@ -32,6 +32,7 @@
 #include <PhysicsModel.hpp>
 #include <DynamicsWorld.hpp>
 #include <Entity.hpp>
+#include <GLEmissive.hpp>
 
 #include "GLScene.hpp"
 
@@ -41,6 +42,7 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
+
     // Initialize data members
     this->puckTypes = {"puck.obj"};
     this->paddleTypes = {"paddle.obj", "paddleSquare.obj", "paddleTriangle.obj"};
@@ -207,12 +209,16 @@ void GLScene::initializeGL()
     
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
-    vertex_uniform->CreateUBO(1, cprogram->getId(), POSITION, GL_STATIC_DRAW);
+    vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
     
     std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
-    frag_uniform->CreateUBO(1, cprogram->getId(), COLOR, GL_STREAM_DRAW);
+    frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
+
+    std::shared_ptr<GLUniform> lights_uniform(new GLUniform("GLights"));
+    lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
+    this->AddToContext(lights_uniform);
 
     //Add Sampler
     std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
@@ -220,8 +226,16 @@ void GLScene::initializeGL()
 
     //Set UBOs t Share
     cprogram->SetUBO(vertex_uniform);
+    cprogram->SetUBO(lights_uniform);
     cprogram->SetUBO(frag_uniform);
     tprogram->SetUBO(vertex_uniform);
+    tprogram->SetUBO(lights_uniform);
+
+    //Set Lighting
+    std::shared_ptr<GLEmissive> lighting(new GLEmissive("lights"));
+    lighting->ambient.color = glm::vec3(1.0f, 1.0f, 1.0f);
+    lighting->ambient.intensity = 1.5f;
+    this->AddToContext(lighting);
 
 }
 
@@ -235,7 +249,7 @@ void GLScene::paintGL()
  
     for(int i=0; i<numPlayers; i++)
     {
-        //Get view & projection matrices
+       //Get matrices
         shared_ptr<GLCamera> camera = this->Get<GLCamera>(string("camera" + to_string(i+1)).c_str() );
         glm::mat4 vp = camera->Projection() * camera->View();
 
@@ -244,10 +258,14 @@ void GLScene::paintGL()
         //Get UBOS
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
         shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+        shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
         
         //Get Programs
         shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
         shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
+
+        //Get Lights
+        shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
 
         // Iterate and draw over all of the models
         vector<int> indices = {0, puckIndex, paddleIndex, paddleIndex+1};
@@ -260,18 +278,34 @@ void GLScene::paintGL()
            glm::mat4 transform;
            transform =  pmodel->GetTransform();
 
-           //Bind MVP
-           Uniform position = vuniform->Get(POSITION);
-           glEnableVertexAttribArray(V_INDEX);
+           //Bind Uniform Matrices
+           Matrices matrices;
+           matrices.mvpMatrix = vp * transform * gmodel->Matrix();
+           matrices.mvMatrix = camera->View() * transform * gmodel->Matrix();
+           matrices.normalMatrix = glm::transpose(glm::inverse(camera->View() * transform * gmodel->Matrix()));
            glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
            glBufferSubData( GL_UNIFORM_BUFFER,
-                            position.offset,
-                            position.size,
-                            glm::value_ptr( vp * transform * gmodel->Matrix()));
+                            0,
+                            sizeof(matrices),
+                            &matrices);
+           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+           
+           // Bind Lights
+           glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
+           glBufferSubData( GL_UNIFORM_BUFFER,
+                            0,
+                            sizeof(lighting->ambient),
+                            &lighting->ambient);
            glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-           //Get Sampler
+           //Bind Sampler
            shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+           glBindBuffer(GL_UNIFORM_BUFFER, tuniform->getLocation());
+           glBufferSubData( GL_UNIFORM_BUFFER,
+                            0,
+                            sizeof(lighting->ambient),
+                            &lighting->ambient);
+           glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
            //Colors Program
            glUseProgram(cprogram->getId());
@@ -497,6 +531,8 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
     
+    std::shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+
     // Dont let spammys happen
     if(!event->isAutoRepeat())
     {
@@ -556,6 +592,12 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 break;
             case (Qt::Key_Q):
                 emit endGame();
+                break;
+            case(Qt::Key_1):
+                lighting->ambient.intensity +=0.05f;
+                break;
+            case(Qt::Key_2):
+                lighting->ambient.intensity -=0.05f;
                 break;
         }
     }

@@ -15,34 +15,77 @@
 #include <QColor>
 
 
-MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
+MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, const char* name) :
     QMainWindow(parent)
 {
 
+    this->name = name;
     // Set up main window
     this->glView = view; //= ((view == NULL) ? new GLViewport(this) : view);
     this->startState = view;
     setCentralWidget(glView);
     glView->setFocusPolicy(Qt::StrongFocus);
-    setWindowTitle(tr("Air Hockey"));
+    setWindowTitle(this->name);
     this->ok = true;
 
-    // Create Transparent Overlay
-    overlay = new OverlayWidget(glView);
-    overlay->setBackgroundWidget(this);
-    overlay->resize(this->width(), overlay->size().height() + 20);
-
+    if(this->name.toStdString() == std::string("Air Hockey"))
+            this->scoreBoard();
 
     // Create Main Menu
-    this->mainMenu = new MenuWidget(glView);
-    this->mainMenu->resize(50, this->height() - 200);
+    this->mainMenu = menu;
+    if(this->name.toStdString() == std::string("Air Hockey"))
+        this->mainMenu->resize(50, this->height() - 200);
+    else if(std::string(name) == std::string("Lighting"))
+        this->mainMenu->resize(30, this->height() - 600);
+    else if(std::string(name) == std::string("Lighting"))
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
+
+    if(std::string(name) == std::string("Air Hockey"))
+        this->setConnections(1);
+    else if(std::string(name) == std::string("Lighting"))
+        this->setConnections(2);
 
     // Menu stuff
     this->createActions();
     this->createMenus();
  
+}
+
+MainWindow::~MainWindow()
+{
+}
+
+void MainWindow::setConnections(int menu)
+{
+    if(menu == 1)
+    {
+        // Connections to main menu
+        connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
+        connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
+        connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
+
+        connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
+        connect(glView, SIGNAL(endGame()), this, SLOT(endGame()));
+
+        // Connections to scoreboard
+        connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
+        connect(this, SIGNAL(pause()), glView, SLOT(pause()));
+    }
+    else if (menu == 2)
+    {
+        connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
+        connect(mainMenu, SIGNAL(setModel(const char*)), glView, SLOT(setModel(const char*)));
+    }
+
+}
+
+void MainWindow::scoreBoard()
+{
+    overlay = new OverlayWidget(glView);
+    overlay->setBackgroundWidget(this);
+    overlay->resize(this->width(), overlay->size().height() + 20);
+    
     // Connections to display / user input
     glView->p1.name = "Player 1";
     glView->p1.score = 0;
@@ -50,22 +93,8 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     glView->p2.name = "Player 2";
     glView->p2.score = 0;
     emit setPlayer(glView->p2, 2);
-
+ 
     connect( glView, SIGNAL(updateScore(int, int)), this, SLOT(updateScore(int, int)));
-
-    // Connections to main menu
-    connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
-    connect(mainMenu, SIGNAL(start()), glView, SLOT(resume()));
-    connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
-    connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
-    connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
-    connect(glView, SIGNAL(endGame()), this, SLOT(endGame()));
-    connect(this, SIGNAL(pause()), glView, SLOT(pause()));
-
-}
-
-MainWindow::~MainWindow()
-{
 }
 
 void MainWindow::createActions()
@@ -176,8 +205,10 @@ void MainWindow::endGame()
 
 void MainWindow::resizeEvent(QResizeEvent* )
 {
-    overlay->resize(this->width(), overlay->size().height());
-        this->mainMenu->resize(250, 250);
+    if(this->name.toStdString() == std::string("Air Hockey"))
+        overlay->resize(this->width(), overlay->size().height());
+
+    this->mainMenu->resize(250, 250);
 
     this->mainMenu->move((glView->geometry().width()/2) -125, (glView->geometry().height()/2) -125 - 0);
 }
