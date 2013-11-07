@@ -32,8 +32,8 @@ class GLScene : public GLViewport
     // updateScore(score, player)
     void updateScore(int, int); 
     void mainMenu(int);
-    void playSound(int soundNum);
-    void playSound2(int soundNum);
+    void playBgm();
+    void playEffect(int effectNum);
     void endGame();
 
  protected slots:
@@ -42,8 +42,9 @@ class GLScene : public GLViewport
     void idleGL();
     void changePaddle(int);
     void playGame(int);
-    void playSoundSlot(int soundNum);    
-    void playSoundSlot2(int soundNum);   
+    void playBgmWorker();    
+    void playEffectWorker(int effectNum);  
+    void finished(); 
 
 
  protected:
@@ -83,20 +84,13 @@ class GLScene : public GLViewport
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
 
     // Phonon
-    Phonon::MediaObject *mediaObject;
-    Phonon::MediaObject *metaInformationResolver;
-    Phonon::AudioOutput *audioOutput;
+    Phonon::MediaObject *bgmObject;
+    Phonon::AudioOutput *bgmOutput;
+    Phonon::MediaSource *bgmSource;
     QList<Phonon::MediaSource> sources;
-    QList<Phonon::AudioOutput> soundOutputs;
-    QList<Phonon::MediaObject> mediaObjects;
-
-    Phonon::MediaObject *mediaObject2;
-    Phonon::MediaObject *metaInformationResolver2;
-    Phonon::AudioOutput *audioOutput2;
-
-    bool playingBg;
-
-
+    QList<Phonon::AudioOutput*> audioOutputs;
+    QList<Phonon::MediaObject*> mediaObjects;
+    bool wasInContact;
 };
 
 #endif 

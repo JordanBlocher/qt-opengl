@@ -41,52 +41,56 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {   
+    // Initialize data members
     this->puckTypes = {"puck.obj"};
     this->paddleTypes = {"paddle.obj", "paddleSquare.obj", "paddleTriangle.obj"};
     this->setContextMenuPolicy(Qt::DefaultContextMenu);   
     this->update = true;
     this->puckIndex = 7;
     this->paddleIndex = 1;
-    this->playingBg = false;
     this->numPlayers = 0;
+    this->wasInContact = false;
+
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
-    // Setup Phonon
-    audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
-    mediaObject = new Phonon::MediaObject(this);
-    metaInformationResolver = new Phonon::MediaObject(this);
-    mediaObject->setTickInterval(1000);
-    Phonon::createPath(mediaObject, audioOutput);
+    // Setup audio output for bgm
+    bgmOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+    bgmObject = new Phonon::MediaObject(this);
+    bgmObject->setTickInterval(1000);
+    Phonon::createPath(bgmObject, bgmOutput);
+    bgmSource = new Phonon::MediaSource("beats.mp3");
 
-    audioOutput2 = new Phonon::AudioOutput(Phonon::MusicCategory, this);
-    mediaObject2 = new Phonon::MediaObject(this);
-    metaInformationResolver2 = new Phonon::MediaObject(this);
-    mediaObject2->setTickInterval(1000);
-    Phonon::createPath(mediaObject2, audioOutput2);
-
-    // Setup audio outputs
+    // Setup audio outputs for sound effects
     for(int i = 0; i < 5; i++)
     {
-
+        audioOutputs.append(new Phonon::AudioOutput(Phonon::MusicCategory, this));
+        mediaObjects.append(new Phonon::MediaObject(this));
+        mediaObjects[i]->setTickInterval(1000);
+        Phonon::createPath(mediaObjects[i], audioOutputs[i]);
     }
 
     // Add sounds to list
     sources.append(Phonon::MediaSource("ding.mp3"));
     sources.append(Phonon::MediaSource("start.mp3"));
     sources.append(Phonon::MediaSource("hit.mp3"));
-    sources.append(Phonon::MediaSource("beats.wav"));
 
-    // Connect signals to play sound
-    connect(this, SIGNAL(playSound(int)), this, SLOT(playSoundSlot(int)));
-    connect(this, SIGNAL(playSound2(int)), this, SLOT(playSoundSlot2(int)));
+    // Connect signals to play sounds
+    connect(this, SIGNAL(playBgm()), this, SLOT(playBgmWorker()));
+    connect(this, SIGNAL(playEffect(int)), this, SLOT(playEffectWorker(int)));
+    connect(bgmObject, SIGNAL(finished()), SLOT(finished()));
 }
+
 void GLScene::playGame(int numPlayers)
 {
-    // PLay starting sound
-    emit playSound(1);
+    // Play bgm, if it is not already playing
+    if(bgmObject->state() == Phonon::StoppedState)
+    {
+       emit playBgm(); 
+    }    
 
-    emit playSound2(1);
+    // Play round start sound
+    emit playEffect(1);
 
     this->puckIndex = 7;
     this->paddleIndex = 1;
@@ -459,12 +463,11 @@ void GLScene::idleGL()
 
         // Check score stuff
         this->monitorScore();
-    }
+    } 
 }
 
 void GLScene::resizeGL(int width, int height)
 {
-        std::cout << "RESIZIN " << numPlayers << std::endl;
     // Resize (depending on player count)
     if(numPlayers > 1)
     {
@@ -769,23 +772,31 @@ void GLScene::updateKeys()
     }
 }
 
-void GLScene::playSoundSlot(int soundNum)
+void GLScene::playBgmWorker()
 {
-    // Play the sounds after some maintenance
-    // ---- By the way, this has some sort of cpu leak, watch out guys.
-    mediaObject->stop();
-    mediaObject->clearQueue();
-    mediaObject->setCurrentSource(sources[soundNum]);
-    mediaObject->play();
+    // Play bgm
+    bgmObject->setCurrentSource(*bgmSource);
+    bgmObject->play();
 }
-void GLScene::playSoundSlot2(int soundNum)
+
+void GLScene::playEffectWorker(int effectNum)
 {
-    // Play the sounds after some maintenance
-    // ---- By the way, this has some sort of cpu leak, watch out guys.
-    mediaObject2->stop();
-    mediaObject2->clearQueue();
-    mediaObject2->setCurrentSource(sources[3]);
-    mediaObject2->play();
+    // Check to see if there is an available sound output
+    for(int i = 0; i < 5; i ++)
+    {
+        // Check if this mediaObject is able to play our effect
+        if(mediaObjects[i]->state() == Phonon::StoppedState)
+        {
+            mediaObjects[i]->setCurrentSource(sources[effectNum]);
+            mediaObjects[i]->play();
+            break;
+        }
+    }
+}
+
+void GLScene::finished()
+{
+    bgmObject->play();
 }
 
 GLScene::~GLScene()
@@ -806,7 +817,7 @@ void GLScene::monitorScore()
     if(puckPos.getX() > 7.0f)
     {
         // Play goal sound
-        emit playSound(0);
+        emit playEffect(0);
 
         // Increment score and tell the other guy to fix the round
         player1Score++;
@@ -817,7 +828,7 @@ void GLScene::monitorScore()
     else if(puckPos.getX() < -7.0f)
     {
         // Play goal sound
-        emit playSound(0);
+        emit playEffect(0);
 
         // Increment score and tell the other guy to fix the round
         player2Score++;
@@ -929,15 +940,17 @@ void GLScene::monitorProps()
     // Play the puck smacking sound if in contact with a paddle
     if(puckPos.distance(paddle1Pos) < 0.6f || puckPos.distance(paddle2Pos) < 0.6f)
     {
-        if(!playingBg)
+        // Play sound if sound queue not full
+        if(!wasInContact)
         {
-            emit playSound(2);
-            playingBg = true;
+           emit playEffect(2);
+           wasInContact = true; 
         }
+        
     }
     else
     {
-        playingBg = false;
+        wasInContact = false;
     }
 
     // Damp puck if it is going hypersonic
