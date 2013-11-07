@@ -351,7 +351,6 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     GLint face_offset = 0;
     GLint vertex_offset = 0;
     glBindVertexArray(this->vao);
-    Uniform funiform;
 
     bool texture, color;
 
@@ -360,7 +359,6 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     if(color)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, fragment->getId());
-        funiform = fragment->Get(COLOR);
     }
 
     //Draw Model 
@@ -368,16 +366,13 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     {   
         
         texture = this->materials->at(this->mtlIndices.at(i)).texture;
-        if ( texture ) 
-                this->textures->at(this->mtlIndices.at(i)).Bind(GL_TEXTURE0);
-        if( color )
+        if(texture)
         {
-            glBufferSubData(GL_UNIFORM_BUFFER,
-                     		funiform.offset,
-                     		funiform.size,
-                            glm::value_ptr( this->materials->at(this->mtlIndices.at(i)).diffuse) );
+            glBindBuffer(GL_UNIFORM_BUFFER, fragment->getLocation());
         }
-        
+      
+        this->SetBufferData(texture, fragment, i);
+
         if( (color && !texture) || (!color && texture) )
         {
         glDrawElementsBaseVertex(GL_TRIANGLES, 
@@ -394,6 +389,28 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
+}
+
+void GLModel::SetBufferData(bool texture, std::shared_ptr<GLUniform> fragment, int i)
+{
+    Uniform diffuse = fragment->Get(std::string(fragment->getName() + ".diffuse").c_str());
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    diffuse.offset,
+                    diffuse.size,
+                    glm::value_ptr( this->materials->at(this->mtlIndices.at(i)).diffuse) );
+    Uniform specular = fragment->Get(std::string(fragment->getName() + ".specular").c_str());
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    specular.offset,
+                    specular.size,
+                    glm::value_ptr( this->materials->at(this->mtlIndices.at(i)).specular) );
+    Uniform ambient = fragment->Get(std::string(fragment->getName() + ".ambient").c_str());
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    ambient.offset,
+                    ambient.size,
+                    glm::value_ptr( this->materials->at(this->mtlIndices.at(i)).ambient) );
+    if( texture )
+        this->textures->at(this->mtlIndices.at(i)).Bind(GL_TEXTURE0);
+
 }
 
 size_t GLModel::numFaces()

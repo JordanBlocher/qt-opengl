@@ -46,6 +46,7 @@ class GLModel : public GLNode
     void AddVertexData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
+    void SetBufferData(bool, std::shared_ptr<GLUniform>, int);
 
     bool AddMaterials(const char*);
     std::string toString(MODEL);

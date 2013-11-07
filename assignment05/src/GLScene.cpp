@@ -26,6 +26,7 @@
 #include <GLModel.hpp>
 #include <GLUniform.hpp>
 #include <GLCamera.hpp>
+#include <GLEmissive.hpp>
 
 #include "GLScene.hpp"
 
@@ -34,8 +35,6 @@
 #define FOCAL_DISTANCE 100.0f
 
 const GLuint NUM_ATTRIBUTES = 3;
-const GLuint POSITION_OFFSET = 1;
-const GLuint COLOR_OFFSET = 0;
 
 using namespace std;
 
@@ -84,12 +83,16 @@ void GLScene::initializeGL()
     
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
-    vertex_uniform->CreateUBO(1, cprogram->getId(), POSITION, GL_STATIC_DRAW);
+    vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
     
     std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
-    frag_uniform->CreateUBO(1, cprogram->getId(), COLOR, GL_STREAM_DRAW);
+    frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
+
+    std::shared_ptr<GLUniform> lights_uniform(new GLUniform("GLights"));
+    lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
+    this->AddToContext(lights_uniform);
 
     //Add Sampler
     std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
@@ -99,6 +102,13 @@ void GLScene::initializeGL()
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(frag_uniform);
     tprogram->SetUBO(vertex_uniform);
+   
+    //Set Lighting
+    std::shared_ptr<GLEmissive> lighting(new GLEmissive("lights"));
+    lighting->ambient.color = glm::vec3(1.0f, 1.0f, 1.0f);
+    lighting->ambient.intensity = 0.4f;
+    this->AddToContext(lighting);
+
 
 }
 
@@ -120,21 +130,35 @@ void GLScene::paintGL()
     //Get UBOS
     shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
     shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+    shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
     
     //Get Programs
     shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
     shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
+    //Get Lights
+    shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+
     //Bind MVP
-    Uniform position = vuniform->Get(POSITION);
-    glEnableVertexAttribArray(V_INDEX);
+    Matrices matrices;
+    matrices.mvpMatrix = vp * model->Matrix();
+    matrices.mvMatrix = camera1->View() *  model->Matrix();
+    matrices.normalMatrix = glm::transpose(glm::inverse(camera1->View() * model->Matrix()));
     glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
     glBufferSubData( GL_UNIFORM_BUFFER,
-                     position.offset,
-                     position.size,
-                     glm::value_ptr( vp * model->Matrix() ));
+                     0,
+                     sizeof(matrices),
+                     &matrices);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
    
+    // Bind Lights
+    glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
+    glBufferSubData( GL_UNIFORM_BUFFER,
+                     0,
+                     sizeof(lighting->ambient),
+                     &lighting->ambient);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     //Get Sampler
     shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
@@ -223,18 +247,6 @@ void GLScene::mousePressEvent(QMouseEvent *event)
 
 void GLScene::contextMenuEvent(QContextMenuEvent *event)
 {
-    QAction *start = new QAction(tr("&Start"), this);
-    start->setStatusTip(tr("Start"));
-    connect(start, SIGNAL(triggered()), this, SLOT(start()));
-    
-    QAction *stop = new QAction(tr("&Stop"), this);
-    start->setStatusTip(tr("Stop"));
-    connect(stop, SIGNAL(triggered()), this, SLOT(stop()));
-
-    QMenu menu(this);    
-    menu.addAction(start);
-    menu.addAction(stop);
-    menu.exec(event->globalPos());
 }
 
 void GLScene::resume()

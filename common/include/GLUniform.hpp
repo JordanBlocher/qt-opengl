@@ -9,8 +9,6 @@
 #include <map>
 #include <GL/glew.h>
 
-enum UniformType {COLOR = 0, POSITION = 1, NORMAL = 2, UV = 3};  
-
 class GLUniform : public GLNode
 {
  public:
@@ -18,12 +16,13 @@ class GLUniform : public GLNode
      GLUniform(const char*, GLuint, int, const char*);
     ~GLUniform();
     
-    bool CreateUBO(int, GLuint, GLuint, GLenum);
-    Uniform Get(UniformType);
+    bool CreateUBO(GLuint, GLuint, GLenum);
+    Uniform Get(const char*);
     GLuint getLocation();
+    void printUniformOffsets(GLuint, GLuint);
 
  private:
-    std::map<UniformType,Uniform> uniforms;
+    std::map<std::string,Uniform> uniforms;
     GLuint block;
     GLuint location;
 

@@ -24,6 +24,7 @@ class GLScene : public GLViewport
  signals:
     void mainMenu(int);
     void updateScore(int, int);
+    void endGame();
 
  protected slots:
     void playGame(int);

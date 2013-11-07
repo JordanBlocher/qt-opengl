@@ -1,6 +1,8 @@
 #include "GLUniform.hpp"
 #include "GLBufferObject.hpp"
 
+#include <iomanip>
+
 
 GLUniform::GLUniform(const char* name) : GLNode(name)
 {
@@ -25,22 +27,34 @@ GLUniform::GLUniform(const char* name, GLuint program, int size, const char* typ
 
 }
 
-bool GLUniform::CreateUBO(int numUniforms, GLuint program, GLuint index, GLenum draw)
+bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
 {
     GLint size;
-    GLenum type;
+    GLint type;
+    GLint offset;
     std::string uname;
-    GLsizei len;
     GLsizei dataSize = 0;
     GLsizeiptr uniformSize;
     Uniform unif;
-    this->location = index;
-        
+    this->location = location;
+    GLint numUniforms;
+    GLuint index;
+      
     this->block = glGetUniformBlockIndex(program, this->name.c_str());
+    glUniformBlockBinding(program, block, this->location);
+    
+    glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &numUniforms );
+    GLint *indices = new GLint[numUniforms];
+    glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
 
     for( int i = 0; i < numUniforms; i++)
     {
-        glGetActiveUniform(program, index + i, 256, &len, &size, &type, &uname[0]);
+        index = (GLuint)indices[i];
+
+        glGetActiveUniformName(program, index, 256, 0, &uname[0]);
+        glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_TYPE, &type);
+        glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_OFFSET, &offset);
+        glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_SIZE, &size);
 
         if(type == GL_FLOAT_VEC3)
             uniformSize = sizeof(glm::vec3);
@@ -54,11 +68,16 @@ bool GLUniform::CreateUBO(int numUniforms, GLuint program, GLuint index, GLenum 
             uniformSize = sizeof(glm::mat3);
         else if(type == GL_INT)
             uniformSize = sizeof(int);
+        else if(type == GL_FLOAT)
+            uniformSize = sizeof(float);
 
-        dataSize += uniformSize*size;
+        dataSize += static_cast<GLint>(size*uniformSize);
 
-        unif = {&uname[0], static_cast<GLuint>(size*uniformSize), index + (GLuint)i, static_cast<GLuint>(size*uniformSize*i)};
-		this->uniforms[(UniformType)index] = unif;
+        unif = {&uname[0], static_cast<GLint>(size*uniformSize), index, offset};
+		this->uniforms[&uname[0]] = unif;
+
+        std::cout << "Uniform <" << unif.name << "> (offset): " << unif.offset <<", (size): " <<unif.size<< ", (index): "<<unif.index<< std::endl;
+        std::cout<<"dataSize : "<<dataSize<<std::endl;
     }
 
     GLBufferObject ubo(name.c_str(), dataSize, (GLuint)1, GL_UNIFORM_BUFFER, draw); 
@@ -67,11 +86,15 @@ bool GLUniform::CreateUBO(int numUniforms, GLuint program, GLuint index, GLenum 
             std::cerr << "[E] Buffer " << name << " not created."<<std::endl;
             return false;
     }
-    glBindBufferBase(ubo.Type(), index, ubo.Buffer());
+
+    ubo.SetBlockIndex(this->location); 
+    glBindBufferBase(ubo.Type(), this->location, ubo.Buffer());
     
     this->id = ubo.Buffer();
 
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    delete [] indices;
 
     return true;
 }
@@ -80,9 +103,9 @@ GLUniform::~GLUniform()
 {
 }
 
-Uniform GLUniform::Get(UniformType type)
+Uniform GLUniform::Get(const char* name)
 {
-    return this->uniforms[type];
+    return this->uniforms[name];
 }
 
 GLuint GLUniform::getLocation()

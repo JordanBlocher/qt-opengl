@@ -22,9 +22,9 @@ struct Material
 struct Uniform
 {
     std::string name;
-    GLuint size;
+    GLint size;
     GLuint index;
-    GLuint offset;
+    GLint offset;
 };
 
 struct Player
@@ -33,6 +33,19 @@ struct Player
     int score;
     std::string puck;
     bool winner;
+};
+
+struct Light
+{
+    float intensity;
+    glm::vec3 color;
+};
+
+struct Matrices
+{
+    glm::mat4 mvpMatrix;
+    glm::mat4 mvMatrix;
+    glm::mat4 normalMatrix;
 };
 
 #endif
