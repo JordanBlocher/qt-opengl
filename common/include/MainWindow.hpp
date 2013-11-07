@@ -29,6 +29,8 @@ class MainWindow : public QMainWindow
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
+    void mouseMoveEvent(QMouseEvent*);
+
     void changeEvent(QEvent*);
 
     GLViewport *glView;

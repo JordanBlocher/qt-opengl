@@ -32,9 +32,10 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     overlay->setBackgroundWidget(this);
     overlay->resize(this->width(), overlay->size().height() + 20);
 
+
     // Create Main Menu
     this->mainMenu = new MenuWidget(glView);
-    this->mainMenu->resize(this->width() /2.0, this->height() - 200);
+    this->mainMenu->resize(50, this->height() - 200);
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
 
@@ -49,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view) :
     glView->p2.name = "Player 2";
     glView->p2.score = 0;
     emit setPlayer(glView->p2, 2);
+
     connect( glView, SIGNAL(updateScore(int, int)), this, SLOT(updateScore(int, int)));
 
     // Connections to main menu
@@ -92,6 +94,7 @@ void MainWindow::createMenus()
     this->help = menuBar()->addMenu(tr("&Help"));
     this->help->addAction(about);
     this->help->addAction(aboutQt);
+
 }
 
 QMenu* MainWindow::createPopupMenu()
@@ -142,7 +145,6 @@ void MainWindow::getPlayer(int i)
         glView->p2.score = 0;
         glView->p2.winner = false;
     }
-
     emit setPlayer(glView->p2, 2);
 
     this->mainMenu->hide();
@@ -175,7 +177,9 @@ void MainWindow::endGame()
 void MainWindow::resizeEvent(QResizeEvent* )
 {
     overlay->resize(this->width(), overlay->size().height());
-    this->mainMenu->move(glView->geometry().width()/2 -200, glView->geometry().height()/2 - 100);
+        this->mainMenu->resize(250, 250);
+
+    this->mainMenu->move((glView->geometry().width()/2) -125, (glView->geometry().height()/2) -125 - 0);
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -195,6 +199,10 @@ void MainWindow::keyReleaseEvent(QKeyEvent* )
 }
 
 void MainWindow::mousePressEvent(QMouseEvent*)
+{
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent*)
 {
 }
 

@@ -30,12 +30,14 @@ MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
     this->setWindowFlags(Qt::WindowStaysOnTopHint);
     
     this->layout = new QStackedLayout;
-    this->layout->setContentsMargins(140, 40, 0, 0);
+    this->layout->setAlignment(Qt::AlignCenter);
 
     // Main menu widget
     QWidget* main = new QWidget;
     this->mainLayout = new QVBoxLayout(main);
-    this->mainLayout->setContentsMargins(140, 40, 0, 0);
+    this->mainLayout->setAlignment(Qt::AlignCenter);
+    this->mainLayout->setSpacing(20);
+    this->mainLayout->setContentsMargins(0, 30, 0, 0);
     main->move(this->geometry().center());
     buttons[0] = new QPushButton(tr("Single Player"));
     buttons[0]->setMaximumWidth(120);
@@ -50,7 +52,9 @@ MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
     // Options widget
     QWidget* options = new QWidget;
     this->optionsLayout = new QVBoxLayout(options);
-    this->optionsLayout->setContentsMargins(140, 40, 0, 0);
+    this->optionsLayout->setAlignment(Qt::AlignCenter);
+    this->optionsLayout->setSpacing(20);
+    this->optionsLayout->setContentsMargins(0, 30, 0, 0);
     buttons[3] = new QPushButton(tr("Change Paddle"));
     buttons[3]->setMaximumWidth(120);
     optionsLayout->addWidget(buttons[3]);
@@ -64,11 +68,11 @@ MenuWidget::MenuWidget(QWidget *parent) : QWidget(parent)
     // Game Over widget
     QWidget* gameOver = new QWidget;
     this->gameOverLayout = new QVBoxLayout(gameOver);
-    this->gameOverLayout->setContentsMargins(140, 40, 0, 0);
+    this->gameOverLayout->setAlignment(Qt::AlignCenter);
+    this->gameOverLayout->setSpacing(20);
+    this->gameOverLayout->setContentsMargins(0, 30, 0, 0);
     buttons[6] = new QPushButton(tr("Main Menu"));
     buttons[6]->setMaximumWidth(120);
-//    QSpacerItem *spacer = new QSpacerItem(80, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
-  //  gameOverLayout->addItem(spacer);
     gameOverLayout->addWidget(buttons[6]);
 
     // Set up stacked menu
@@ -89,6 +93,7 @@ MenuWidget::~MenuWidget()
 void MenuWidget::show()
 {
     QWidget::show();
+
 }
 
 void MenuWidget::setConnections()
@@ -142,22 +147,25 @@ void MenuWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.eraseRect(event->rect());
-    painter.setPen(Qt::darkCyan);
-    painter.setFont(QFont("Arial", 24));
+    painter.setBrush(QBrush(Qt::white));
+     QRectF rectangle(5.0, 5.0, this->geometry().width()-10, this->geometry().height()-10);
+    painter.drawRect(rectangle);
+    painter.setPen(Qt::darkGray);
+    painter.setFont(QFont("Trebuchet", 24));
     if(this->layout->currentIndex() == 0)   
-        painter.drawText(100, 40, tr("Play Airhockey"));
+        painter.drawText(this->geometry().width()/2 - 90, 40, tr("Air Hockey!"));
     if(this->layout->currentIndex() == 1)   
-        painter.drawText(100, 40, tr("Options Menu"));
+        painter.drawText(this->geometry().width()/2 - 110, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
     {
         painter.setFont(QFont("Arial", 28, QFont::Bold, QFont::SmallCaps));
-        painter.drawText(100, 40, tr("Game Over"));
+        painter.drawText(this->geometry().width()/2 - 100, 40, tr("Game Over"));
         painter.setPen(Qt::darkGray);
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
-            painter.drawText(100, 80, std::string(glView->p1.name + "  Won!").c_str());
+            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p1.name + "  Won!").c_str());
         else if(glView->p2.winner)
-            painter.drawText(100, 80, std::string(glView->p2.name + "  Won!").c_str());
+            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p2.name + "  Won!").c_str());
     }
 }
 

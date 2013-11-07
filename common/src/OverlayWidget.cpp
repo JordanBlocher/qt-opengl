@@ -29,6 +29,7 @@ OverlayWidget::OverlayWidget(QWidget *parent) : QWidget(parent, Qt::SubWindow)
     rarrow->setArrowType(Qt::RightArrow);
     QToolButton *larrow = new QToolButton();
     larrow->setArrowType(Qt::LeftArrow);
+
 }
 
 OverlayWidget::~OverlayWidget()
@@ -53,31 +54,41 @@ void OverlayWidget::setTransparent(bool transparent)
         setAttribute(Qt::WA_TranslucentBackground);
         setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
         setOpacity();
+
+        this->hide();
     }
     else
     {
         setAttribute(Qt::WA_TranslucentBackground,false);
         setWindowFlags(windowFlags() & ~Qt::FramelessWindowHint);
+
+        this->show();
     }
 }
 
 void OverlayWidget::setOpacity(const float &opacity)
 {
-    QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
-    this->setGraphicsEffect(opacityEffect);
-    opacityEffect->setOpacity(opacity);
+    // Disabled to get rid of that nasty effect. May (wont) fix later
+    //QGraphicsOpacityEffect* opacityEffect = new QGraphicsOpacityEffect;
+    //this->setGraphicsEffect(opacityEffect);
+    //opacityEffect->setOpacity(opacity);
 }
 
 void OverlayWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.eraseRect(event->rect());
+    painter.setBrush(QBrush(Qt::darkGray));
+    QRectF rectangle(2.0, 2.0, 120, this->geometry().height()-10);
+    painter.drawRect(rectangle);
+    QRectF rectangle2(this->geometry().width()-122, 2.0, 120, this->geometry().height()-10);
+    painter.drawRect(rectangle2);
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 14));
     painter.drawText(5,20,glView->p1.name.c_str());
     painter.drawText(15,40,std::to_string(glView->p1.score).c_str());
-    painter.drawText(this->width() - 10*glView->p2.name.length(),20,glView->p2.name.c_str());
-    painter.drawText(this->width() - 10*glView->p2.name.length() + 15,40,std::to_string(glView->p2.score).c_str());
+    painter.drawText(this->width() - 11*glView->p2.name.length(),20,glView->p2.name.c_str());
+    painter.drawText(this->width() - 25,40,std::to_string(glView->p2.score).c_str());
 }
 
 // Filter events from user
