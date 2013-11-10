@@ -38,6 +38,7 @@ class GLScene : public GLViewport
     void updateKeys();
     void mousePressEvent(QMouseEvent*);
     void contextMenuEvent(QContextMenuEvent*);
+    void wheelEvent(QWheelEvent*);
 
     bool keyHeld[12];// W S A D I K J L R RG LF UP DW
     QColor background;

@@ -12,6 +12,7 @@ QT += phonon
 _BOOST_ROOT = /usr/include
 _BULLET_ROOT = /usr/include/bullet
 _IMAGE_MAGICK_ROOT = /usr/include/ImageMagick
+_ASSIMP_ROOT = /usr/include/assimp
 # -------------------------------
 
 isEmpty(_BOOST_ROOT) {
@@ -44,6 +45,22 @@ isEmpty(_BULLET_ROOT) {
 } else {
     message(\"Bullet Library\" detected in BULLET_ROOT = \"$$_BULLET_ROOT\")
         INCLUDEPATH += $$_BULLET_ROOT
+}
+
+isEmpty(_ASSIMP_ROOT) {
+    message(\"Assimp Library\" qmake value not detected...)
+            _ASSIMP_ROOT = $$(ASSIMP_ROOT)
+}
+isEmpty(_ASSIMP_ROOT) {
+    message(\"Assimp Library\" qmake value not detected...)
+            _ASSIMP_ROOT = /usr/local/include/assimp
+}
+isEmpty(_ASSIMP_ROOT) {
+    message(\"Assimp Library\" environment variable not detected...)
+        !build_pass:error(Please set the environment variable `ASSIMP_ROOT`.
+} else {
+    message(\"Assimp Library\" detected in ASSIMP_ROOT = \"$$_ASSIMP_ROOT\")
+        INCLUDEPATH += $$_ASSIMP_ROOT
 }
 
 isEmpty(_IMAGE_MAGICK_ROOT) {

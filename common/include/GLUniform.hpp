@@ -19,7 +19,6 @@ class GLUniform : public GLNode
     bool CreateUBO(GLuint, GLuint, GLenum);
     Uniform Get(const char*);
     GLuint getLocation();
-    void printUniformOffsets(GLuint, GLuint);
 
  private:
     std::map<std::string,Uniform> uniforms;

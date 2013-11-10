@@ -25,6 +25,7 @@ GLCamera::GLCamera(const char* name, QSize size)
                             this->focusDistance) );
 
     updateView();
+    this->updated = true;
 }
 
 GLCamera::~GLCamera()
@@ -132,4 +133,10 @@ void GLCamera::updateView()
                     glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
                     glm::vec3(0.0, 0.0, 0.0),    //focus point
                     glm::vec3(0, 1, 0)) );  //up
+}
+
+bool GLCamera::Updated(bool update)
+{
+    this->updated = update;
+    return this->updated;
 }

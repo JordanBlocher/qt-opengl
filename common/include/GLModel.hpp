@@ -46,7 +46,6 @@ class GLModel : public GLNode
     void AddVertexData(const aiMesh*, unsigned int);
     void AddMaterials(aiMaterial**, unsigned int);
     void CreateVBOs();
-    void SetBufferData(bool, std::shared_ptr<GLUniform>, int);
 
     bool AddMaterials(const char*);
     std::string toString(MODEL);
@@ -59,8 +58,8 @@ class GLModel : public GLNode
     std::shared_ptr<std::vector<std::vector<glm::vec3>>> normals;
     std::shared_ptr<std::vector<std::vector<glm::vec2>>> uvs;
     std::shared_ptr<std::vector<std::vector<GLuint>>> faces;
-    std::shared_ptr<std::vector<Material>> materials;
-    std::shared_ptr<std::vector<GLTexture>> textures;
+    std::shared_ptr<std::vector<std::pair<aiString, Material>>> materials;
+    std::shared_ptr<std::vector<std::pair<bool,GLTexture>>> textures;
     std::vector<GLuint> mtlIndices;
 
     size_t e_size;

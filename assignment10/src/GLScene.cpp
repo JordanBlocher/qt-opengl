@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QPalette>
 #include <QColor>
+#include <QWheelEvent>
 
 #include <iostream>
 #include <chrono>
@@ -81,37 +82,38 @@ void GLScene::initializeGL()
         this->AddToContext( tprogram );
     
     //Create UBOs 
-    std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
+    shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
     vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
     
-    std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
+    shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
     frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
 
-    std::shared_ptr<GLUniform> lights_uniform(new GLUniform("GLights"));
+    shared_ptr<GLUniform> lights_uniform(new GLUniform("GLights"));
     lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
     this->AddToContext(lights_uniform);
 
+    shared_ptr<GLUniform> eye_uniform(new GLUniform("Eye"));
+    eye_uniform->CreateUBO(cprogram->getId(), 4, GL_STREAM_DRAW);
+    this->AddToContext(eye_uniform);
+
     //Add Sampler
-    std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
+    shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
     this->AddToContext(texture_uniform);
 
     //Set UBOs t Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(lights_uniform);
     cprogram->SetUBO(frag_uniform);
+    cprogram->SetUBO(eye_uniform);
     tprogram->SetUBO(vertex_uniform);
     tprogram->SetUBO(lights_uniform);
+    tprogram->SetUBO(eye_uniform);
 
     //Set Lighting
-    std::shared_ptr<GLEmissive> lighting(new GLEmissive("lights"));
-    lighting->ambient.color = glm::vec3(1.0f, 1.0f, 1.0f);
-    lighting->ambient.intensity = 1.5f;
-    this->AddToContext(lighting);
-
-
-
+    shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
+    this->AddToContext(emissive);
 }
 
 void GLScene::paintGL()
@@ -135,13 +137,14 @@ void GLScene::paintGL()
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
         shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
         shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
+        shared_ptr<GLUniform> eye = this->Get<GLUniform>("Eye");
         
         //Get Programs
         shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
         shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
 
         //Get Lights
-        shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+        shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
         //Bind MVP
         Matrices matrices;
@@ -149,18 +152,17 @@ void GLScene::paintGL()
         matrices.mvMatrix = camera1->View() *  model->Matrix();
         matrices.normalMatrix = glm::transpose(glm::inverse(camera1->View() * model->Matrix()));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-        glBufferSubData( GL_UNIFORM_BUFFER,
-                         0,
-                         sizeof(matrices),
-                         &matrices);
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
        
+        // Eye Position
+        glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera1->getCameraPosition(), 1.0f)));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
         // Bind Lights
         glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
-        glBufferSubData( GL_UNIFORM_BUFFER,
-                         0,
-                         sizeof(lighting->ambient),
-                         &lighting->ambient);
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(emissive->lights), &emissive->lights);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler
@@ -173,9 +175,9 @@ void GLScene::paintGL()
         glUseProgram(0);
         
         //Texture Program
-        glUseProgram(tprogram->getId());
-        model->Draw(tuniform, tprogram->getId());
-        glUseProgram(0);
+       // glUseProgram(tprogram->getId());
+       // model->Draw(tuniform, tprogram->getId());
+       // glUseProgram(0);
     }
           
 
@@ -213,7 +215,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
     
-    std::shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
     // Act on the key press event
     switch(event->key())
     {
@@ -233,10 +235,10 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             emit mainMenu(0);
             break;
        case(Qt::Key_1):
-            lighting->ambient.intensity +=0.05f;
+            emissive->lights.basic.ambientIntensity +=0.05f;
             break;
         case(Qt::Key_2):
-            lighting->ambient.intensity -=0.05f;
+            emissive->lights.basic.ambientIntensity -=0.05f;
             break;
     }
 }
@@ -259,6 +261,21 @@ void GLScene::keyReleaseEvent(QKeyEvent *event)
             keyHeld[11] = false;
             break;            
     }
+}
+
+void GLScene::wheelEvent(QWheelEvent *event)
+{
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+
+    if(event->delta() > 0) // RG
+    {
+        camera->moveCamera(GLCamera::CamDirection::Backward);
+    }
+    if(event->delta() < 0) // LF
+    {
+        camera->moveCamera(GLCamera::CamDirection::Forward);
+    }
+
 }
 
 void GLScene::updateKeys()

@@ -17,6 +17,7 @@
 #include <QContextMenuEvent>
 #include <QColor>
 #include <QObject>
+#include <QWheelEvent>
 
 typedef std::pair<std::string, std::shared_ptr<GLNode>> GLPair;
 
@@ -119,6 +120,10 @@ void GLViewport::mousePressEvent(QMouseEvent *)
 }
 
 void GLViewport::mouseMoveEvent(QMouseEvent *)
+{
+}
+
+void GLViewport::wheelEvent(QWheelEvent*)
 {
 }
 

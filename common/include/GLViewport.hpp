@@ -67,6 +67,7 @@ Q_OBJECT
     virtual void keyReleaseEvent(QKeyEvent*);
     virtual void mousePressEvent(QMouseEvent*);
     virtual void mouseMoveEvent(QMouseEvent*);
+    virtual void wheelEvent(QWheelEvent*);
 
     virtual void contextMenuEvent(QContextMenuEvent*);
 

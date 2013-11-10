@@ -42,7 +42,6 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
       
     this->block = glGetUniformBlockIndex(program, this->name.c_str());
     glUniformBlockBinding(program, block, this->location);
-    
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &numUniforms );
     GLint *indices = new GLint[numUniforms];
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );

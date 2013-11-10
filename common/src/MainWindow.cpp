@@ -13,6 +13,7 @@
 #include <QResizeEvent>
 #include <QPalette>
 #include <QColor>
+#include <QWheelEvent>
 
 
 MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, const char* name) :
@@ -226,7 +227,6 @@ void MainWindow::keyPressEvent(QKeyEvent* )
 
 void MainWindow::keyReleaseEvent(QKeyEvent* )
 {
-    
 }
 
 void MainWindow::mousePressEvent(QMouseEvent*)
@@ -234,6 +234,10 @@ void MainWindow::mousePressEvent(QMouseEvent*)
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent*)
+{
+}
+
+void MainWindow::wheelEvent(QWheelEvent*)
 {
 }
 

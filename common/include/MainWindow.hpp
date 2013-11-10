@@ -30,6 +30,7 @@ class MainWindow : public QMainWindow
     void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
     void mouseMoveEvent(QMouseEvent*);
+    void wheelEvent(QWheelEvent*);
 
     void changeEvent(QEvent*);
 

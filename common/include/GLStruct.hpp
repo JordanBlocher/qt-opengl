@@ -6,17 +6,18 @@
 #include <GL/glew.h>
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
+#include <vector>
 
 struct Material
 {
-    std::string name;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-    glm::vec3 emissive;
-    glm::vec3 transparent;
-    float transparency;
-    bool texture;
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+    glm::vec4 emissive;
+    glm::vec4 transparency;
+    float shininess;
+    float intensity;
+    float diffuseBlend;
 };
 
 struct Uniform
@@ -35,10 +36,39 @@ struct Player
     bool winner;
 };
 
-struct Light
+struct BaseLight
 {
-    float intensity;
-    glm::vec3 color;
+    glm::vec4 color;
+    glm::vec4 ambientIntensity;
+    glm::vec4 diffuseIntensity;
+};
+
+struct DirectionalLight
+{
+    glm::vec4 color;
+    glm::vec4 ambientIntensity;
+    glm::vec4 diffuseIntensity;
+    glm::vec4 direction;
+};
+
+struct PointLight
+{
+    glm::vec4 color;
+    glm::vec4 ambientIntensity;
+    glm::vec4 diffuseIntensity;
+    glm::vec4 position;
+    glm::vec4 constant;
+    glm::vec4 linear;
+    glm::vec4 exp;
+};
+
+struct SpotLight
+{
+    glm::vec4 color;
+    glm::vec4 ambientIntensity;
+    glm::vec4 diffuseIntensity;
+    glm::vec4 direction;
+    glm::vec4 cutoff;
 };
 
 struct Matrices
@@ -46,6 +76,12 @@ struct Matrices
     glm::mat4 mvpMatrix;
     glm::mat4 mvMatrix;
     glm::mat4 normalMatrix;
+};
+
+struct Lights
+{
+    DirectionalLight basic;
+
 };
 
 #endif

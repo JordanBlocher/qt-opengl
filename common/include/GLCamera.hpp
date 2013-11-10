@@ -19,7 +19,8 @@ public:
     void SetView(float radius, float azimuth, float zenith);
     void moveCamera(CamDirection direction);
     glm::vec3 getCameraPosition();
-
+   
+    bool Updated(bool = true);
     glm::mat4 Projection();
     glm::mat4 View();
 
@@ -31,6 +32,7 @@ protected:
     float focusDistance;
     float radius, azimuth, zenith;
     float eyeX,eyeY,eyeZ;
+    bool updated;
 
     glm::mat4 projection;
     glm::mat4 view;

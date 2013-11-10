@@ -9,10 +9,8 @@ class GLEmissive : public GLNode
  public:
     GLEmissive(const char*);
     ~GLEmissive();
-
-    Light ambient;
-    Light spot;
-    Light point;
+    
+    Lights lights;
 
 protected:
 };
