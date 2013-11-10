@@ -6,7 +6,9 @@ The lights are loaded as tiered structs into a single UBO. The eye position and 
 
 The setup provides for any number (<8) lights, currently the demo includes the 4 required.
 
-Issue: Textures are broken. Did not have time to debug, but the setup is all there for when it is chased down, right now it is just a diffuse blend, but assimp provides blend values for ambient and specular as well.
+Issues:
+Textures are broken. Did not have time to debug, but the setup is all there for when it is chased down, right now it is just a diffuse blend, but assimp provides blend values for ambient and specular as well.
+The lights do not know how big the model is. The best size will fit nicely into the blender grid, approx. 4x4 - 8x8.
 
 Controls
 ---------------------
