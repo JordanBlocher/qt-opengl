@@ -12,6 +12,9 @@
 *.la
 *.a
 
+#Swap files
+*.swp
+
 */bin/assignment*
 */temp
 class_files
