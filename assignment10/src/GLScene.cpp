@@ -162,12 +162,15 @@ void GLScene::paintGL()
 
         // Bind Lights
         glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
-        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(emissive->lights), &emissive->lights);
+        size_t baseSize = sizeof(emissive->lights.basic);
+        size_t ptSize = sizeof(emissive->lights.point);
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, sizeof(emissive->lights.point[0]), &emissive->lights.point[0]);
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler
         shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
-
 
         //Colors Program
         glUseProgram(cprogram->getId());
@@ -235,10 +238,10 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             emit mainMenu(0);
             break;
        case(Qt::Key_1):
-            emissive->lights.basic.ambientIntensity +=0.05f;
+            emissive->lights.basic.base.ambientIntensity +=0.05f;
             break;
         case(Qt::Key_2):
-            emissive->lights.basic.ambientIntensity -=0.05f;
+            emissive->lights.basic.base.ambientIntensity -=0.05f;
             break;
     }
 }

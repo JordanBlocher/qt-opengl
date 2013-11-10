@@ -248,11 +248,8 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         mat.emissive = glm::vec4(emissive.r, emissive.g, emissive.b, 1.0f);
         mat.transparency = glm::vec4(transparent.r, transparent.g, transparent.b, 1.0f);
         mat.shininess = shininess;
-        mat.intensity = intensity;
+        mat.intensity = 1.0f + intensity;
         mat.diffuseBlend = diffuseBlend;
-
-        std::cout<<"shininess "<< shininess<<std::endl;
-        std::cout<<"intensity "<< intensity<<std::endl;
 
         //int numTextures = material.GetTextureCount(aiTextureType_DIFFUSE);
 

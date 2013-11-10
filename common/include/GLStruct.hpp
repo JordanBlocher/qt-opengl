@@ -39,36 +39,26 @@ struct Player
 struct BaseLight
 {
     glm::vec4 color;
-    glm::vec4 ambientIntensity;
-    glm::vec4 diffuseIntensity;
+    float ambientIntensity;
+    float diffuseIntensity;
 };
 
 struct DirectionalLight
 {
-    glm::vec4 color;
-    glm::vec4 ambientIntensity;
-    glm::vec4 diffuseIntensity;
     glm::vec4 direction;
+    BaseLight base;
 };
 
 struct PointLight
 {
-    glm::vec4 color;
-    glm::vec4 ambientIntensity;
-    glm::vec4 diffuseIntensity;
     glm::vec4 position;
-    glm::vec4 constant;
-    glm::vec4 linear;
-    glm::vec4 exp;
+    BaseLight base;
 };
 
 struct SpotLight
 {
-    glm::vec4 color;
-    glm::vec4 ambientIntensity;
-    glm::vec4 diffuseIntensity;
     glm::vec4 direction;
-    glm::vec4 cutoff;
+    PointLight point;
 };
 
 struct Matrices
@@ -81,6 +71,8 @@ struct Matrices
 struct Lights
 {
     DirectionalLight basic;
+    std::vector<PointLight> point;
+    std::vector<SpotLight> spot;
 
 };
 
