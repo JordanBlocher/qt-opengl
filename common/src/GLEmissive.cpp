@@ -3,10 +3,6 @@
 
 GLEmissive::GLEmissive(const char* name) : GLNode(name)
 {
-    this->lights.toggle.resize(2);
-    this->lights.toggle[0] = true;
-    this->lights.toggle[1] = true;
-
     //Basic ambient/diffuse
     BaseLight base = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                       0.1f,
@@ -18,7 +14,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     //Pointlights
     this->lights.point.resize(1);
     BaseLight bpt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-                     0.0f,
+                     0.1f,
                      0.7f};
     PointLight pt0 = {glm::vec4(3.0f, 1.0f, 2.0f, 1.0f),
                      bpt0 };
@@ -27,8 +23,8 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     //Spotlights
     this->lights.spot.resize(1);
     BaseLight bspt0 = {glm::vec4(1.0f, 0.0f, 1.0f, 1.0f),
-                     0.0f,
-                     0.2f};
+                     0.3f,
+                     0.3f};
     PointLight pspt0 = {glm::vec4(2.0f, 6.0f, 0.0f, 1.0f),
                      bspt0};
     SpotLight spt0 = {glm::vec4(-0.33, -1.0f, 0.0f, 1.0f),

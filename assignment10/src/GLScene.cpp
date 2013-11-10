@@ -46,6 +46,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
+    keyHeld[4] = keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
+
     // Start the timer
     this->time = std::chrono::high_resolution_clock::now();
     GLViewport::timer.start();  
@@ -155,15 +157,17 @@ void GLScene::paintGL()
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
        
-        // Eye Position
+        // Eye Position & toggle
         glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera1->getCameraPosition(), 1.0f)));
+        glBufferSubData( GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(glm::vec4(keyHeld[4], keyHeld[5], keyHeld[6], keyHeld[7])));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // Bind Lights
         glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
         size_t baseSize = sizeof(emissive->lights.basic);
         size_t ptSize = sizeof(emissive->lights.point);
+        size_t sptSize = sizeof(emissive->lights.spot);
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, sizeof(emissive->lights.point[0]), &emissive->lights.point[0]);
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
@@ -178,9 +182,9 @@ void GLScene::paintGL()
         glUseProgram(0);
         
         //Texture Program
-       // glUseProgram(tprogram->getId());
-       // model->Draw(tuniform, tprogram->getId());
-       // glUseProgram(0);
+        glUseProgram(tprogram->getId());
+        model->Draw(tuniform, tprogram->getId());
+        glUseProgram(0);
     }
           
 
@@ -221,7 +225,19 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
     // Act on the key press event
     switch(event->key())
-    {
+    {   
+        case(Qt::Key_1):
+            keyHeld[4] = !keyHeld[4];
+            break;
+        case(Qt::Key_2):
+            keyHeld[5] = !keyHeld[5];
+            break;
+        case(Qt::Key_3):
+            keyHeld[6] = !keyHeld[6];
+            break;
+        case(Qt::Key_4):
+            keyHeld[7] = !keyHeld[7];
+            break;
         case (Qt::Key_Right):
             keyHeld[8] = true;
             break;    
@@ -237,16 +253,16 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case (Qt::Key_Escape):
             emit mainMenu(0);
             break;
-        case(Qt::Key_1):
+         case(Qt::Key_W):
             emissive->lights.basic.base.ambientIntensity +=0.05f;
             break;
-        case(Qt::Key_2):
+        case(Qt::Key_S):
             emissive->lights.basic.base.ambientIntensity -=0.05f;
             break;
-        case(Qt::Key_3):
+        case(Qt::Key_A):
             emissive->lights.basic.base.diffuseIntensity +=0.05f;
             break;
-        case(Qt::Key_4):
+        case(Qt::Key_D):
             emissive->lights.basic.base.diffuseIntensity -=0.05f;
             break;
 

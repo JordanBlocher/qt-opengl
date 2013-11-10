@@ -36,12 +36,12 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
     GLsizei dataSize = 0;
     GLsizeiptr uniformSize;
     Uniform unif;
-    this->location = location;
+    this->location = UINT_MAX;
     GLint numUniforms;
     GLuint index;
       
     this->block = glGetUniformBlockIndex(program, this->name.c_str());
-    glUniformBlockBinding(program, block, this->location);
+    glUniformBlockBinding(program, block, location);
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &numUniforms );
     GLint *indices = new GLint[numUniforms];
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
@@ -86,8 +86,8 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
             return false;
     }
 
-    ubo.SetBlockIndex(this->location); 
-    glBindBufferBase(ubo.Type(), this->location, ubo.Buffer());
+    ubo.SetBlockIndex(location); 
+    glBindBufferBase(ubo.Type(), location, ubo.Buffer());
     
     this->id = ubo.Buffer();
 

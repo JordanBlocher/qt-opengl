@@ -3,95 +3,86 @@
 const int MAX_POINT_LIGHTS = 4;
 const int MAX_SPOT_LIGHTS = 4;
 
-layout(location=0) in vec3 f_position;
-layout(location=1) in vec3 f_normal;
-layout(location=2) in vec2 f_uv;
+in vec3 f_position;
+in vec3 f_normal;
+in vec2 f_uv;
 
-uniform GColors
+layout(std140) uniform GColors
 {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    vec3 emissive;
-    vec3 transparency;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 emissive;
+    vec4 transparency;
     float shininess;
     float intensity;
     float diffuseBlend;
 }colors;
 
+
 struct BaseLight
 {
-    vec3 color;
+    vec4 color;
     float ambientIntensity;
     float diffuseIntensity;
 };
     
 struct DirectionalLight 
 {
-    BaseLight basic;
-    vec3 direction;
-};
-
-struct Attenuation
-{
-    float constant;
-    float linear;
-    float exp;
+    vec4 direction;
+    BaseLight base;
 };
 
 struct PointLight 
 {
-    BaseLight basic;
-    Attenuation attn;
-    vec3 position;
+    vec4 position;
+    BaseLight base;
 };
 
 struct SpotLight 
 {
+    vec4 direction;
     PointLight point;
-    vec3 direction;
-    float cutoff;
 };
 
-
-uniform GLights
+layout(std140) uniform GLights
 {
-    int numPt;
-    int numSpt;
-    DirectionalLight dir;
-    PointLight pt[MAX_POINT_LIGHTS];
-    SpotLight spt[MAX_SPOT_LIGHTS];
- 
+    DirectionalLight basic;
+    PointLight point[1];
+    SpotLight spot[1];
+
 }light;
 
-uniform Eye
+layout(std140) uniform Eye
 {
-    vec3 position;
+    vec4 position;
+    vec4 toggle;
 }eye;
+
 
 uniform sampler2D diffuseTexture;
 
-out vec4 f_out;
-
-vec4 LightBasic(BaseLight emit, vec3 direction, vec3 normal)
+vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
 {
     vec4 ambient = vec4(0, 0, 0, 0); 
     vec4 diffuse = vec4(0, 0, 0, 0);
-    vec4 specular = vec4(0, 0, 0, 0); 
+    vec4 specular = vec4(0, 0, 0, 0);
 
-    ambient = vec4(emit.color, 1.0) * emit.ambientIntensity; 
+    vec4 tex = texture2D(diffuseTexture, f_uv.xy);
 
-    float diffuseFactor = dot(normalize(f_normal), -direction);
+    ambient = source.color * colors.ambient * source.ambientIntensity; 
+
+    float diffuseFactor = dot(normal, -direction.xyz);
     if (diffuseFactor > 0) 
     {
-        diffuse = vec4(emit.color, 1.0) * emit.diffuseIntensity * diffuseFactor;
-        vec3 v_toEye = normalize(eye.position - f_position);
-        vec3 l_reflect = normalize(reflect(direction, normal));
+        diffuse = source.color * mix(colors.diffuse, tex, colors.diffuseBlend) * source.diffuseIntensity * diffuseFactor;
+        vec3 v_toEye = normalize(eye.position.xyz - f_position);
+        vec3 l_reflect = normalize(reflect(direction.xyz, normal));
         float specularFactor = dot(v_toEye, l_reflect);
-        specularFactor = pow(specularFactor, colors.intensity);
+        specularFactor = pow(specularFactor, colors.shininess);
         if(specularFactor > 0)
         {
-            specular = vec4(emit.color, 1.0) * colors.shininess * specularFactor;
+            specular = source.color * colors.specular * colors.intensity * specularFactor;
         }
     }
 
@@ -100,28 +91,28 @@ vec4 LightBasic(BaseLight emit, vec3 direction, vec3 normal)
 
 vec4 LightDir(vec3 normal)
 {
-    return LightBasic(light.dir.basic, light.dir.direction, normal);
+    return LightBasic(light.basic.base, light.basic.direction, normal);
 }
 
 vec4 LightPt(PointLight pt, vec3 normal)
 {
-    vec3 dir = f_position - pt.position;
+    vec3 dir = f_position - pt.position.xyz;
     float l = length(dir);
     dir = normalize(dir);
 
-    vec4 color = LightBasic(pt.basic, dir, normal);
-    float attn = pt.attn.constant + pt.attn.linear * l + pt.attn.exp * l * l;
-    return color / attn;
+    vec4 color = LightBasic(pt.base, vec4(dir, 1.0), normal);
+
+    return color;
 }
 
 vec4 LightSpt(SpotLight sp, vec3 normal)
 {
-    vec3 l_toPix = normalize(f_position - sp.point.position);
-    float spotFactor = dot(l_toPix, sp.direction);
-    if(spotFactor > sp.cutoff)
+    vec3 l_toPix = normalize(f_position - sp.point.position.xyz);
+    float spotFactor = dot(l_toPix, sp.direction.xyz);
+    if( spotFactor > 0)
     {
-        vec4 color = LightPt(sp.point, normal);
-        return color * (1.0 - (1.0 - spotFactor) * 1.0/(1.0 - sp.cutoff));
+        vec4 color = LightPt(sp.point, normal) * spotFactor;
+        return vec4(color.xyz, 1.0);
     }
     else
     {
@@ -129,16 +120,21 @@ vec4 LightSpt(SpotLight sp, vec3 normal)
     }
 }
 
+out vec4 f_out;
+
 void main(void)
 {
     vec3 normal = normalize(f_normal);
-    vec4 totalLight = LightDir(normal);
 
-    for ( int i = 0; i < light.numPt; i++ )
-         totalLight += LightPt(light.pt[i], normal);
-  //  for ( int i = 0; i < light.numSpt; i++ )
-  //       totalLight += LightSpt(light.spt[i], normal);
+    vec4 totalLight = vec4(0, 0, 0, 0);
 
-    f_out =  texture2D(diffuseTexture, f_uv.xy) * totalLight;
+    if( eye.toggle.y == 1.0)
+        totalLight += LightDir(normal);
+    if( eye.toggle.z == 1.0)
+         totalLight += LightPt(light.point[0], normal);
+    if( eye.toggle.w == 1.0)
+         totalLight += LightSpt(light.spot[0], normal);
+
+    f_out = totalLight;
 }
 

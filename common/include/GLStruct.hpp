@@ -73,7 +73,6 @@ struct Lights
     DirectionalLight basic;
     std::vector<PointLight> point;
     std::vector<SpotLight> spot;
-    std::vector<bool> toggle;
 
 };
 

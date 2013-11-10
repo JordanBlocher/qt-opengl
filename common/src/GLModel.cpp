@@ -247,8 +247,8 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         mat.specular = glm::vec4(specular.r, specular.g, specular.b, 1.0f);
         mat.emissive = glm::vec4(emissive.r, emissive.g, emissive.b, 1.0f);
         mat.transparency = glm::vec4(transparent.r, transparent.g, transparent.b, 1.0f);
-        mat.shininess = shininess;
-        mat.intensity = 5.0f + intensity;
+        mat.shininess = shininess / 5.0f;
+        mat.intensity = 1.0f + intensity;
         mat.diffuseBlend = diffuseBlend;
 
         //int numTextures = material.GetTextureCount(aiTextureType_DIFFUSE);
@@ -368,18 +368,17 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
     for(size_t i=0; i< this->faces->size(); i++)
     {   
 
-        texture = this->textures->at(i).first;
+        texture = this->textures->at(this->mtlIndices.at(i)).first;
         if(texture)
+            this->textures->at(this->mtlIndices.at(i)).second.Bind(GL_TEXTURE0);
+        if(color)
         {
-            glBindBuffer(GL_UNIFORM_BUFFER, fragment->getLocation());
-        }
-        glBufferSubData(GL_UNIFORM_BUFFER,
+            glBufferSubData(GL_UNIFORM_BUFFER,
                         0,
                         sizeof(Material),
                         &(this->materials->at(this->mtlIndices.at(i)).second) );
-        if( texture )
-            this->textures->at(this->mtlIndices.at(i)).second.Bind(GL_TEXTURE0);
-       
+        }
+
         if( (color && !texture) || (!color && texture) )
         {
             glDrawElementsBaseVertex(GL_TRIANGLES, 
