@@ -122,10 +122,10 @@ out vec4 colout;
 void main(void)
 {
     vec3 normal = normalize(f_normal);
-    vec4 totalLight = vec4(0, 0, 0, 1.0);//LightDir(normal);
+    vec4 totalLight = LightDir(normal);
 
-   // for ( int i = 0; i < 1; i++ )
-   //      totalLight += LightPt(light.point[i], normal);
+    for ( int i = 0; i < 1; i++ )
+         totalLight += LightPt(light.point[i], normal);
 
     for ( int i = 0; i < 1; i++ )
          totalLight += LightSpt(light.spot[i], normal);
