@@ -113,7 +113,7 @@ vec4 LightSpt(SpotLight sp, vec3 normal)
     }
     else
     {
-        return vec4(1.0, 0, 0, 1.0);
+        return vec4(0, 0, 0, 0);
     }
 }
 
@@ -127,8 +127,8 @@ void main(void)
     for ( int i = 0; i < 1; i++ )
          totalLight += LightPt(light.point[i], normal);
 
-    for ( int i = 0; i < 1; i++ )
-         totalLight += LightSpt(light.spot[i], normal);
+    //for ( int i = 0; i < 1; i++ )
+       //  totalLight += LightSpt(light.spot[i], normal);
 
   //  if(light.point[0].base.diffuseIntensity == 0.95)
     colout = vec4(totalLight.xyz, 1.0);

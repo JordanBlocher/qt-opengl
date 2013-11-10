@@ -237,12 +237,37 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case (Qt::Key_Escape):
             emit mainMenu(0);
             break;
-       case(Qt::Key_1):
+        case(Qt::Key_1):
             emissive->lights.basic.base.ambientIntensity +=0.05f;
             break;
         case(Qt::Key_2):
             emissive->lights.basic.base.ambientIntensity -=0.05f;
             break;
+        case(Qt::Key_3):
+            if(emissive->lights.point[0].base.ambientIntensity == 1.0)
+            {
+                emissive->lights.point[0].base.ambientIntensity = 0.0;
+                emissive->lights.point[0].base.diffuseIntensity = 0.0;
+            }
+            else
+            {
+                emissive->lights.point[0].base.ambientIntensity = 1.0;
+                emissive->lights.point[0].base.diffuseIntensity = 1.0;
+            }
+            break;
+        case(Qt::Key_4):
+            if(emissive->lights.point[0].base.ambientIntensity == 1.0)
+            {
+                emissive->lights.point[0].base.ambientIntensity = 0.0;
+                emissive->lights.point[0].base.diffuseIntensity = 0.0;
+            }
+            else
+            {
+                emissive->lights.point[0].base.ambientIntensity = 1.0;
+                emissive->lights.point[0].base.diffuseIntensity = 1.0;
+            }
+            break;
+
     }
 }
 
