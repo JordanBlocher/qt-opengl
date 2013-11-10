@@ -149,8 +149,8 @@ void GLScene::paintGL()
         //Bind MVP
         Matrices matrices;
         matrices.mvpMatrix = vp * model->Matrix();
-        matrices.mvMatrix = camera1->View() *  model->Matrix();
-        matrices.normalMatrix = glm::transpose(glm::inverse(camera1->View() * model->Matrix()));
+        matrices.mvMatrix = model->Matrix();
+        matrices.normalMatrix = glm::transpose(glm::inverse(model->Matrix()));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -244,28 +244,10 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             emissive->lights.basic.base.ambientIntensity -=0.05f;
             break;
         case(Qt::Key_3):
-            if(emissive->lights.point[0].base.ambientIntensity == 1.0)
-            {
-                emissive->lights.point[0].base.ambientIntensity = 0.0;
-                emissive->lights.point[0].base.diffuseIntensity = 0.0;
-            }
-            else
-            {
-                emissive->lights.point[0].base.ambientIntensity = 1.0;
-                emissive->lights.point[0].base.diffuseIntensity = 1.0;
-            }
+            emissive->lights.basic.base.diffuseIntensity +=0.05f;
             break;
         case(Qt::Key_4):
-            if(emissive->lights.point[0].base.ambientIntensity == 1.0)
-            {
-                emissive->lights.point[0].base.ambientIntensity = 0.0;
-                emissive->lights.point[0].base.diffuseIntensity = 0.0;
-            }
-            else
-            {
-                emissive->lights.point[0].base.ambientIntensity = 1.0;
-                emissive->lights.point[0].base.diffuseIntensity = 1.0;
-            }
+            emissive->lights.basic.base.diffuseIntensity -=0.05f;
             break;
 
     }

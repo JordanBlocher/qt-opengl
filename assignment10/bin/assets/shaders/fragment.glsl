@@ -49,6 +49,7 @@ layout(std140) uniform GLights
     DirectionalLight basic;
     PointLight point[1];
     SpotLight spot[1];
+    bool toggle[2];
 
 }light;
 
@@ -83,7 +84,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         }
     }
 
-    return vec4(( diffuse + ambient + specular).xyz, 1.0);
+    return (ambient + diffuse + specular);
 }
 
 vec4 LightDir(vec3 normal)
@@ -106,10 +107,10 @@ vec4 LightSpt(SpotLight sp, vec3 normal)
 {
     vec3 l_toPix = normalize(f_position - sp.point.position.xyz);
     float spotFactor = dot(l_toPix, sp.direction.xyz);
-    if( spotFactor > 2)
+    if( spotFactor > 0)
     {
         vec4 color = LightPt(sp.point, normal) * spotFactor;
-        return vec4(color.xyz, 1.0);
+        return vec4(l_toPix, 1.0);//vec4(color.xyz, 1.0);
     }
     else
     {
@@ -122,17 +123,17 @@ out vec4 colout;
 void main(void)
 {
     vec3 normal = normalize(f_normal);
-    vec4 totalLight = LightDir(normal);
+    vec4 totalLight = vec4(0, 0, 0, 0);//LightDir(normal);
+
+   // for ( int i = 0; i < 1; i++ )
+   //      totalLight += LightPt(light.point[i], normal);
 
     for ( int i = 0; i < 1; i++ )
-         totalLight += LightPt(light.point[i], normal);
+         totalLight += LightSpt(light.spot[i], normal);
 
-    //for ( int i = 0; i < 1; i++ )
-       //  totalLight += LightSpt(light.spot[i], normal);
-
-  //  if(light.point[0].base.diffuseIntensity == 0.95)
+   // if(light.basic.base.ambientIntensity == 0.1)
     colout = vec4(totalLight.xyz, 1.0);
-   // else 
+  //  else 
    // colout = vec4(1.0, 1.0, 1.0, 1.0);
 }
 
