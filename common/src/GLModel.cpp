@@ -255,9 +255,6 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
 
         aiString texPath;
         this->textures->resize(this->textures->size() + 1 + 1);
-        GLTexture white("DefaultTexture", GL_TEXTURE_2D, "./assets/textures/white.png");
-        white.Load();
-        this->textures->at(i) = std::pair<bool, GLTexture>(false, white);
 
         if ( material.Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE,0), texPath) == AI_SUCCESS )
         {
@@ -361,7 +358,7 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
 
     if(color)
     {
-        glBindBuffer(GL_UNIFORM_BUFFER, fragment->getId());
+        glBindBuffer(GL_UNIFORM_BUFFER, fragment->getLocation());
     }
 
     //Draw Model 

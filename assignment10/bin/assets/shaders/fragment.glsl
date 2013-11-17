@@ -84,7 +84,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         }
     }
 
-    return (diffuse + specular);
+    return (diffuse + specular + ambient);
 }
 
 vec4 LightDir(vec3 normal)
@@ -127,8 +127,13 @@ void main(void)
 
     vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity; 
 
+    vec4 diffuse = light.basic.base.color * colors.diffuse * light.basic.base.diffuseIntensity;
+ 
     if( eye.toggle.x == 1.0)
+    {
         totalLight += ambient;
+        totalLight += diffuse;
+    }
     if( eye.toggle.y == 1.0)
         totalLight += LightDir(normal);
     if( eye.toggle.z == 1.0)

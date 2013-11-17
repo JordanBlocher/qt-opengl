@@ -104,7 +104,7 @@ void GLScene::initializeGL()
     shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
     this->AddToContext(texture_uniform);
 
-    //Set UBOs t Share
+    //Set UBOs to Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(lights_uniform);
     cprogram->SetUBO(frag_uniform);
@@ -112,6 +112,7 @@ void GLScene::initializeGL()
     tprogram->SetUBO(vertex_uniform);
     tprogram->SetUBO(lights_uniform);
     tprogram->SetUBO(eye_uniform);
+    tprogram->SetUBO(frag_uniform);
 
     //Set Lighting
     shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
@@ -176,6 +177,13 @@ void GLScene::paintGL()
         //Get Sampler
         shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
+        cout<< "cposition" <<glGetAttribLocation(cprogram->getId(), "v_position") <<endl;
+        cout<< "cnormal" <<glGetAttribLocation(cprogram->getId(), "v_normal") <<endl<<endl;
+    
+        cout<< "tposition" <<glGetAttribLocation(tprogram->getId(), "v_position") <<endl;
+        cout<< "tnormal" <<glGetAttribLocation(tprogram->getId(), "v_normal") <<endl;
+        cout<< "tuv" <<glGetAttribLocation(tprogram->getId(), "v_uv") <<endl<<endl;
+
         //Colors Program
         glUseProgram(cprogram->getId());
         model->Draw(cuniform, cprogram->getId());
@@ -185,6 +193,7 @@ void GLScene::paintGL()
         glUseProgram(tprogram->getId());
         model->Draw(tuniform, tprogram->getId());
         glUseProgram(0);
+
     }
           
 

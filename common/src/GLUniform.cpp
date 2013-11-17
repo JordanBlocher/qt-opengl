@@ -36,7 +36,7 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
     GLsizei dataSize = 0;
     GLsizeiptr uniformSize;
     Uniform unif;
-    this->location = UINT_MAX;
+    this->location = location;
     GLint numUniforms;
     GLuint index;
       
