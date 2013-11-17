@@ -11,8 +11,6 @@ layout(std140) uniform GColors
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-    vec4 emissive;
-    vec4 transparency;
     float shininess;
     float intensity;
     float diffuseBlend;
@@ -67,8 +65,9 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
     vec4 diffuse = vec4(0, 0, 0, 0);
     vec4 specular = vec4(0, 0, 0, 0);
     vec4 ambient = vec4(0, 0, 0, 0);
+    float blend = colors.diffuseBlend;
 
-    ambient = source.color * colors.ambient * source.ambientIntensity; 
+    ambient = source.color * colors.ambient * source.ambientIntensity * (blend + 1.0) / (blend + 1.00000000001); 
 
     float diffuseFactor = dot(normal, -direction.xyz);
     if (diffuseFactor > 0) 

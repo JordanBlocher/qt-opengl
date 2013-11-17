@@ -2,7 +2,7 @@
 layout(location=0) in vec3 v_position;
 layout(location=1) in vec3 v_normal;
 
-uniform GMatrices
+layout(std140) uniform GMatrices
 {
     mat4 mvpMatrix;
     mat4 mvMatrix;

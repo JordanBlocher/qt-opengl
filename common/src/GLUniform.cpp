@@ -74,12 +74,10 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
 
         dataSize += size*uniformSize;
 
-        std::cout<<"dataSize : "<<dataSize<<std::endl;
         unif = {&uname[0], static_cast<GLint>(size*uniformSize), index, offset};
 		this->uniforms[&uname[0]] = unif;
 
         std::cout << "Uniform <" << unif.name << "> (offset): " << unif.offset <<", (size): " <<unif.size<< ", (index): "<<unif.index<< std::endl;
-        std::cout<<"dataSize : "<<dataSize<<std::endl;
     }
 
     GLBufferObject ubo(name.c_str(), dataSize, (GLuint)1, GL_UNIFORM_BUFFER, draw); 

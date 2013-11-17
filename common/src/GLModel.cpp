@@ -223,8 +223,6 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         aiColor3D ambient(0.0f, 0.0f, 0.0f);
         aiColor3D diffuse(0.0f, 0.0f, 0.0f);
         aiColor3D specular(0.0f, 0.0f, 0.0f);
-        aiColor3D emissive(0.0f, 0.0f, 0.0f);
-        aiColor3D transparent(0.0f, 0.0f, 0.0f);
         float shininess = 10.0f;
         float intensity = 1.0f;
         float diffuseBlend = 1.0f;
@@ -233,8 +231,6 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         material.Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
         material.Get(AI_MATKEY_COLOR_AMBIENT, ambient);
         material.Get(AI_MATKEY_COLOR_SPECULAR, specular); 
-        material.Get(AI_MATKEY_COLOR_EMISSIVE, emissive);
-        material.Get(AI_MATKEY_COLOR_TRANSPARENT, transparent); 
         material.Get(AI_MATKEY_SHININESS, shininess);
         material.Get(AI_MATKEY_TEXBLEND_DIFFUSE(0), diffuseBlend);
         material.Get(AI_MATKEY_SHININESS_STRENGTH, intensity);
@@ -245,8 +241,6 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         mat.diffuse = glm::vec4(diffuse.r, diffuse.g, diffuse.b, 1.0f);
         mat.ambient = glm::vec4(ambient.r, ambient.g, ambient.b, 1.0f);
         mat.specular = glm::vec4(specular.r, specular.g, specular.b, 1.0f);
-        mat.emissive = glm::vec4(emissive.r, emissive.g, emissive.b, 1.0f);
-        mat.transparency = glm::vec4(transparent.r, transparent.g, transparent.b, 1.0f);
         mat.shininess = shininess / 5.0f;
         mat.intensity = 1.0f + intensity;
         mat.diffuseBlend = diffuseBlend;
