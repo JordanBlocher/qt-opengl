@@ -177,13 +177,6 @@ void GLScene::paintGL()
         //Get Sampler
         shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
-        cout<< "cposition" <<glGetAttribLocation(cprogram->getId(), "v_position") <<endl;
-        cout<< "cnormal" <<glGetAttribLocation(cprogram->getId(), "v_normal") <<endl<<endl;
-    
-        cout<< "tposition" <<glGetAttribLocation(tprogram->getId(), "v_position") <<endl;
-        cout<< "tnormal" <<glGetAttribLocation(tprogram->getId(), "v_normal") <<endl;
-        cout<< "tuv" <<glGetAttribLocation(tprogram->getId(), "v_uv") <<endl<<endl;
-
         //Colors Program
         glUseProgram(cprogram->getId());
         model->Draw(cuniform, cprogram->getId());

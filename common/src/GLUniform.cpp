@@ -69,9 +69,12 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
             uniformSize = sizeof(int);
         else if(type == GL_FLOAT)
             uniformSize = sizeof(float);
+        else 
+            uniformSize = 0.0f;
 
-        dataSize += static_cast<GLint>(size*uniformSize);
+        dataSize += size*uniformSize;
 
+        std::cout<<"dataSize : "<<dataSize<<std::endl;
         unif = {&uname[0], static_cast<GLint>(size*uniformSize), index, offset};
 		this->uniforms[&uname[0]] = unif;
 

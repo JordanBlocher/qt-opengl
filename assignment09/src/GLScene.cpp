@@ -55,6 +55,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
 
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
+  
+    keyHeld[12] = keyHeld[13] = keyHeld[14] = keyHeld[15] = true; 
 
     // Setup audio output for bgm
     bgmOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
@@ -88,7 +90,7 @@ void GLScene::playGame(int numPlayers)
     // Play bgm, if it is not already playing
     if(bgmObject->state() == Phonon::StoppedState)
     {
-       emit playBgm(); 
+        emit playBgm(); 
     }    
 
     // Play round start sound
@@ -104,11 +106,11 @@ void GLScene::playGame(int numPlayers)
     this->player1Score = 0;
     this->player2Score = 0;
 
-        // Make sure that this is the camera we want (wont work if this is our second time)
-        if(!this->AddToContext(camera2))
-        {
-            camera2 = this->Get<GLCamera>("camera2");
-        }
+    // Make sure that this is the camera we want (wont work if this is our second time)
+    if(!this->AddToContext(camera2))
+    {
+        camera2 = this->Get<GLCamera>("camera2");
+    }
 
 
     if(numPlayers > 1)
@@ -177,14 +179,14 @@ void GLScene::changePaddle(int i)
 
 void GLScene::initializeGL()
 {
-   GLViewport::initializeGL();
+    GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    
+
     this->initGame();
     this->addStaticBodies();
-       /****** Deep GPU Stuff ******/
+    /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
@@ -194,7 +196,7 @@ void GLScene::initializeGL()
     //Programs
     shared_ptr<GLProgram> cprogram(new GLProgram("color_program"));
     shared_ptr<GLProgram> tprogram(new GLProgram("texture_program"));
-    
+
     //Add Shaders
     cprogram->AddShader(vertex); 
     cprogram->AddShader(fragment); 
@@ -206,12 +208,12 @@ void GLScene::initializeGL()
         this->AddToContext( cprogram );
     if( this->AddProgram(tprogram) )
         this->AddToContext( tprogram );
-    
+
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
     vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
-    
+
     std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
     frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
@@ -220,22 +222,27 @@ void GLScene::initializeGL()
     lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
     this->AddToContext(lights_uniform);
 
+    shared_ptr<GLUniform> eye_uniform(new GLUniform("Eye"));
+    eye_uniform->CreateUBO(cprogram->getId(), 4, GL_STREAM_DRAW);
+    this->AddToContext(eye_uniform);
+
     //Add Sampler
     std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
     this->AddToContext(texture_uniform);
 
-    //Set UBOs t Share
+     //Set UBOs t Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(lights_uniform);
     cprogram->SetUBO(frag_uniform);
+    cprogram->SetUBO(eye_uniform);
     tprogram->SetUBO(vertex_uniform);
     tprogram->SetUBO(lights_uniform);
+    tprogram->SetUBO(eye_uniform);
+    tprogram->SetUBO(frag_uniform);
 
     //Set Lighting
-    std::shared_ptr<GLEmissive> lighting(new GLEmissive("lights"));
-    lighting->ambient.color = glm::vec3(1.0f, 1.0f, 1.0f);
-    lighting->ambient.intensity = 1.5f;
-    this->AddToContext(lighting);
+    std::shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
+    this->AddToContext(emissive);
 
 }
 
@@ -246,10 +253,10 @@ void GLScene::paintGL()
     this->background.getRgbF(&r, &g, &b);
     glClearColor(r, g, b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
+
     for(int i=0; i<numPlayers; i++)
     {
-       //Get matrices
+        //Get matrices
         shared_ptr<GLCamera> camera = this->Get<GLCamera>(string("camera" + to_string(i+1)).c_str() );
         glm::mat4 vp = camera->Projection() * camera->View();
 
@@ -259,53 +266,52 @@ void GLScene::paintGL()
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
         shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
         shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
-        
+        shared_ptr<GLUniform> eye = this->Get<GLUniform>("Eye");
+
         //Get Programs
         shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
         shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
-
         //Get Lights
-        shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+        shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
         // Iterate and draw over all of the models
         vector<int> indices = {0, puckIndex, paddleIndex, paddleIndex+1};
         for(int i=0; i<indices.size(); i++)
         {
-           int index = indices[i];
-           //Choose Model
-           std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->getPhysicsModel();
-           std::shared_ptr<GLModel> gmodel = entities->at(index)->getGraphicsModel();
-           glm::mat4 transform;
-           transform =  pmodel->GetTransform();
+            int index = indices[i];
+            //Choose Model
+            std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->getPhysicsModel();
+            std::shared_ptr<GLModel> gmodel = entities->at(index)->getGraphicsModel();
+            glm::mat4 transform;
+            transform =  pmodel->GetTransform();
 
-           //Bind Uniform Matrices
-           Matrices matrices;
-           matrices.mvpMatrix = vp * transform * gmodel->Matrix();
-           matrices.mvMatrix = camera->View() * transform * gmodel->Matrix();
-           matrices.normalMatrix = glm::transpose(glm::inverse(camera->View() * transform * gmodel->Matrix()));
-           glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(matrices),
-                            &matrices);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
-           
-           // Bind Lights
-           glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(lighting->ambient),
-                            &lighting->ambient);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            //Bind MVP
+            Matrices matrices;
+            matrices.mvpMatrix = vp * transform * gmodel->Matrix();
+            matrices.mvMatrix = transform * gmodel->Matrix();
+            matrices.normalMatrix = glm::transpose(glm::inverse(transform * gmodel->Matrix()));
+            glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-           //Bind Sampler
-           shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
-           glBindBuffer(GL_UNIFORM_BUFFER, tuniform->getLocation());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(lighting->ambient),
-                            &lighting->ambient);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            // Eye Position & toggle
+            glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera->getCameraPosition(), 1.0f)));
+            glBufferSubData( GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(glm::vec4(keyHeld[12], keyHeld[13], keyHeld[14], keyHeld[15])));
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            // Bind Lights
+            glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
+            size_t baseSize = sizeof(emissive->lights.basic);
+            size_t ptSize = sizeof(emissive->lights.point);
+            size_t sptSize = sizeof(emissive->lights.spot);
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, sizeof(emissive->lights.point[0]), &emissive->lights.point[0]);
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            //Get Sampler
+            shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
            //Colors Program
            glUseProgram(cprogram->getId());
@@ -594,11 +600,18 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 emit endGame();
                 break;
             case(Qt::Key_1):
-                lighting->ambient.intensity +=0.05f;
+                keyHeld[12] = !keyHeld[12];
                 break;
             case(Qt::Key_2):
-                lighting->ambient.intensity -=0.05f;
+                keyHeld[13] = !keyHeld[13];
                 break;
+            case(Qt::Key_3):
+                keyHeld[14] = !keyHeld[14];
+                break;
+            case(Qt::Key_4):
+                keyHeld[15] = !keyHeld[15];
+                break;
+        
         }
     }
 

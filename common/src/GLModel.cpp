@@ -358,7 +358,7 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
 
     if(color)
     {
-        glBindBuffer(GL_UNIFORM_BUFFER, fragment->getLocation());
+        glBindBuffer(GL_UNIFORM_BUFFER, fragment->getId());
     }
 
     //Draw Model 
