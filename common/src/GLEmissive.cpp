@@ -16,7 +16,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bpt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.7f};
-    PointLight pt0 = {glm::vec4(3.0f, 1.0f, 2.0f, 1.0f),
+    PointLight pt0 = {glm::vec4(3.0f, 1.0f, -2.0f, 1.0f),
                      bpt0 };
     this->lights.point[0] = pt0;
 

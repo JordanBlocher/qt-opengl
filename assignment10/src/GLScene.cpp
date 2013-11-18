@@ -171,7 +171,7 @@ void GLScene::paintGL()
         size_t sptSize = sizeof(emissive->lights.spot);
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, sizeof(emissive->lights.point[0]), &emissive->lights.point[0]);
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 24, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler

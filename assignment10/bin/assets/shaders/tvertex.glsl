@@ -18,8 +18,8 @@ void main(void)
 {
     f_uv = v_uv;
     vec4 p = (mvMatrix * vec4(v_position,1.0));
-    f_position = (p.xyz/p.w).xyz;
+    f_position = p.xyz/p.w;
     vec4 n = normalMatrix * vec4(v_normal,1.0);
-    f_normal = normalize(n.xyz/n.w).xyz;
+    f_normal = normalize(n.xyz/n.w);
     gl_Position = mvpMatrix * vec4(v_position, 1.0);
 }

@@ -83,7 +83,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         }
     }
 
-    return (diffuse + specular + ambient);
+    return (diffuse);
 }
 
 vec4 LightDir(vec3 normal)
@@ -141,9 +141,9 @@ void main(void)
     if( eye.toggle.w == 1.0)
          totalLight += LightSpt(light.spot[0], normal);
 
-   // if( eye.toggle.x == 1.0)
+    if( light.point[0].base.color.y == 1.0)
     colout = vec4(totalLight.xyz, 1.0);
-   // else 
-   // colout = vec4(1.0, 1.0, 1.0, 1.0);
+    else 
+    colout = vec4(1.0, 1.0, 1.0, 1.0);
 }
 
