@@ -14,7 +14,9 @@ out vec3 f_normal;
 
 void main(void)
 {
-    f_position = (mvMatrix * vec4(v_position,1.0)).xyz;
-    f_normal = normalize(normalMatrix * vec4(v_normal,1.0)).xyz;
+    vec4 p = (mvMatrix * vec4(v_position,1.0));
+    f_position = (p.xyz/p.w).xyz;
+    vec4 n = normalMatrix * vec4(v_normal,1.0);
+    f_normal = normalize(n.xyz/n.w).xyz;
     gl_Position = mvpMatrix * vec4(v_position, 1.0);
 }

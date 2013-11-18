@@ -66,9 +66,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
     vec4 specular = vec4(0, 0, 0, 0);
     vec4 ambient = vec4(0, 0, 0, 0);
 
-    float blend = colors.diffuseBlend;
-
-    ambient = source.color * colors.ambient * source.ambientIntensity * (blend + 1.0) / (blend + 1.00000000001); 
+    ambient = source.color * colors.ambient * source.ambientIntensity; 
 
     float diffuseFactor = dot(normal, -direction.xyz);
     if (diffuseFactor > 0) 
@@ -98,12 +96,9 @@ vec4 LightPt(PointLight pt, vec3 normal)
     float l = length(dir);
     dir = normalize(dir);
 
-  //  vec4 color = LightBasic(pt.base, vec4(dir, 1.0), normal);
+    vec4 color = LightBasic(pt.base, vec4(dir, 1.0), normal);
 
-   // return color;
- vec4 color = LightBasic(pt.base, vec4(dir, 1.0), normal);
-color.xyz = color.w*(vec3(1.0,1.0,1.0) - (color.xyz/color.w));
-return color;
+    return color;
 }
 
 vec4 LightSpt(SpotLight sp, vec3 normal)
@@ -127,8 +122,9 @@ void main(void)
 {
     vec3 normal = normalize(f_normal);
     vec4 totalLight = vec4(0, 0, 0, 0);
+    float blend = colors.diffuseBlend;
 
-    vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity; 
+    vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity * ((blend + 1.0) / (blend + 1.00000000001)); 
 
     vec4 diffuse = light.basic.base.color * colors.diffuse * light.basic.base.diffuseIntensity;
  
