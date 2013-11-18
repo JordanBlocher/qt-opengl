@@ -41,7 +41,7 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
     GLuint index;
       
     this->block = glGetUniformBlockIndex(program, this->name.c_str());
-    glUniformBlockBinding(program, block, location);
+    std::cout<<"Block index "<<block<< " and location "<<location<<std::endl;
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &numUniforms );
     GLint *indices = new GLint[numUniforms];
     glGetActiveUniformBlockiv( program, this->block, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
@@ -66,9 +66,9 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
         else if(type == GL_FLOAT_MAT3)
             uniformSize = sizeof(glm::mat3);
         else if(type == GL_INT)
-            uniformSize = sizeof(int);
+            uniformSize = 2*sizeof(int);
         else if(type == GL_FLOAT)
-            uniformSize = sizeof(float);
+            uniformSize = 2*sizeof(float);
         else 
             uniformSize = 0.0f;
 
@@ -87,8 +87,11 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
             return false;
     }
 
-    ubo.SetBlockIndex(location); 
     glBindBufferBase(ubo.Type(), location, ubo.Buffer());
+
+    this->block = glGetUniformBlockIndex(program, this->name.c_str());
+    std::cout<<"Block index "<<this->block<< " after bind "<<std::endl;
+    ubo.SetBlockIndex(this->block); 
     
     this->id = ubo.Buffer();
 
@@ -112,5 +115,11 @@ GLuint GLUniform::getLocation()
 {
     return this->location;
 }
+
+GLuint GLUniform::getBlock()
+{
+    return this->block;
+}
+
 
 

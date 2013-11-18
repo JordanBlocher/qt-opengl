@@ -366,7 +366,7 @@ void GLModel::Draw(std::shared_ptr<GLUniform> fragment, GLuint program)
         {
             glBufferSubData(GL_UNIFORM_BUFFER,
                         0,
-                        sizeof(Material),
+                        sizeof(this->materials->at(this->mtlIndices.at(i)).second),
                         &(this->materials->at(this->mtlIndices.at(i)).second) );
         }
 

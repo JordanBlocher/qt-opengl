@@ -7,13 +7,11 @@ in vec3 f_position;
 in vec3 f_normal;
 in vec2 f_uv;
 
-layout(std140) uniform GColors
+layout(std140, binding=2) uniform GColors
 {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-    vec4 emissive;
-    vec4 transparency;
     float shininess;
     float intensity;
     float diffuseBlend;
@@ -45,7 +43,7 @@ struct SpotLight
     PointLight point;
 };
 
-layout(std140) uniform GLights
+layout(std140, binding=3) uniform GLights
 {
     DirectionalLight basic;
     PointLight point[1];
@@ -53,7 +51,7 @@ layout(std140) uniform GLights
 
 }light;
 
-layout(std140) uniform Eye
+layout(std140, binding=4) uniform Eye
 {
     vec4 position;
     vec4 toggle;
@@ -130,12 +128,9 @@ void main(void)
 
     vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity; 
 
-    vec4 diffuse = light.basic.base.color * colors.diffuse * light.basic.base.diffuseIntensity;
- 
     if( eye.toggle.x == 1.0)
     {
         totalLight += ambient;
-        totalLight += diffuse;
     }
     if( eye.toggle.y == 1.0)
         totalLight += LightDir(normal);

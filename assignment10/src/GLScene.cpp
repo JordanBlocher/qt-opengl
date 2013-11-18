@@ -20,6 +20,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> //Makes passing matrices to shaders easier
+#include <glm/virtrev/xstream.hpp>
 
 #include <GLShader.hpp>
 #include <GLProgram.hpp>
@@ -84,18 +85,23 @@ void GLScene::initializeGL()
         this->AddToContext( tprogram );
     
     //Create UBOs 
+    cout<<"Matrix UBO"<<endl;
     shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
     vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
     
+    cout<<"Color UBO"<<endl;
     shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
     frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
+    cout<<"Colors index " <<glGetUniformBlockIndex(cprogram->getId(), "GColors")<<endl;
 
+    cout<<"Lights UBO"<<endl;
     shared_ptr<GLUniform> lights_uniform(new GLUniform("GLights"));
     lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
     this->AddToContext(lights_uniform);
 
+    cout<<"Eye UBO"<<endl;
     shared_ptr<GLUniform> eye_uniform(new GLUniform("Eye"));
     eye_uniform->CreateUBO(cprogram->getId(), 4, GL_STREAM_DRAW);
     this->AddToContext(eye_uniform);
@@ -166,12 +172,32 @@ void GLScene::paintGL()
 
         // Bind Lights
         glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
+
+        cout<<"matrix "<<vuniform->getBlock()<<endl;
+        cout<<"colors "<<cuniform->getBlock()<<endl;
+        cout<<"lights "<<luniform->getBlock()<<endl;
+        cout<<"eye "<<eye->getBlock()<<endl;
+        GLint offset;
+        std::string uname;
+        GLint numUniforms;
+        GLuint index;
+        glGetActiveUniformBlockiv( tprogram->getId(), luniform->getBlock(), GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &numUniforms );
+        GLint *indices = new GLint[numUniforms];
+        glGetActiveUniformBlockiv( tprogram->getId(), luniform->getBlock(), GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices );
+        for( int i = 0; i < numUniforms; i++)
+        {
+            index = (GLuint)indices[i];
+            glGetActiveUniformName(tprogram->getId(), index, 256, 0, &uname[0]);
+            glGetActiveUniformsiv(tprogram->getId(), 1, &index, GL_UNIFORM_OFFSET, &offset);
+            std::cout << "Uniform <" << &uname[0] << "> (offset): " << offset << std::endl;
+        }
+
         size_t baseSize = sizeof(emissive->lights.basic);
-        size_t ptSize = sizeof(emissive->lights.point);
-        size_t sptSize = sizeof(emissive->lights.spot);
+        size_t ptSize = sizeof(emissive->lights.point[0]);
+        size_t sptSize = sizeof(emissive->lights.spot[0]); 
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, sizeof(emissive->lights.point[0]), &emissive->lights.point[0]);
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 24, sizeof(emissive->lights.spot[0]), &emissive->lights.spot[0]);
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sptSize, &(emissive->lights.spot[0]));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler
