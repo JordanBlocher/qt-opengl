@@ -144,8 +144,8 @@ void GLScene::playGame(int numPlayers)
 void GLScene::changePaddle(int i)
 {
     // Get the old paddle
-    std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->GetPhysicsModel()->GetRigidBody();
 
     // Make the old paddle a ghost
     paddle1Old->setCollisionFlags( paddle1Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
@@ -161,9 +161,9 @@ void GLScene::changePaddle(int i)
     this->paddleIndex = 2*i + 1;
 
     // Get the new paddles
-    std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody();
     //paddle1->translate(paddle1Old->getCenterOfMassPosition());
-    std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->GetPhysicsModel()->GetRigidBody();
     //paddle2->translate(paddle2Old->getCenterOfMassPosition());
 
     // De-ghost the new paddles
@@ -171,8 +171,8 @@ void GLScene::changePaddle(int i)
     paddle2->setCollisionFlags( paddle2->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
     // Move the new paddles into position.
-    this->entities->at(paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
-    this->entities->at(paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
+    this->entities->at(paddleIndex)->GetPhysicsModel()->SetPosition(btVector3(-3,0,0));
+    this->entities->at(paddleIndex+1)->GetPhysicsModel()->SetPosition(btVector3(3,0,0));
 
 }
 
@@ -280,8 +280,8 @@ void GLScene::paintGL()
         {
             int index = indices[i];
             //Choose Model
-            std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->getPhysicsModel();
-            std::shared_ptr<GLModel> gmodel = entities->at(index)->getGraphicsModel();
+            std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->GetPhysicsModel();
+            std::shared_ptr<GLModel> gmodel = entities->at(index)->GetGraphicsModel();
             glm::mat4 transform;
             transform =  pmodel->GetTransform();
 
@@ -462,7 +462,7 @@ void GLScene::removeDynamicBodies()
     {
         std::shared_ptr<Entity> ent = entities->at(i);
         entities->pop_back();
-        world->RemoveDynamicPhysics(ent->getPhysicsModel());
+        world->RemoveDynamicPhysics(ent->GetPhysicsModel());
     }
 }
 
@@ -489,8 +489,8 @@ void GLScene::idleGL()
         updateKeys();
 
         // Apply carefully calibrated space friction to the paddles (8% reduction in speed per phys tick)
-        entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+        entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->getLinearVelocity());
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
         // Make sure game props are behaving
         this->monitorProps();
@@ -726,8 +726,8 @@ void GLScene::mousePressEvent(QMouseEvent *event)
         // Move paddle1 into position (probably temporary)
         if(worldX > -10 && worldX < 10 && worldZ < 8 && worldZ > -8)
         {
-            this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
-            entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
+            this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
+            entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
         }
     }    
 }
@@ -766,21 +766,21 @@ void GLScene::updateKeys()
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
 
     if(keyHeld[0]) // W
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[1]) // S
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[2]) // A
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
     if(keyHeld[3]) // D
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[4]) // I
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[5]) // K
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[6]) // J
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[7]) // L
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
 
     if(numPlayers > 1)
     {
@@ -865,7 +865,7 @@ GLScene::~GLScene()
 void GLScene::monitorScore()
 {
     // Check if either player has scored.
-    btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 puckPos = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     bool newRound = false;
 
     // Check if puck is score
@@ -896,17 +896,17 @@ void GLScene::monitorScore()
     if (newRound)
     {
         // Reset the puck position
-        this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(0,0,0));
-        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->SetPosition(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
 
         // Reset the paddle positions
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->SetPosition(btVector3(-3,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->SetPosition(btVector3(3,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
 
     }
 
@@ -922,13 +922,13 @@ void GLScene::monitorScore()
 void GLScene::invokeAI()
 {
     // Define needed variables
-    btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
+    btVector3 puckPosition = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle1Pos = entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody();
    
     btVector3 targetPosition;
-    btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 currentPos = entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     btVector3 forceVector;
     btVector3 goal = btVector3(7.0f, 0,0);
 
@@ -979,14 +979,14 @@ void GLScene::invokeAI()
 
     // Apply forces
     forceVector.normalize();
-    entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
+    entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
 }
 
 void GLScene::monitorProps()
 {
-    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle1 = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle2 = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1 = entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2 = entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody();
 
     btVector3 puckPos = puck->getCenterOfMassPosition();
     btVector3 paddle1Pos = paddle1->getCenterOfMassPosition();

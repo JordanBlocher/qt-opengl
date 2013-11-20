@@ -36,9 +36,8 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
     this->mainMenu = menu;
     if(this->name.toStdString() == std::string("Air Hockey"))
         this->mainMenu->resize(50, this->height() - 200);
-    else if(std::string(name) == std::string("Lighting"))
+    else if(std::string(name) == std::string("Lighting") || std::string(name) == std::string("Labrinth"))
         this->mainMenu->resize(30, this->height() - 600);
-    else if(std::string(name) == std::string("Lighting"))
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
 
@@ -46,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
         this->setConnections(1);
     else if(std::string(name) == std::string("Lighting"))
         this->setConnections(2);
+    else if(std::string(name) == std::string("Labrinth"))
+        this->setConnections(3);
 
     // Menu stuff
     this->createActions();
@@ -59,12 +60,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::setConnections(int menu)
 {
-    if(menu == 1)
+    if(menu == 1 || menu == 3)
     {
         // Connections to main menu
         connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
         connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
-        connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
+        if(menu == 1)
+            connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
 
         connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
         connect(glView, SIGNAL(endGame()), this, SLOT(endGame()));
@@ -138,6 +140,13 @@ QMenu* MainWindow::createPopupMenu()
 
 void MainWindow::getPlayer(int i)
 {
+    if(i == 0)
+    {
+        this->mainMenu->hide();
+        glView->setFocus();
+        emit playGame(0);
+        return;
+    }
     bool ok;
     QInputDialog *dialog1 = new QInputDialog();
     QString name = dialog1->getText(this, 
