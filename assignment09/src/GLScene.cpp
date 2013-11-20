@@ -55,6 +55,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
 
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
+  
+    keyHeld[12] = keyHeld[13] = keyHeld[14] = keyHeld[15] = true; 
 
     // Setup audio output for bgm
     bgmOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
@@ -88,7 +90,7 @@ void GLScene::playGame(int numPlayers)
     // Play bgm, if it is not already playing
     if(bgmObject->state() == Phonon::StoppedState)
     {
-       emit playBgm(); 
+        emit playBgm(); 
     }    
 
     // Play round start sound
@@ -104,11 +106,11 @@ void GLScene::playGame(int numPlayers)
     this->player1Score = 0;
     this->player2Score = 0;
 
-        // Make sure that this is the camera we want (wont work if this is our second time)
-        if(!this->AddToContext(camera2))
-        {
-            camera2 = this->Get<GLCamera>("camera2");
-        }
+    // Make sure that this is the camera we want (wont work if this is our second time)
+    if(!this->AddToContext(camera2))
+    {
+        camera2 = this->Get<GLCamera>("camera2");
+    }
 
 
     if(numPlayers > 1)
@@ -142,8 +144,8 @@ void GLScene::playGame(int numPlayers)
 void GLScene::changePaddle(int i)
 {
     // Get the old paddle
-    std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1Old = this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2Old = this->entities->at(paddleIndex + 1)->GetPhysicsModel()->GetRigidBody();
 
     // Make the old paddle a ghost
     paddle1Old->setCollisionFlags( paddle1Old->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
@@ -159,9 +161,9 @@ void GLScene::changePaddle(int i)
     this->paddleIndex = 2*i + 1;
 
     // Get the new paddles
-    std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1 = this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody();
     //paddle1->translate(paddle1Old->getCenterOfMassPosition());
-    std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2 = this->entities->at(paddleIndex + 1)->GetPhysicsModel()->GetRigidBody();
     //paddle2->translate(paddle2Old->getCenterOfMassPosition());
 
     // De-ghost the new paddles
@@ -169,22 +171,22 @@ void GLScene::changePaddle(int i)
     paddle2->setCollisionFlags( paddle2->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
     // Move the new paddles into position.
-    this->entities->at(paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
-    this->entities->at(paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
+    this->entities->at(paddleIndex)->GetPhysicsModel()->SetPosition(btVector3(-3,0,0));
+    this->entities->at(paddleIndex+1)->GetPhysicsModel()->SetPosition(btVector3(3,0,0));
 
 }
 
 
 void GLScene::initializeGL()
 {
-   GLViewport::initializeGL();
+    GLViewport::initializeGL();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    
+
     this->initGame();
     this->addStaticBodies();
-       /****** Deep GPU Stuff ******/
+    /****** Deep GPU Stuff ******/
     //Shaders
     shared_ptr<GLShader> vertex(new GLShader(GL_VERTEX_SHADER, "vshader"));
     shared_ptr<GLShader> fragment(new GLShader(GL_FRAGMENT_SHADER, "fshader"));
@@ -194,7 +196,7 @@ void GLScene::initializeGL()
     //Programs
     shared_ptr<GLProgram> cprogram(new GLProgram("color_program"));
     shared_ptr<GLProgram> tprogram(new GLProgram("texture_program"));
-    
+
     //Add Shaders
     cprogram->AddShader(vertex); 
     cprogram->AddShader(fragment); 
@@ -206,12 +208,12 @@ void GLScene::initializeGL()
         this->AddToContext( cprogram );
     if( this->AddProgram(tprogram) )
         this->AddToContext( tprogram );
-    
+
     //Create UBOs 
     std::shared_ptr<GLUniform> vertex_uniform(new GLUniform("GMatrices"));
     vertex_uniform->CreateUBO(cprogram->getId(), 1, GL_STATIC_DRAW);
     this->AddToContext(vertex_uniform);
-    
+
     std::shared_ptr<GLUniform> frag_uniform(new GLUniform("GColors"));
     frag_uniform->CreateUBO(cprogram->getId(), 2, GL_STREAM_DRAW);
     this->AddToContext(frag_uniform);
@@ -220,22 +222,27 @@ void GLScene::initializeGL()
     lights_uniform->CreateUBO(cprogram->getId(), 3, GL_STREAM_DRAW);
     this->AddToContext(lights_uniform);
 
+    shared_ptr<GLUniform> eye_uniform(new GLUniform("Eye"));
+    eye_uniform->CreateUBO(cprogram->getId(), 4, GL_STREAM_DRAW);
+    this->AddToContext(eye_uniform);
+
     //Add Sampler
     std::shared_ptr<GLUniform> texture_uniform(new GLUniform("Texture", tprogram->getId(), 1, "i"));
     this->AddToContext(texture_uniform);
 
-    //Set UBOs t Share
+     //Set UBOs t Share
     cprogram->SetUBO(vertex_uniform);
     cprogram->SetUBO(lights_uniform);
     cprogram->SetUBO(frag_uniform);
+    cprogram->SetUBO(eye_uniform);
     tprogram->SetUBO(vertex_uniform);
     tprogram->SetUBO(lights_uniform);
+    tprogram->SetUBO(eye_uniform);
+    tprogram->SetUBO(frag_uniform);
 
     //Set Lighting
-    std::shared_ptr<GLEmissive> lighting(new GLEmissive("lights"));
-    lighting->ambient.color = glm::vec3(1.0f, 1.0f, 1.0f);
-    lighting->ambient.intensity = 1.5f;
-    this->AddToContext(lighting);
+    std::shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
+    this->AddToContext(emissive);
 
 }
 
@@ -246,10 +253,10 @@ void GLScene::paintGL()
     this->background.getRgbF(&r, &g, &b);
     glClearColor(r, g, b, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
+
     for(int i=0; i<numPlayers; i++)
     {
-       //Get matrices
+        //Get matrices
         shared_ptr<GLCamera> camera = this->Get<GLCamera>(string("camera" + to_string(i+1)).c_str() );
         glm::mat4 vp = camera->Projection() * camera->View();
 
@@ -259,53 +266,52 @@ void GLScene::paintGL()
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
         shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
         shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
-        
+        shared_ptr<GLUniform> eye = this->Get<GLUniform>("Eye");
+
         //Get Programs
         shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
         shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
-
         //Get Lights
-        shared_ptr<GLEmissive> lighting = this->Get<GLEmissive>("lights");
+        shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
         // Iterate and draw over all of the models
         vector<int> indices = {0, puckIndex, paddleIndex, paddleIndex+1};
         for(int i=0; i<indices.size(); i++)
         {
-           int index = indices[i];
-           //Choose Model
-           std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->getPhysicsModel();
-           std::shared_ptr<GLModel> gmodel = entities->at(index)->getGraphicsModel();
-           glm::mat4 transform;
-           transform =  pmodel->GetTransform();
+            int index = indices[i];
+            //Choose Model
+            std::shared_ptr<PhysicsModel> pmodel = entities->at(index)->GetPhysicsModel();
+            std::shared_ptr<GLModel> gmodel = entities->at(index)->GetGraphicsModel();
+            glm::mat4 transform;
+            transform =  pmodel->GetTransform();
 
-           //Bind Uniform Matrices
-           Matrices matrices;
-           matrices.mvpMatrix = vp * transform * gmodel->Matrix();
-           matrices.mvMatrix = camera->View() * transform * gmodel->Matrix();
-           matrices.normalMatrix = glm::transpose(glm::inverse(camera->View() * transform * gmodel->Matrix()));
-           glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(matrices),
-                            &matrices);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
-           
-           // Bind Lights
-           glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(lighting->ambient),
-                            &lighting->ambient);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            //Bind MVP
+            Matrices matrices;
+            matrices.mvpMatrix = vp * transform * gmodel->Matrix();
+            matrices.mvMatrix = transform * gmodel->Matrix();
+            matrices.normalMatrix = glm::transpose(glm::inverse(transform * gmodel->Matrix()));
+            glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-           //Bind Sampler
-           shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
-           glBindBuffer(GL_UNIFORM_BUFFER, tuniform->getLocation());
-           glBufferSubData( GL_UNIFORM_BUFFER,
-                            0,
-                            sizeof(lighting->ambient),
-                            &lighting->ambient);
-           glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            // Eye Position & toggle
+            glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera->getCameraPosition(), 1.0f)));
+            glBufferSubData( GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(glm::vec4(keyHeld[12], keyHeld[13], keyHeld[14], keyHeld[15])));
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            // Bind Lights
+            glBindBuffer(GL_UNIFORM_BUFFER, luniform->getId());
+            size_t baseSize = sizeof(emissive->lights.basic);
+            size_t ptSize = sizeof(emissive->lights.point[0]);
+            size_t sptSize = sizeof(emissive->lights.spot[0]);
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sptSize, &emissive->lights.spot[0]);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            //Get Sampler
+            shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
            //Colors Program
            glUseProgram(cprogram->getId());
@@ -456,7 +462,7 @@ void GLScene::removeDynamicBodies()
     {
         std::shared_ptr<Entity> ent = entities->at(i);
         entities->pop_back();
-        world->RemoveDynamicPhysics(ent->getPhysicsModel());
+        world->RemoveDynamicPhysics(ent->GetPhysicsModel());
     }
 }
 
@@ -483,8 +489,8 @@ void GLScene::idleGL()
         updateKeys();
 
         // Apply carefully calibrated space friction to the paddles (8% reduction in speed per phys tick)
-        entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getLinearVelocity());
+        entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->getLinearVelocity());
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity((1.0f - 0.6f*dt*10) * entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getLinearVelocity());
 
         // Make sure game props are behaving
         this->monitorProps();
@@ -594,11 +600,18 @@ void GLScene::keyPressEvent(QKeyEvent *event)
                 emit endGame();
                 break;
             case(Qt::Key_1):
-                lighting->ambient.intensity +=0.05f;
+                keyHeld[12] = !keyHeld[12];
                 break;
             case(Qt::Key_2):
-                lighting->ambient.intensity -=0.05f;
+                keyHeld[13] = !keyHeld[13];
                 break;
+            case(Qt::Key_3):
+                keyHeld[14] = !keyHeld[14];
+                break;
+            case(Qt::Key_4):
+                keyHeld[15] = !keyHeld[15];
+                break;
+        
         }
     }
 
@@ -713,8 +726,8 @@ void GLScene::mousePressEvent(QMouseEvent *event)
         // Move paddle1 into position (probably temporary)
         if(worldX > -10 && worldX < 10 && worldZ < 8 && worldZ > -8)
         {
-            this->entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
-            entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
+            this->entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(-3,0,0));
+            entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce((btVector3(worldX,0,worldZ) - entities->at(paddleIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition())*250);
         }
     }    
 }
@@ -753,21 +766,21 @@ void GLScene::updateKeys()
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
 
     if(keyHeld[0]) // W
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[1]) // S
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[2]) // A
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
     if(keyHeld[3]) // D
-        entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
+        entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[4]) // I
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(-1,0,0)*40);
     if(keyHeld[5]) // K
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(1,0,0)*40);
     if(keyHeld[6]) // J
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,1)*40);
     if(keyHeld[7]) // L
-        entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
+        entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce(btVector3(0,0,-1)*40);
 
     if(numPlayers > 1)
     {
@@ -852,7 +865,7 @@ GLScene::~GLScene()
 void GLScene::monitorScore()
 {
     // Check if either player has scored.
-    btVector3 puckPos = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 puckPos = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     bool newRound = false;
 
     // Check if puck is score
@@ -883,17 +896,17 @@ void GLScene::monitorScore()
     if (newRound)
     {
         // Reset the puck position
-        this->entities->at(this->puckIndex)->getPhysicsModel()->SetPosition(btVector3(0,0,0));
-        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->SetPosition(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
 
         // Reset the paddle positions
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->SetPosition(btVector3(-3,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->SetPosition(btVector3(3,0,0));
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
-        this->entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->SetPosition(btVector3(-3,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->SetPosition(btVector3(3,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setLinearVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
+        this->entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->setAngularVelocity(btVector3(0,0,0));
 
     }
 
@@ -909,13 +922,13 @@ void GLScene::monitorScore()
 void GLScene::invokeAI()
 {
     // Define needed variables
-    btVector3 puckPosition = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    btVector3 paddle1Pos = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
+    btVector3 puckPosition = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle1Pos = entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 paddle2Pos = entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody();
    
     btVector3 targetPosition;
-    btVector3 currentPos = entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    btVector3 currentPos = entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     btVector3 forceVector;
     btVector3 goal = btVector3(7.0f, 0,0);
 
@@ -966,14 +979,14 @@ void GLScene::invokeAI()
 
     // Apply forces
     forceVector.normalize();
-    entities->at(paddleIndex+1)->getPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
+    entities->at(paddleIndex+1)->GetPhysicsModel()->GetRigidBody()->applyCentralForce((forceVector)*20);
 }
 
 void GLScene::monitorProps()
 {
-    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle1 = entities->at(this->paddleIndex)->getPhysicsModel()->GetRigidBody();
-    std::shared_ptr<btRigidBody> paddle2 = entities->at(this->paddleIndex+1)->getPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> puck = entities->at(this->puckIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle1 = entities->at(this->paddleIndex)->GetPhysicsModel()->GetRigidBody();
+    std::shared_ptr<btRigidBody> paddle2 = entities->at(this->paddleIndex+1)->GetPhysicsModel()->GetRigidBody();
 
     btVector3 puckPos = puck->getCenterOfMassPosition();
     btVector3 paddle1Pos = paddle1->getCenterOfMassPosition();

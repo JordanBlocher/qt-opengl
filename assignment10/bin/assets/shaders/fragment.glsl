@@ -6,13 +6,11 @@ const int MAX_SPOT_LIGHTS = 4;
 in vec3 f_position;
 in vec3 f_normal;
 
-layout(std140) uniform GColors
+layout(std140, binding=2) uniform GColors
 {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-    vec4 emissive;
-    vec4 transparency;
     float shininess;
     float intensity;
     float diffuseBlend;
@@ -44,7 +42,7 @@ struct SpotLight
     PointLight point;
 };
 
-layout(std140) uniform GLights
+layout(std140, binding=3) uniform GLights
 {
     DirectionalLight basic;
     PointLight point[1];
@@ -52,7 +50,7 @@ layout(std140) uniform GLights
 
 }light;
 
-layout(std140) uniform Eye
+layout(std140, binding=4) uniform Eye
 {
     vec4 position;
     vec4 toggle;
@@ -84,7 +82,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         }
     }
 
-    return (diffuse + specular);
+    return (diffuse);
 }
 
 vec4 LightDir(vec3 normal)
@@ -100,7 +98,7 @@ vec4 LightPt(PointLight pt, vec3 normal)
 
     vec4 color = LightBasic(pt.base, vec4(dir, 1.0), normal);
 
-    return color;
+    return color/l;
 }
 
 vec4 LightSpt(SpotLight sp, vec3 normal)
@@ -124,11 +122,14 @@ void main(void)
 {
     vec3 normal = normalize(f_normal);
     vec4 totalLight = vec4(0, 0, 0, 0);
+    float blend = colors.diffuseBlend;
 
-    vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity; 
+    vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity * ((blend + 1.0) / (blend + 1.00000000001));  
 
     if( eye.toggle.x == 1.0)
+    {
         totalLight += ambient;
+    }
     if( eye.toggle.y == 1.0)
         totalLight += LightDir(normal);
     if( eye.toggle.z == 1.0)
@@ -136,9 +137,6 @@ void main(void)
     if( eye.toggle.w == 1.0)
          totalLight += LightSpt(light.spot[0], normal);
 
-   // if( eye.toggle.x == 1.0)
     colout = vec4(totalLight.xyz, 1.0);
-   // else 
-   // colout = vec4(1.0, 1.0, 1.0, 1.0);
 }
 

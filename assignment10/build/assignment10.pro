@@ -52,7 +52,7 @@ isEmpty(_IMAGE_MAGICK_ROOT) {
 
 TEMPLATE = app
 TARGET = ../bin/assignment10
-DEPENDPATH += ../src/* ../../common/include/* ../../common/src/*
+DEPENDPATH += ../src/ ../../common/include/ ../../common/src/
 INCLUDEPATH += ../src ../../common/include 
 LIBS += -L../../common/lib -lqglcommon -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lGLU -lphonon
 QMAKE_CXX = g++-4.6

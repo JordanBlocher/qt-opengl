@@ -86,7 +86,7 @@ isEmpty(_IMAGE_MAGICK_ROOT) {
 
 TEMPLATE = lib
 TARGET = ../lib/qglcommon
-DEPENDPATH += ../include/* ../src/*
+DEPENDPATH += ../include/ ../src/
 INCLUDEPATH += ../include
 LIBS += -lGLEW -lassimp -lMagick++ -lBulletSoftBody -lBulletDynamics -lBulletCollision -lLinearMath -lphonon
 VERSION = 1.0
@@ -96,6 +96,6 @@ QMAKE_CXX = g++-4.6
 CONFIG += debug staticlib
 
 # Input
-SOURCES += ../src/*
-HEADERS += ../include/*
+SOURCES += ../src/*.cpp
+HEADERS += ../include/*.hpp
 

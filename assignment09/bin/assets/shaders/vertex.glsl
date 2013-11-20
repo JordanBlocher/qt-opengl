@@ -2,7 +2,7 @@
 layout(location=0) in vec3 v_position;
 layout(location=1) in vec3 v_normal;
 
-uniform GMatrices
+layout(std140, binding=1) uniform GMatrices
 {
     mat4 mvpMatrix;
     mat4 mvMatrix;
@@ -14,7 +14,9 @@ out vec3 f_normal;
 
 void main(void)
 {
-    f_position = (mvMatrix * vec4(v_position,1.0)).xyz;
-    f_normal = normalize(normalMatrix * vec4(v_normal,1.0)).xyz;
+    vec4 p = (mvMatrix * vec4(v_position,1.0));
+    f_position = p.xyz/p.w;
+    vec4 n = normalMatrix * vec4(v_normal,1.0);
+    f_normal = normalize(n.xyz/n.w);
     gl_Position = mvpMatrix * vec4(v_position, 1.0);
 }

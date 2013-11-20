@@ -22,15 +22,15 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
 
     //Spotlights
     this->lights.spot.resize(1);
-    BaseLight bspt0 = {glm::vec4(1.0f, 0.0f, 1.0f, 1.0f),
-                     0.3f,
+    BaseLight bspt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+                     0.1f,
                      0.3f};
-    PointLight pspt0 = {glm::vec4(2.0f, 6.0f, 0.0f, 1.0f),
-                     bspt0};
-    SpotLight spt0 = {glm::vec4(-0.33, -1.0f, 0.0f, 1.0f),
-                     pspt0};
+    PointLight spt0 = {glm::vec4(-2.0f, 2.0f, 0.0f, 1.0f),
+                      bspt0};
+    SpotLight sp0 = {glm::vec4(1.0, -1.0f, 0.0f, 1.0f),
+                      spt0};
 
-    this->lights.spot[0] = spt0;
+    this->lights.spot[0] = sp0;
 
 }
 

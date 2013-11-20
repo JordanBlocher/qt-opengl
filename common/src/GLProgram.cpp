@@ -64,7 +64,8 @@ void GLProgram::SetAttributeIndex(const char* name, GLuint index)
 void GLProgram::SetUBO(std::shared_ptr<GLUniform> ubo)
 {
     GLuint block = glGetUniformBlockIndex(this->id, ubo->getName().c_str());
-    glUniformBlockBinding(this->id, block, ubo->getLocation());
+    std::cout<<"Binding block "<< ubo->getName()<< " to block "<<block<< " ubo block "<<ubo->getBlock()<<" location "<<ubo->getLocation()<< " buffer "<<ubo->getId() <<std::endl;
+    glUniformBlockBinding(this->id, ubo->getBlock(), ubo->getLocation());
 }
 
 
