@@ -35,6 +35,7 @@
 #include <PhysicsModel.hpp>
 #include <DynamicsWorld.hpp>
 #include <Entity.hpp>
+#include <PhysicsDebug.hpp>
 
 #include "GLScene.hpp"
 
@@ -187,6 +188,33 @@ void GLScene::initializeGL()
     //Set Lighting
     shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
     this->AddToContext(emissive);
+
+#ifdef PHYSICS_DEBUG
+    std::cout << "Initializing Debug Physics Program" << std::endl;
+    //Shaders (draw normals)
+    shared_ptr<GLShader> pvertex(new GLShader("pvertex.glsl", GL_VERTEX_SHADER, "passvshader"));
+    shared_ptr<GLShader> pfragment(new GLShader("pfragment.glsl", GL_FRAGMENT_SHADER, "passfshader"));
+    //Program
+    shared_ptr<GLProgram> pprogram(new GLProgram("passthrough_program"));
+    //Add Shaders
+    pprogram->AddShader(pvertex);
+    pprogram->AddShader(pfragment);
+    //Add Program
+    if( this->AddProgram(pprogram) )
+        this->AddToContext( pprogram );
+    //Share UBO
+    pprogram->SetUBO(vertex_uniform);
+  
+    //Add physics debug class
+    std::shared_ptr<PhysicsDebug> physicsDebug(new PhysicsDebug("physicsDebug"));
+    this->AddToContext(physicsDebug);
+
+    //Add debug class to world
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+    world->setDebugDrawer(physicsDebug.get());
+    dynamics->SetWorld(std::move(world));
+#endif
 }
 
 void GLScene::playGame(int)
@@ -277,7 +305,34 @@ void GLScene::paintGL()
         glUseProgram(0);
 
     }
-          
+    
+#ifdef PHYSICS_DEBUG
+    {
+        Matrices matrices;
+        shared_ptr<GLProgram> pprogram = this->Get<GLProgram>("passthrough_program");
+        shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+        std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+        std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+        std::shared_ptr<PhysicsDebug> physicsDebug = this->Get<PhysicsDebug>("physicsDebug");
+        
+        // set the matrices
+        matrices.mvpMatrix = vp;
+        matrices.mvMatrix = camera1->View();
+        matrices.normalMatrix = camera1->View();
+        glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+        // now draw and render the debug world
+        glUseProgram(pprogram->getId());
+        world->debugDrawWorld();
+        physicsDebug->loadToBuffer();
+        physicsDebug->draw();
+        glUseProgram(0);
+        
+        dynamics->SetWorld(std::move(world));
+    }
+#endif
 
 }
 
