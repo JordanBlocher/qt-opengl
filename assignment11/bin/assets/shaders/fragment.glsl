@@ -82,7 +82,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         }
     }
 
-    return (diffuse);
+    return (ambient + diffuse + specular);
 }
 
 vec4 LightDir(vec3 normal)

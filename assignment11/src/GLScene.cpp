@@ -321,7 +321,6 @@ void GLScene::keyPressEvent(QKeyEvent *event)
     // Let the superclass handle the events
     GLViewport::keyPressEvent(event);
     
-    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
     // Act on the key press event
     switch(event->key())
     {   
@@ -352,17 +351,17 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case (Qt::Key_Escape):
             emit mainMenu(0);
             break;
-         case(Qt::Key_W):
-            emissive->lights.basic.base.ambientIntensity +=0.05f;
+        case(Qt::Key_W):
+            keyHeld[0] = true;
             break;
         case(Qt::Key_S):
-            emissive->lights.basic.base.ambientIntensity -=0.05f;
+            keyHeld[1] = true;
             break;
         case(Qt::Key_A):
-            emissive->lights.basic.base.diffuseIntensity +=0.05f;
+            keyHeld[2] = true;
             break;
         case(Qt::Key_D):
-            emissive->lights.basic.base.diffuseIntensity -=0.05f;
+            keyHeld[3] = true;
             break;
 
     }
@@ -373,6 +372,18 @@ void GLScene::keyReleaseEvent(QKeyEvent *event)
     // Act on the key press event
     switch(event->key())
     {
+        case (Qt::Key_W):
+            keyHeld[0] = false;
+            break;    
+        case (Qt::Key_S):
+            keyHeld[1] = false;
+            break;
+        case (Qt::Key_A):
+            keyHeld[2] = false;
+            break;
+        case (Qt::Key_D):
+            keyHeld[3] = false;
+            break; 
         case (Qt::Key_Right):
             keyHeld[8] = false;
             break;    
@@ -406,7 +417,24 @@ void GLScene::wheelEvent(QWheelEvent *event)
 void GLScene::updateKeys()
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
+    if(keyHeld[0])
+    {
+        emissive->lights.basic.base.ambientIntensity +=0.05f;
+    }
+    if(keyHeld[1])
+    {
+        emissive->lights.basic.base.ambientIntensity -=0.05f;
+    }
+    if(keyHeld[2])
+    {
+        emissive->lights.basic.base.diffuseIntensity +=0.05f;
+    }
+    if(keyHeld[3])
+    {
+        emissive->lights.basic.base.diffuseIntensity -=0.05f;
+    }
     if(keyHeld[8]) // RG
     {
         camera->moveCamera(GLCamera::CamDirection::Right);
