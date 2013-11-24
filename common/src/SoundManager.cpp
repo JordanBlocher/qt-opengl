@@ -10,7 +10,7 @@ SoundManager::SoundManager(const char* name)
 	Phonon::createPath(bgmObject, bgmOutput);
 
 	// Add bgm files to sources
-	bgmSources.append(Phonon::MediaSource("sassets/sound/RalphieHolyGrail.mp3"));
+	bgmSources.append(Phonon::MediaSource("assets/sound/RalphieHolyGrail.mp3"));
 	bgmSources.append(Phonon::MediaSource("assets/sound/ZomboyHoedown.mp3"));
 	bgmSources.append(Phonon::MediaSource("assets/sound/KonecRailgun.mp3"));
   
