@@ -26,10 +26,13 @@ class GameMenu : public MenuWidget
  signals:
     void playGame(int);
     void changePaddle(int);
+    void update();
+    void setPlayer(Player, int);
 
  public slots:
     void updatePaint();
     void toggle(int);
+    void updateScore(int, int);
 
  protected: 
     void setConnections();
@@ -42,6 +45,8 @@ class GameMenu : public MenuWidget
     void multiplayer();
     void singleplayer();
     void getPaddle();
+    void endGame();
+    void getPlayer(int);
 
  private: 
 };

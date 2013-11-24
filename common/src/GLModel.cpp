@@ -423,6 +423,11 @@ glm::mat4 GLModel::Matrix()
     return this->matrix;
 }
 
+glm::vec4 GLModel::Position()
+{
+    return glm::vec4(10.0f, 10.0f, 10.0f, 1.0f) * this->matrix;
+}
+
 std::string GLModel::toString(MODEL type)
 {
     switch(type)

@@ -92,7 +92,7 @@ void GLScene::initGame()
 
     // Ball
     std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(0, 2, 2)));
-    ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
+    ball->Create("ball2.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
     world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
@@ -247,7 +247,7 @@ void GLScene::paintGL()
         Matrices matrices;
         matrices.mvpMatrix = vp * transform * gmodel->Matrix();
         matrices.mvMatrix = transform * gmodel->Matrix();
-        matrices.normalMatrix = glm::transpose(glm::inverse(camera1->RotMat() * transform * gmodel->Matrix()));
+        matrices.normalMatrix = glm::transpose(glm::inverse(transform * gmodel->Matrix() * camera1->RotMat() ));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -266,6 +266,7 @@ void GLScene::paintGL()
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sptSize, &(emissive->lights.spot[0]));
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + sptSize + 24, sptSize, &(emissive->lights.spot[1]));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler
@@ -407,6 +408,7 @@ void GLScene::checkGameState()
     if(ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition().y() < -3.0f)
     {
         ball->GetPhysicsModel()->SetPosition(btVector3(0, 2, 2));
+        emit updateScore();
     }
 }
 

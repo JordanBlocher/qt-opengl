@@ -73,13 +73,11 @@ class MainWindow : public QMainWindow
    
  protected slots:
     void setConnections(int);
-    void scoreBoard();
+    void scoreBoard(int);
     void aboutCallback();     
     void aboutQtCallback();
-    void getPlayer(int);
-    void updateScore(int, int);
-    void endGame();
-
+    void updateScore();
+    
  private:
     void createActions();
     void createMenus();

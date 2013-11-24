@@ -30,7 +30,10 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
     this->ok = true;
 
     if(this->name.toStdString() == std::string("Air Hockey"))
-            this->scoreBoard();
+            this->scoreBoard(0);
+    if(this->name.toStdString() == std::string("Labrinth"))
+            this->scoreBoard(1);
+
 
     // Create Main Menu
     this->mainMenu = menu;
@@ -63,17 +66,19 @@ void MainWindow::setConnections(int menu)
     if(menu == 1 || menu == 3)
     {
         // Connections to main menu
-        connect(mainMenu, SIGNAL(playGame(int)), this, SLOT(getPlayer(int)));
-        connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
         if(menu == 1)
             connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
+        
+        connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
 
+        connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
         connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
-        connect(glView, SIGNAL(endGame()), this, SLOT(endGame()));
+        connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
 
         // Connections to scoreboard
-        connect(this, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
+        connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
         connect(this, SIGNAL(pause()), glView, SLOT(pause()));
+        connect(mainMenu, SIGNAL(update()), overlay, SLOT(updatePaint()));
     }
     else if (menu == 2)
     {
@@ -83,21 +88,29 @@ void MainWindow::setConnections(int menu)
 
 }
 
-void MainWindow::scoreBoard()
+void MainWindow::scoreBoard(int game)
 {
     overlay = new OverlayWidget(glView);
     overlay->setBackgroundWidget(this);
     overlay->resize(this->width(), overlay->size().height() + 20);
     
-    // Connections to display / user input
-    glView->p1.name = "Player 1";
-    glView->p1.score = 0;
-    emit setPlayer(glView->p1, 1);
-    glView->p2.name = "Player 2";
-    glView->p2.score = 0;
-    emit setPlayer(glView->p2, 2);
- 
-    connect( glView, SIGNAL(updateScore(int, int)), this, SLOT(updateScore(int, int)));
+    if(game == 0)
+    {
+        // Connections to display / user input
+        glView->p1.name = "Player 1";
+        glView->p1.score = 0;
+        glView->p2.name = "Player 2";
+        glView->p2.score = 0;
+        connect( glView, SIGNAL(updateScore(int, int)), mainMenu, SLOT(updateScore(int, int)));
+    }
+
+    else if(game == 1)
+    {
+        glView->p1.name = "Lives";
+        glView->p1.score = 5;
+        glView->p2.score = -1;
+        connect( glView, SIGNAL(updateScore()), mainMenu, SLOT(updateScore()));
+    }
 }
 
 void MainWindow::createActions()
@@ -138,81 +151,6 @@ QMenu* MainWindow::createPopupMenu()
     return menu;
 }
 
-void MainWindow::getPlayer(int i)
-{
-    if(i == 0)
-    {
-        this->mainMenu->hide();
-        glView->setFocus();
-        emit playGame(0);
-        return;
-    }
-    bool ok;
-    QInputDialog *dialog1 = new QInputDialog();
-    QString name = dialog1->getText(this, 
-                    tr(std::string("Player" + std::to_string(i)).c_str()),
-                    tr("Name:"), 
-                    QLineEdit::Normal, QDir::home().dirName(),
-                    &ok);
-    if (ok && !name.isEmpty())
-    {
-        glView->p1.name = name.toStdString();
-        glView->p1.score = 0;
-        glView->p1.winner = false;
-        emit setPlayer(glView->p1, 1);
-    }
-    else ok = false;
-
-    if(i > 1)
-    {
-        QInputDialog *dialog2 = new QInputDialog();
-        QString name = dialog2->getText(this, 
-                    tr(std::string("Player" + std::to_string(i)).c_str()),
-                    tr("Name:"), 
-                    QLineEdit::Normal, QDir::home().dirName(),
-                    &ok);
-        if (ok && !name.isEmpty())
-        {
-            glView->p2.name = name.toStdString();
-            glView->p2.score = 0;
-        }
-        else ok = false;
-    }
-    else
-    {
-        glView->p2.name = "Computer";
-        glView->p2.score = 0;
-        glView->p2.winner = false;
-    }
-    emit setPlayer(glView->p2, 2);
-
-    this->mainMenu->hide();
-    glView->setFocus();
-
-    emit playGame(i);
-
-}
-
-void MainWindow::updateScore(int score, int player)
-{
-    if(player == 1)
-        glView->p1.score = score;
-    else 
-        glView->p2.score = score;
-    overlay->updatePaint();
-}
-
-void MainWindow::endGame()
-{
-    glView->pause();
-    if(glView->p1.score > glView->p2.score)
-        glView->p1.winner = true;
-    if(glView->p1.score < glView->p2.score)
-        glView->p2.winner = true;
-    mainMenu->toggle(2);
-    mainMenu->updatePaint();
-}
-
 void MainWindow::resizeEvent(QResizeEvent* )
 {
     if(this->name.toStdString() == std::string("Air Hockey"))
@@ -228,6 +166,10 @@ void MainWindow::changeEvent(QEvent *event)
     if (event->type()==QEvent::ActivationChange)
     {
     }
+}
+
+void MainWindow::updateScore()
+{
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* )

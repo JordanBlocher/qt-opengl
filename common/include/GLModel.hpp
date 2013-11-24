@@ -30,6 +30,7 @@ class GLModel : public GLNode
 
     bool CreateVAO();
     glm::mat4 Matrix();
+    glm::vec4 Position();
     void setMatrix(glm::mat4);
     bool LoadVertexData();
 

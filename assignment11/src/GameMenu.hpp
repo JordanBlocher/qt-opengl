@@ -25,10 +25,12 @@ class GameMenu : public MenuWidget
 
  signals:
     void playGame(int);
+    void update();
 
  public slots:
     void updatePaint();
     void toggle(int);
+    void updateScore();
 
  protected: 
     void setConnections();

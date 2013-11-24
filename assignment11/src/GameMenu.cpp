@@ -98,8 +98,16 @@ void GameMenu::setConnections()
     connect(this->buttons[4], SIGNAL(clicked()), this, SLOT(reset()));
 }
 
+void GameMenu::updateScore()
+{
+    glView->p1.score --;
+    emit update();
+}
+
 void GameMenu::play()
 {
+    this->hide();
+    glView->setFocus();
     emit playGame(0);
 }
 

@@ -19,6 +19,7 @@ class GLScene : public GLViewport
 
  signals:
     void mainMenu(int);
+    void updateScore();
 
  protected slots:
     void idleGL();

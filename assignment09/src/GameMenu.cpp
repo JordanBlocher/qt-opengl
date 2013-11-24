@@ -16,6 +16,8 @@
 #include <QStackedLayout>
 #include <QInputDialog>
 #include <QSpacerItem>
+#include <QMessageBox>
+#include <QDir>
 
 #define WAIT_MS 300
 
@@ -106,6 +108,81 @@ void GameMenu::setConnections()
     connect(this->buttons[6], SIGNAL(clicked()), this, SLOT(reset()));
 }
 
+void GameMenu::endGame()
+{
+    glView->pause();
+    if(glView->p1.score > glView->p2.score)
+        glView->p1.winner = true;
+    if(glView->p1.score < glView->p2.score)
+        glView->p2.winner = true;
+    this->toggle(2);
+    this->updatePaint();
+}
+
+void GameMenu::getPlayer(int i)
+{
+    if(i == 0)
+    {
+        this->hide();
+        glView->setFocus();
+        emit playGame(0);
+        return;
+    }
+    bool ok;
+    QInputDialog *dialog1 = new QInputDialog();
+    QString name = dialog1->getText(this, 
+                    tr(std::string("Player" + std::to_string(i)).c_str()),
+                    tr("Name:"), 
+                    QLineEdit::Normal, QDir::home().dirName(),
+                    &ok);
+    if (ok && !name.isEmpty())
+    {
+        glView->p1.name = name.toStdString();
+        glView->p1.score = 0;
+        glView->p1.winner = false;
+    }
+    else ok = false;
+
+    if(i > 1)
+    {
+        QInputDialog *dialog2 = new QInputDialog();
+        QString name = dialog2->getText(this, 
+                    tr(std::string("Player" + std::to_string(i)).c_str()),
+                    tr("Name:"), 
+                    QLineEdit::Normal, QDir::home().dirName(),
+                    &ok);
+        if (ok && !name.isEmpty())
+        {
+            glView->p2.name = name.toStdString();
+            glView->p2.score = 0;
+        
+        }
+        else ok = false;
+    }
+    else
+    {
+        glView->p2.name = "Computer";
+        glView->p2.score = 0;
+        glView->p2.winner = false;
+    }
+
+    this->hide();
+    glView->setFocus();
+
+    emit playGame(i);
+
+}
+
+void GameMenu::updateScore(int score, int player)
+{
+    if(player == 1)
+        glView->p1.score = score;
+    else 
+        glView->p2.score = score;
+    emit update();
+}
+
+
 void GameMenu::getPaddle()
 {
       QStringList items;
@@ -120,12 +197,12 @@ void GameMenu::getPaddle()
 
 void GameMenu::multiplayer()
 {
-    emit playGame(2);
+    this->getPlayer(2);
 }
 
 void GameMenu::singleplayer()
 {
-    emit playGame(1);
+    this->getPlayer(1);
 }
 
 void GameMenu::reset()

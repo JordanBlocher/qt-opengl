@@ -81,14 +81,17 @@ void OverlayWidget::paintEvent(QPaintEvent *event)
     painter.setBrush(QBrush(Qt::darkGray));
     QRectF rectangle(2.0, 2.0, 120, this->geometry().height()-10);
     painter.drawRect(rectangle);
-    QRectF rectangle2(this->geometry().width()-122, 2.0, 120, this->geometry().height()-10);
-    painter.drawRect(rectangle2);
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 14));
     painter.drawText(5,20,glView->p1.name.c_str());
     painter.drawText(15,40,std::to_string(glView->p1.score).c_str());
-    painter.drawText(this->width() - 11*glView->p2.name.length(),20,glView->p2.name.c_str());
-    painter.drawText(this->width() - 25,40,std::to_string(glView->p2.score).c_str());
+    if(glView->p2.score >= 0)
+    {
+        QRectF rectangle2(this->geometry().width()-122, 2.0, 120, this->geometry().height()-10);
+        painter.drawRect(rectangle2);
+        painter.drawText(this->width() - 11*glView->p2.name.length(),20,glView->p2.name.c_str());
+        painter.drawText(this->width() - 25,40,std::to_string(glView->p2.score).c_str());
+    }
 }
 
 // Filter events from user
