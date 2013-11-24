@@ -92,7 +92,7 @@ void GLScene::initGame()
 
     // Ball
     std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(0, 2, 2)));
-    ball->Create("ball2.obj", NULL, Entity::BODY::SPHERE);
+    ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
     world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
