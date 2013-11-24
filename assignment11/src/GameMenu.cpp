@@ -102,6 +102,11 @@ void GameMenu::updateScore()
 {
     glView->p1.score --;
     emit update();
+    if(glView->p1.score <= 0)
+    {
+        this->layout->setCurrentIndex(2);
+        this->updatePaint();
+    }
 }
 
 void GameMenu::play()
@@ -131,7 +136,7 @@ void GameMenu::paintEvent(QPaintEvent *event)
     painter.setPen(Qt::darkGray);
     painter.setFont(QFont("Verdana", 24));
     if(this->layout->currentIndex() == 0)   
-        painter.drawText(this->geometry().width()/2 - 90, 40, tr("LABRINTH"));
+        painter.drawText(this->geometry().width()/2 - 90, 40, tr("LABYRINTH"));
     if(this->layout->currentIndex() == 1)   
         painter.drawText(this->geometry().width()/2 - 110, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
@@ -141,9 +146,9 @@ void GameMenu::paintEvent(QPaintEvent *event)
         painter.setPen(Qt::darkGray);
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
-            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p1.name + "  Won!").c_str());
-        else if(glView->p2.winner)
-            painter.drawText(this->geometry().width()/2 - 100, 80, std::string(glView->p2.name + "  Won!").c_str());
+            painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Won!"));
+        else
+            painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Lose!"));
     }
 }
 

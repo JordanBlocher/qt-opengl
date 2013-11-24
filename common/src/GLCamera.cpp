@@ -18,8 +18,12 @@ GLCamera::GLCamera(const char* name, QSize size)
     this->azimuth = (4.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
+    // Surface is not tilted
     this->zenOffset = 0.0f;
     this->aziOffset = 0.0f;
+
+    // Aim at the origin
+    this->aimTarget = glm::vec3(0.0f,0.0f,0.0f);
 
     this->SetProjection(glm::perspective(
                             this->fov, 
@@ -128,6 +132,11 @@ void GLCamera::setCameraOffset(float zenith, float azimuth)
     this->updateView();
 }
 
+void GLCamera::setAimTarget(glm::vec3 aimPos)
+{
+    this->aimTarget = aimPos;
+}
+
 void GLCamera::updateView()
 {
     // Declare function variables
@@ -136,7 +145,6 @@ void GLCamera::updateView()
     // Perform fake object rotation (for the table)
     if(zenOffset != 0.0f || aziOffset != 0.0f )
     {
-        float firstX, firstY, firstZ;
 
         // Calculate the first eye position
 
@@ -170,10 +178,22 @@ void GLCamera::updateView()
         0,0,0,1);
 
     // Set us up the view
-    this->view = (glm::lookAt(
-                    glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
-                    glm::vec3(0.0, 0.0, 0.0),    //focus point
-                    glm::vec3(0, 1, 0)))*homRotMat;  //up
+    if (aimTarget != glm::vec3(0,0,0))
+    {
+        // Labyrinth
+        this->view = (glm::lookAt(
+                        glm::vec3(this->aimTarget.x, this->aimTarget.y+radius, this->aimTarget.z),  //eye pos
+                        this->aimTarget,    //focus point
+                        glm::vec3(1, 0, 0)))*homRotMat;  //up
+    }
+    else
+    {
+        // Airhockey
+        this->view = (glm::lookAt(
+                        glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
+                        glm::vec3(0,0,0),    //focus point
+                        glm::vec3(0, 1, 0)))*homRotMat;  //up        
+    }
 
 }
 

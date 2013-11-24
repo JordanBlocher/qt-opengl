@@ -205,6 +205,9 @@ void GLScene::initializeGL()
 
 void GLScene::playGame(int)
 {
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    camera1->SetView(10.0f,0.0f,0.0f);
+
     this->update = false;
     this->resume();
 }
@@ -347,68 +350,6 @@ void GLScene::idleGL()
 
         // Maintain game
         checkGameState();
-    }
-}
-
-void GLScene::updateBallGravVector(float dt)
-{
-    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
-    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
-
-    // TODO: Apply this to all balls
-    std::shared_ptr<Entity> ball = this->entities->at(1);
-
-    // Compose a rotation matrix for the table
-    btMatrix3x3 xMat = btMatrix3x3(1,0,0,
-            0,cos(tablePitch),-sin(tablePitch),
-            0,sin(tablePitch),cos(tablePitch));
-    // btMatrix3x3 yMat = btMatrix3x3(cos(tableRoll),0,sin(tableRoll),
-    //         0,1,0,
-    //         -sin(tableRoll),0,cos(tableRoll));
-    btMatrix3x3 zMat = btMatrix3x3(cos(tableRoll),-sin(tableRoll),0,
-            sin(tableRoll),cos(tableRoll),0,
-            0,0,1);
-    btMatrix3x3 rotMat = zMat*xMat;
-
-    camera->setCameraOffset(tableRoll, tablePitch);
-
-    btVector3 gravityVector = rotMat*(btVector3(0.0f,-900.0f,0.0f)*dt);
-    ball->GetPhysicsModel()->GetRigidBody()->activate(true);
-    ball->GetPhysicsModel()->GetRigidBody()->setGravity(gravityVector);
-
-     // Damp the table values
-    if(tablePitch-((dt/0.5f)*tablePitch) < M_PI/10000.0f && tablePitch-((dt/0.5f)*tablePitch) > -M_PI/10000.0f)
-    {
-        tablePitch = 0.0f;
-    }
-    else
-    {
-        tablePitch-=((dt/0.5f)*tablePitch);       
-    }
-
-    if(tableRoll-((dt/0.5f)*tableRoll) < M_PI/10000.0f && tableRoll-((dt/0.5f)*tableRoll) > -M_PI/10000.0f)
-    {
-        tableRoll = 0.0f;
-    }
-    else
-    {
-        tableRoll-=((dt/0.5f)*tableRoll);       
-    }
-
-    //emissive->lights.point[0].position = camera->RotMat() * emissive->lights.point[0].position;
-    //emissive->lights.spot[0].point.position = camera->RotMat() * emissive->lights.spot[0].point.position;
-
-}
-
-void GLScene::checkGameState()
-{
-    // Respawn the ball if it is below the threshold.
-    std::shared_ptr<Entity> ball = this->entities->at(1);
-
-    if(ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition().y() < -3.0f)
-    {
-        ball->GetPhysicsModel()->SetPosition(btVector3(0, 2, 2));
-        emit updateScore();
     }
 }
 
@@ -678,6 +619,70 @@ void GLScene::contextMenuEvent(QContextMenuEvent *event)
 {
     GLViewport::contextMenuEvent(event);
 }
+
+void GLScene::updateBallGravVector(float dt)
+{
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+
+    // TODO: Apply this to all balls
+    std::shared_ptr<Entity> ball = this->entities->at(1);
+
+    // Compose a rotation matrix for the table
+    btMatrix3x3 xMat = btMatrix3x3(1,0,0,
+            0,cos(tablePitch),-sin(tablePitch),
+            0,sin(tablePitch),cos(tablePitch));
+    btMatrix3x3 zMat = btMatrix3x3(cos(tableRoll),-sin(tableRoll),0,
+            sin(tableRoll),cos(tableRoll),0,
+            0,0,1);
+    btMatrix3x3 rotMat = zMat*xMat;
+
+
+    // TODO: Send the table rotation data to the camera (OPTIMIZE)
+    camera->setCameraOffset(tableRoll, tablePitch);
+
+    // Pass thhe ball pos into the camera
+    btVector3 btBallPos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    glm::vec3 glmBallPos = glm::vec3(btBallPos.x(),btBallPos.y(),btBallPos.z());
+    camera->setAimTarget(glmBallPos);
+
+    btVector3 gravityVector = rotMat*(btVector3(0.0f,-950.0f,0.0f)*dt);
+    ball->GetPhysicsModel()->GetRigidBody()->activate(true);
+    ball->GetPhysicsModel()->GetRigidBody()->setGravity(gravityVector);
+
+
+    // Damp the table values
+    if(tablePitch-((dt/0.5f)*tablePitch) < M_PI/10000.0f && tablePitch-((dt/0.5f)*tablePitch) > -M_PI/10000.0f)
+    {
+        tablePitch = 0.0f;
+    }
+    else
+    {
+        tablePitch-=((dt/0.5f)*tablePitch);       
+    }
+
+    if(tableRoll-((dt/0.5f)*tableRoll) < M_PI/10000.0f && tableRoll-((dt/0.5f)*tableRoll) > -M_PI/10000.0f)
+    {
+        tableRoll = 0.0f;
+    }
+    else
+    {
+        tableRoll-=((dt/0.5f)*tableRoll);       
+    }
+
+}
+
+void GLScene::checkGameState()
+{
+    // Respawn the ball if it is below the threshold.
+    std::shared_ptr<Entity> ball = this->entities->at(1);
+
+    if(ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition().y() < -3.0f)
+    {
+        ball->GetPhysicsModel()->SetPosition(btVector3(0, 2, 2));
+        emit updateScore();
+    }
+}
+
 GLScene::~GLScene()
 {
     std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");

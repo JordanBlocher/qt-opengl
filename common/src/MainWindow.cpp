@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
     this->mainMenu = menu;
     if(this->name.toStdString() == std::string("Air Hockey"))
         this->mainMenu->resize(50, this->height() - 200);
-    else if(std::string(name) == std::string("Lighting") || std::string(name) == std::string("Labrinth"))
+    else if(std::string(name) == std::string("Lighting") || std::string(name) == std::string("Labyrinth"))
         this->mainMenu->resize(30, this->height() - 600);
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
         this->setConnections(1);
     else if(std::string(name) == std::string("Lighting"))
         this->setConnections(2);
-    else if(std::string(name) == std::string("Labrinth"))
+    else if(std::string(name) == std::string("Labyrinth"))
         this->setConnections(3);
 
     // Menu stuff
@@ -67,13 +67,15 @@ void MainWindow::setConnections(int menu)
     {
         // Connections to main menu
         if(menu == 1)
+        {
             connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
+            connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
+        }
         
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
 
         connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
         connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
-        connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
 
         // Connections to scoreboard
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
