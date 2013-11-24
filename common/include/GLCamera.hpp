@@ -20,6 +20,7 @@ public:
     void moveCamera(CamDirection direction);
     glm::vec3 getCameraPosition();
     void setCameraOffset(float zenith, float azimuth);
+    void setAimTarget(glm::vec3 aimPos);
 
     bool Updated(bool = true);
     glm::mat4 Projection();
@@ -34,6 +35,7 @@ protected:
     float radius, azimuth, zenith;
     float eyeX,eyeY,eyeZ;
     bool updated;
+    glm::vec3 aimTarget;
 
     glm::mat4 projection;
     glm::mat4 view;

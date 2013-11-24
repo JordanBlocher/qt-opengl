@@ -205,6 +205,9 @@ void GLScene::initializeGL()
 
 void GLScene::playGame(int)
 {
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    camera1->SetView(10.0f,0.0f,0.0f);
+
     this->update = false;
     this->resume();
 }
@@ -626,15 +629,19 @@ void GLScene::updateBallGravVector(float dt)
     btMatrix3x3 xMat = btMatrix3x3(1,0,0,
             0,cos(tablePitch),-sin(tablePitch),
             0,sin(tablePitch),cos(tablePitch));
-    // btMatrix3x3 yMat = btMatrix3x3(cos(tableRoll),0,sin(tableRoll),
-    //         0,1,0,
-    //         -sin(tableRoll),0,cos(tableRoll));
     btMatrix3x3 zMat = btMatrix3x3(cos(tableRoll),-sin(tableRoll),0,
             sin(tableRoll),cos(tableRoll),0,
             0,0,1);
     btMatrix3x3 rotMat = zMat*xMat;
 
+
+    // TODO: Send the table rotation data to the camera (OPTIMIZE)
     camera->setCameraOffset(tableRoll, tablePitch);
+
+    // Pass thhe ball pos into the camera
+    btVector3 btBallPos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    glm::vec3 glmBallPos = glm::vec3(btBallPos.x(),btBallPos.y(),btBallPos.z());
+    camera->setAimTarget(glmBallPos);
 
     btVector3 gravityVector = rotMat*(btVector3(0.0f,-600.0f,0.0f)*dt);
     ball->GetPhysicsModel()->GetRigidBody()->activate(true);
