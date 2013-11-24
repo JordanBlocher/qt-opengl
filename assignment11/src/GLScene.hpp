@@ -46,17 +46,20 @@ class GLScene : public GLViewport
     float getDT();
     void keyPressEvent(QKeyEvent*);
     void keyReleaseEvent(QKeyEvent*);
-    void updateKeys();
+    void updateKeys(float dt);
     void mousePressEvent(QMouseEvent*);
     void contextMenuEvent(QContextMenuEvent*);
     void wheelEvent(QWheelEvent*);
+    void updateBallGravVector(float dt);
 
-    bool keyHeld[12];// W S A D I K J L R RG LF UP DW
+    bool keyHeld[16];// W S A D I K J L R RG LF UP DW NP_8 NP_2 NP_4 NP_6 
     bool update;
     QColor background;
     QColor font;
     std::vector<std::string> gameLevels;
     size_t levelIdx;
+
+    float tablePitch, tableRoll;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
 

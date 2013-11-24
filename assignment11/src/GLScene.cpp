@@ -102,19 +102,23 @@ void GLScene::initGame()
     
     // Board
     std::shared_ptr<Entity> board(new Entity(0.2, 1000.0f, 1.0f, 0.01f, btVector3(0, 0, 0)));
-    board->Create(this->gameLevels[levelIdx].c_str(), NULL, Entity::BODY::DYNAMIC);
+    board->Create(this->gameLevels[levelIdx].c_str(), NULL, Entity::BODY::STATIC);
     world->AddPhysicsBody(board->GetPhysicsModel()->GetRigidBody());
     board->Constrain(Entity::DYNAMIC_NO_G);
     world->AddConstraint(board->GetPhysicsModel()->GetConstraint());
     this->entities->push_back(board);
 
     // Ball
-    std::shared_ptr<Entity> ball(new Entity(0.2, 10.0f, 1.0f, 0.01f, btVector3(0, 2, 2)));
+    std::shared_ptr<Entity> ball(new Entity(0.5, 10.0f, 1.0f, 0.01f, btVector3(0, 2, 2)));
     ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
     world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
     this->entities->push_back(ball);
+
+    // Initialize the controls
+    this->tablePitch = 0.0f;
+    this->tableRoll = 0.0f;
 }
 
 void GLScene::initializeGL()
@@ -347,10 +351,10 @@ void GLScene::idleGL()
         this->start_time = chrono::high_resolution_clock::now();
 
         // Repair Bug in Bullet Lib
-        for(int i=0; i<this->entities->size(); i++)
-        {
-            entities->at(i)->GetPhysicsModel()->GetRigidBody()->applyDamping(dt/1.0f);
-        }
+        //for(int i=0; i<this->entities->size(); i++)
+        //{
+        //    entities->at(i)->GetPhysicsModel()->GetRigidBody()->applyDamping(dt/1.0f);
+        //}
 
         // Get Discrete Dynamics World and update time step
         std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
@@ -362,7 +366,10 @@ void GLScene::idleGL()
         GLViewport::updateGL();
 
         // Update all of the physics dependent keys
-        updateKeys();
+        updateKeys(dt);
+
+        // Update the ball's gravity vector
+        updateBallGravVector(dt);
     }
 }
 
@@ -385,7 +392,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case(Qt::Key_2):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[1] = true;  
+                keyHeld[13] = true;  
             }
             else
             {
@@ -398,7 +405,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
         case(Qt::Key_4):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[2] = true;  
+                keyHeld[14] = true;  
             }
             else
             {
@@ -408,13 +415,13 @@ void GLScene::keyPressEvent(QKeyEvent *event)
          case(Qt::Key_6):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[3] = true;  
+                keyHeld[15] = true;  
             }     
             break;      
         case(Qt::Key_8):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[0] = true;  
+                keyHeld[12] = true;  
             }
             break;
         case (Qt::Key_Right):
@@ -433,12 +440,16 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             emit mainMenu(0);
             break;
         case(Qt::Key_W):
+            keyHeld[0] = true;
             break;
         case(Qt::Key_S):
+            keyHeld[1] = true;
             break;
         case(Qt::Key_A):
+            keyHeld[2] = true;
             break;
         case(Qt::Key_D):
+            keyHeld[3] = true;
             break;
 
     }
@@ -452,25 +463,25 @@ void GLScene::keyReleaseEvent(QKeyEvent *event)
         case(Qt::Key_2):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[1] = false;  
+                keyHeld[13] = false;  
             }
             break;
         case(Qt::Key_4):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[2] = false;  
+                keyHeld[14] = false;  
             }
             break;
-         case(Qt::Key_6):
+        case(Qt::Key_6):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[3] = false;  
+                keyHeld[15] = false;  
             }     
             break;      
         case(Qt::Key_8):
             if(event->modifiers() & Qt::KeypadModifier)
             {
-                keyHeld[0] = false;  
+                keyHeld[12] = false;  
             }
             break;
         case (Qt::Key_Right):
@@ -484,7 +495,19 @@ void GLScene::keyReleaseEvent(QKeyEvent *event)
             break;
         case (Qt::Key_Down):
             keyHeld[11] = false;
-            break;            
+            break; 
+         case(Qt::Key_W):
+            keyHeld[0] = false;
+            break;
+        case(Qt::Key_S):
+            keyHeld[1] = false;
+            break;
+        case(Qt::Key_A):
+            keyHeld[2] = false;
+            break;
+        case(Qt::Key_D):
+            keyHeld[3] = false;
+            break;           
     }
 }
 
@@ -503,27 +526,55 @@ void GLScene::wheelEvent(QWheelEvent *event)
 
 }
 
-void GLScene::updateKeys()
+void GLScene::updateKeys(float dt)
 {
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
     shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
-    if(keyHeld[0])
+    if(keyHeld[2]) // A
     {
-        emissive->lights.basic.base.ambientIntensity +=0.05f;
+        if(tablePitch+(dt*(M_PI/3.0f)) > M_PI/2.0f)
+        {
+            tablePitch = M_PI/2.0f;
+        }
+        else
+        {
+            tablePitch += dt*(M_PI/3.0f);
+        }
     }
-    if(keyHeld[1])
+    if(keyHeld[3]) // D
     {
-        emissive->lights.basic.base.ambientIntensity -=0.05f;
+        if(tablePitch-(dt*(M_PI/3.0f)) < -M_PI/2.0f)
+        {
+            tablePitch = -M_PI/2.0f;
+        }
+        else
+        {
+            tablePitch -= dt*(M_PI/3.0f);
+        }
     }
-    if(keyHeld[2])
+    if(keyHeld[0]) // W
     {
-        emissive->lights.basic.base.diffuseIntensity +=0.05f;
+        if(tableRoll+(dt*(M_PI/3.0f)) > M_PI/2.0f)
+        {
+            tableRoll = M_PI/2.0f;
+        }
+        else
+        {
+            tableRoll += dt*(M_PI/3.0f);
+        }
     }
-    if(keyHeld[3])
+    if(keyHeld[1]) // S
     {
-        emissive->lights.basic.base.diffuseIntensity -=0.05f;
-    }
+        if(tableRoll-(dt*(M_PI/3.0f)) < -M_PI/2.0f)
+        {
+            tableRoll = -M_PI/2.0f;
+        }
+        else
+        {
+            tableRoll -= dt*(M_PI/3.0f);
+        }
+    }   
     if(keyHeld[8]) // RG
     {
         camera->moveCamera(GLCamera::CamDirection::Right);
@@ -540,6 +591,22 @@ void GLScene::updateKeys()
     {
         camera->moveCamera(GLCamera::CamDirection::Down);
     }  
+    if(keyHeld[12])
+    {
+        emissive->lights.basic.base.ambientIntensity +=0.05f;
+    }
+    if(keyHeld[13])
+    {
+        emissive->lights.basic.base.ambientIntensity -=0.05f;
+    }
+    if(keyHeld[14])
+    {
+        emissive->lights.basic.base.diffuseIntensity +=0.05f;
+    }
+    if(keyHeld[15])
+    {
+        emissive->lights.basic.base.diffuseIntensity -=0.05f;
+    }
 }
 
 void GLScene::resume()
@@ -597,6 +664,48 @@ void GLScene::mousePressEvent(QMouseEvent *event)
 void GLScene::contextMenuEvent(QContextMenuEvent *event)
 {
     GLViewport::contextMenuEvent(event);
+}
+
+void GLScene::updateBallGravVector(float dt)
+{
+    // TODO: Apply this to all balls
+    std::shared_ptr<Entity> ball = this->entities->at(1);
+
+    // Compose a rotation matrix for the table
+    btMatrix3x3 xMat = btMatrix3x3(1,0,0,
+            0,cos(tablePitch),-sin(tablePitch),
+            0,sin(tablePitch),cos(tablePitch));
+    // btMatrix3x3 yMat = btMatrix3x3(cos(tableRoll),0,sin(tableRoll),
+    //         0,1,0,
+    //         -sin(tableRoll),0,cos(tableRoll));
+    btMatrix3x3 zMat = btMatrix3x3(cos(tableRoll),-sin(tableRoll),0,
+            sin(tableRoll),cos(tableRoll),0,
+            0,0,1);
+    btMatrix3x3 rotMat = zMat*xMat;
+
+    btVector3 gravityVector = rotMat*(btVector3(0.0f,-50.0f,0.0f)*dt);
+    ball->GetPhysicsModel()->GetRigidBody()->activate(true);
+    ball->GetPhysicsModel()->GetRigidBody()->applyCentralImpulse(gravityVector);
+
+    // Damp the table values
+    if(tablePitch-((dt/0.5f)*tablePitch) > M_PI/10.0f)
+    {
+        tablePitch = 0.0f;
+    }
+    else
+    {
+        tablePitch-=((dt/0.5f)*tablePitch);       
+    }
+
+    if(tableRoll-((dt/0.5f)*tableRoll) > M_PI/10.0f)
+    {
+        tableRoll = 0.0f;
+    }
+    else
+    {
+        tableRoll-=((dt/0.5f)*tableRoll);       
+    }
+
 }
 
 GLScene::~GLScene()
