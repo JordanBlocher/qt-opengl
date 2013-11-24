@@ -18,6 +18,9 @@ GLCamera::GLCamera(const char* name, QSize size)
     this->azimuth = (4.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
+    this->zenOffset = 0.0f;
+    this->aziOffset = 0.0f;
+
     this->SetProjection(glm::perspective(
                             this->fov, 
                             float(size.width())/float(size.height()),
@@ -118,21 +121,60 @@ void GLCamera::moveCamera(GLCamera::CamDirection direction)
     updateView();
 }
 
+void GLCamera::setCameraOffset(float zenith, float azimuth)
+{
+    this->zenOffset = zenith;
+    this->aziOffset = azimuth;
+    this->updateView();
+}
+
 void GLCamera::updateView()
 {
     // Declare function variables
     //float eyeX, eyeY, eyeZ;
 
-    // Calculate the eye position
-    eyeX = radius * sin (zenith) * cos (azimuth);
-    eyeZ = radius * sin (zenith) * sin (azimuth);
-    eyeY = radius * cos (zenith);
+    // Perform fake object rotation (for the table)
+    if(zenOffset != 0.0f || aziOffset != 0.0f )
+    {
+        float firstX, firstY, firstZ;
+
+        // Calculate the first eye position
+
+        // Calculate the eye position
+        eyeX = radius*sin (zenith) * cos (azimuth);
+        eyeZ = radius*sin (zenith) * sin (azimuth);
+        eyeY = radius*cos (zenith);
+    }
+    else
+    {
+        // Calculate the eye position
+        eyeX = radius * sin (zenith) * cos (azimuth);
+        eyeZ = radius * sin (zenith) * sin (azimuth);
+        eyeY = radius * cos (zenith);
+    }
+
+    // Compose a rotation matrix for the table
+    glm::mat3 xMat = glm::mat3(1,0,0,
+            0,cos(aziOffset),-sin(aziOffset),
+            0,sin(aziOffset),cos(aziOffset));
+    // glm::mat3 yMat = glm::mat3(cos(aziOffset),0,sin(aziOffset),
+    //         0,1,0,
+    //         -sin(aziOffset),0,cos(aziOffset));
+    glm::mat3 zMat = glm::mat3(cos(zenOffset),-sin(zenOffset),0,
+            sin(zenOffset),cos(zenOffset),0,
+            0,0,1);
+    glm::mat3 rotMat = zMat*xMat;
+    glm::mat4 homRotMat(rotMat[0][0],rotMat[0][1],rotMat[0][2],0,
+        rotMat[1][0],rotMat[1][1],rotMat[1][2],0,
+        rotMat[2][0],rotMat[2][1],rotMat[2][2],0,
+        0,0,0,1);
 
     // Set us up the view
     this->view = (glm::lookAt(
                     glm::vec3(eyeX, eyeY, eyeZ),  //eye pos
                     glm::vec3(0.0, 0.0, 0.0),    //focus point
-                    glm::vec3(0, 1, 0)) );  //up
+                    glm::vec3(0, 1, 0)))*homRotMat;  //up
+
 }
 
 bool GLCamera::Updated(bool update)

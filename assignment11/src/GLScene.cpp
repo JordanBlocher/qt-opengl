@@ -91,7 +91,7 @@ void GLScene::initGame()
     this->entities->push_back(board);
 
     // Ball
-    std::shared_ptr<Entity> ball(new Entity(0.5, 10.0f, 1.0f, 0.01f, btVector3(0, 2, 2)));
+    std::shared_ptr<Entity> ball(new Entity(0.5, 10.0f, 0.1f, 0.01f, btVector3(0, 2, 2)));
     ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
@@ -614,6 +614,8 @@ void GLScene::contextMenuEvent(QContextMenuEvent *event)
 
 void GLScene::updateBallGravVector(float dt)
 {
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+
     // TODO: Apply this to all balls
     std::shared_ptr<Entity> ball = this->entities->at(1);
 
@@ -629,12 +631,15 @@ void GLScene::updateBallGravVector(float dt)
             0,0,1);
     btMatrix3x3 rotMat = zMat*xMat;
 
-    btVector3 gravityVector = rotMat*(btVector3(0.0f,-50.0f,0.0f)*dt);
+    camera->setCameraOffset(tableRoll, tablePitch);
+
+    btVector3 gravityVector = rotMat*(btVector3(0.0f,-300.0f,0.0f)*dt);
     ball->GetPhysicsModel()->GetRigidBody()->activate(true);
     ball->GetPhysicsModel()->GetRigidBody()->applyCentralImpulse(gravityVector);
 
+
     // Damp the table values
-    if(tablePitch-((dt/0.5f)*tablePitch) > M_PI/10.0f)
+    if(tablePitch-((dt/0.5f)*tablePitch) < M_PI/10000.0f && tablePitch-((dt/0.5f)*tablePitch) > -M_PI/10000.0f)
     {
         tablePitch = 0.0f;
     }
@@ -643,7 +648,7 @@ void GLScene::updateBallGravVector(float dt)
         tablePitch-=((dt/0.5f)*tablePitch);       
     }
 
-    if(tableRoll-((dt/0.5f)*tableRoll) > M_PI/10.0f)
+    if(tableRoll-((dt/0.5f)*tableRoll) < M_PI/10000.0f && tableRoll-((dt/0.5f)*tableRoll) > -M_PI/10000.0f)
     {
         tableRoll = 0.0f;
     }
