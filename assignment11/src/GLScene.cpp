@@ -383,13 +383,39 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             keyHeld[4] = !keyHeld[4];
             break;
         case(Qt::Key_2):
-            keyHeld[5] = !keyHeld[5];
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[1] = true;  
+            }
+            else
+            {
+                keyHeld[5] = !keyHeld[5];
+            }
             break;
         case(Qt::Key_3):
             keyHeld[6] = !keyHeld[6];
             break;
         case(Qt::Key_4):
-            keyHeld[7] = !keyHeld[7];
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[2] = true;  
+            }
+            else
+            {
+                keyHeld[7] = !keyHeld[7];
+            }
+            break;
+         case(Qt::Key_6):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[3] = true;  
+            }     
+            break;      
+        case(Qt::Key_8):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[0] = true;  
+            }
             break;
         case (Qt::Key_Right):
             keyHeld[8] = true;
@@ -407,16 +433,12 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             emit mainMenu(0);
             break;
         case(Qt::Key_W):
-            keyHeld[0] = true;
             break;
         case(Qt::Key_S):
-            keyHeld[1] = true;
             break;
         case(Qt::Key_A):
-            keyHeld[2] = true;
             break;
         case(Qt::Key_D):
-            keyHeld[3] = true;
             break;
 
     }
@@ -427,18 +449,30 @@ void GLScene::keyReleaseEvent(QKeyEvent *event)
     // Act on the key press event
     switch(event->key())
     {
-        case (Qt::Key_W):
-            keyHeld[0] = false;
-            break;    
-        case (Qt::Key_S):
-            keyHeld[1] = false;
+        case(Qt::Key_2):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[1] = false;  
+            }
             break;
-        case (Qt::Key_A):
-            keyHeld[2] = false;
+        case(Qt::Key_4):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[2] = false;  
+            }
             break;
-        case (Qt::Key_D):
-            keyHeld[3] = false;
-            break; 
+         case(Qt::Key_6):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[3] = false;  
+            }     
+            break;      
+        case(Qt::Key_8):
+            if(event->modifiers() & Qt::KeypadModifier)
+            {
+                keyHeld[0] = false;  
+            }
+            break;
         case (Qt::Key_Right):
             keyHeld[8] = false;
             break;    
