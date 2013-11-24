@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
     this->mainMenu = menu;
     if(this->name.toStdString() == std::string("Air Hockey"))
         this->mainMenu->resize(50, this->height() - 200);
-    else if(std::string(name) == std::string("Lighting") || std::string(name) == std::string("Labrinth"))
+    else if(std::string(name) == std::string("Lighting") || std::string(name) == std::string("Labyrinth"))
         this->mainMenu->resize(30, this->height() - 600);
     this->mainMenu->setFocusPolicy(Qt::StrongFocus);
     this->mainMenu->setFocus();
@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
         this->setConnections(1);
     else if(std::string(name) == std::string("Lighting"))
         this->setConnections(2);
-    else if(std::string(name) == std::string("Labrinth"))
+    else if(std::string(name) == std::string("Labyrinth"))
         this->setConnections(3);
 
     // Menu stuff

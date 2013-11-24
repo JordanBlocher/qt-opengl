@@ -123,7 +123,7 @@ void GameMenu::paintEvent(QPaintEvent *event)
     painter.setPen(Qt::darkGray);
     painter.setFont(QFont("Verdana", 24));
     if(this->layout->currentIndex() == 0)   
-        painter.drawText(this->geometry().width()/2 - 90, 40, tr("LABRINTH"));
+        painter.drawText(this->geometry().width()/2 - 90, 40, tr("LABYRINTH"));
     if(this->layout->currentIndex() == 1)   
         painter.drawText(this->geometry().width()/2 - 110, 40, tr("Options Menu"));
     if(this->layout->currentIndex() == 2)   
