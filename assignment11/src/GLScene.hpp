@@ -2,14 +2,7 @@
 #define GLMAIN_H
 
 #include <GLViewport.hpp>
-
-#include <chrono>
-#include <phonon/AudioOutput>
-#include <phonon/MediaObject>
-#include <phonon/MediaSource>
-#include <phonon/VideoWidget>
-#include <phonon/VideoPlayer>
-#include <QSound>
+#include "SoundManager.hpp"
 
 class QKeyEvent;
 class QContextMenuEvent;
@@ -26,17 +19,12 @@ class GLScene : public GLViewport
 
  signals:
     void mainMenu(int);
-    void playBgm();
-    void playEffect(int effectNum);
 
  protected slots:
     void idleGL();
     void resume();
     void pause();
     void playGame(int);
-    void playBgmWorker();    
-    void playEffectWorker(int effectNum);  
-    void finished(); 
 
  protected:
     void initGame();
@@ -64,16 +52,6 @@ class GLScene : public GLViewport
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
 
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
-
-    // Phonon
-    Phonon::MediaObject *bgmObject;
-    Phonon::AudioOutput *bgmOutput;
-    Phonon::MediaSource *bgmSource;
-    QList<Phonon::MediaSource> sources;
-    QList<Phonon::AudioOutput*> audioOutputs;
-    QList<Phonon::MediaObject*> mediaObjects;
-    bool wasInContact;
-
 };
 
 template <typename T> 

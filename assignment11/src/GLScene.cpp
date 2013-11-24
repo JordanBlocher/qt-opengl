@@ -49,6 +49,14 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {
+    // Create sound manager
+    std::shared_ptr<SoundManager> soundMan(new SoundManager("soundMan"));
+    this->AddToContext(soundMan);
+
+    // Play first bgm
+    soundMan->emitPlayBgm(0);
+
+
     this->gameLevels = {"level1.obj"};
     this->levelIdx = 0;
 
@@ -58,32 +66,6 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
         this->keyHeld[index] = false;
 
     keyHeld[4] = keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
-
-   // Setup audio output for bgm
-    bgmOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
-    bgmObject = new Phonon::MediaObject(this);
-    bgmObject->setTickInterval(1000);
-    Phonon::createPath(bgmObject, bgmOutput);
-    bgmSource = new Phonon::MediaSource("start.mp3");
-
-    // Setup audio outputs for sound effects
-    for(int i = 0; i < 5; i++)
-    {
-        audioOutputs.append(new Phonon::AudioOutput(Phonon::MusicCategory, this));
-        mediaObjects.append(new Phonon::MediaObject(this));
-        mediaObjects[i]->setTickInterval(1000);
-        Phonon::createPath(mediaObjects[i], audioOutputs[i]);
-    }
-
-    // Add sounds to list
-    sources.append(Phonon::MediaSource("ding.mp3"));
-    sources.append(Phonon::MediaSource("start.mp3"));
-    sources.append(Phonon::MediaSource("hit.mp3"));
-
-    // Connect signals to play sounds
-    connect(this, SIGNAL(playBgm()), this, SLOT(playBgmWorker()));
-    connect(this, SIGNAL(playEffect(int)), this, SLOT(playEffectWorker(int)));
-    connect(bgmObject, SIGNAL(finished()), SLOT(finished()));
 
     this->update = true;
 }
@@ -223,15 +205,6 @@ void GLScene::initializeGL()
 
 void GLScene::playGame(int)
 {
-    // Play bgm, if it is not already playing
-    if(bgmObject->state() == Phonon::StoppedState)
-    {
-        emit playBgm(); 
-    }    
-
-    // Play round start sound
-    emit playEffect(1);
-
     this->update = false;
     this->resume();
 }
@@ -627,33 +600,6 @@ void GLScene::pause()
         this->update = false;
         GLViewport::timer.stop();
     }
-}
-
-void GLScene::playBgmWorker()
-{
-    // Play bgm
-    bgmObject->setCurrentSource(*bgmSource);
-    bgmObject->play();
-}
-
-void GLScene::playEffectWorker(int effectNum)
-{
-    // Check to see if there is an available sound output
-    for(int i = 0; i < 5; i ++)
-    {
-        // Check if this mediaObject is able to play our effect
-        if(mediaObjects[i]->state() == Phonon::StoppedState)
-        {
-            mediaObjects[i]->setCurrentSource(sources[effectNum]);
-            mediaObjects[i]->play();
-            break;
-        }
-    }
-}
-
-void GLScene::finished()
-{
-    bgmObject->play();
 }
 
 void GLScene::mousePressEvent(QMouseEvent *event)
