@@ -343,6 +343,9 @@ void GLScene::idleGL()
 
         // Update the ball's gravity vector
         updateBallGravVector(dt);
+
+        // Maintain game
+        checkGameState();
     }
 }
 
@@ -633,7 +636,7 @@ void GLScene::updateBallGravVector(float dt)
 
     camera->setCameraOffset(tableRoll, tablePitch);
 
-    btVector3 gravityVector = rotMat*(btVector3(0.0f,-300.0f,0.0f)*dt);
+    btVector3 gravityVector = rotMat*(btVector3(0.0f,-600.0f,0.0f)*dt);
     ball->GetPhysicsModel()->GetRigidBody()->activate(true);
     ball->GetPhysicsModel()->GetRigidBody()->applyCentralImpulse(gravityVector);
 
@@ -657,6 +660,17 @@ void GLScene::updateBallGravVector(float dt)
         tableRoll-=((dt/0.5f)*tableRoll);       
     }
 
+}
+
+void GLScene::checkGameState()
+{
+    // Respawn the ball if it is below the threshold.
+    std::shared_ptr<Entity> ball = this->entities->at(1);
+
+    if(ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition().y() < -3.0f)
+    {
+        ball->GetPhysicsModel()->SetPosition(btVector3(0, 2, 2));
+    }
 }
 
 GLScene::~GLScene()

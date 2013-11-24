@@ -39,6 +39,7 @@ class GLScene : public GLViewport
     void contextMenuEvent(QContextMenuEvent*);
     void wheelEvent(QWheelEvent*);
     void updateBallGravVector(float dt);
+    void checkGameState();
 
     bool keyHeld[16];// W S A D I K J L R RG LF UP DW NP_8 NP_2 NP_4 NP_6 
     bool update;
