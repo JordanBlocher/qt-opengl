@@ -13,7 +13,7 @@ DynamicsWorld::DynamicsWorld(const char* name) : GLNode(name)
     				         this->overlappingPairCache.get(),
     						 this->solver.get(),
     						 this->collisionConfiguration.get()));
-    this->world->setGravity(btVector3(0,0,0));
+    this->world->setGravity(btVector3(0,-10,0));
 }
 
 DynamicsWorld::~DynamicsWorld()

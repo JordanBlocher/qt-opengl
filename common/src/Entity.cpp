@@ -84,13 +84,13 @@ void Entity::Constrain(BODY type)
     if(type == DYNAMIC)
     {
         this->physModel->initConstraints(zeros, ones, zeros, ones, zeros);
-        this->physModel->GetRigidBody()->setDamping(0.5f, 0.5f);
+        this->physModel->GetRigidBody()->setDamping(0.0f, 0.0f);
         this->physModel->GetRigidBody()->setActivationState(DISABLE_DEACTIVATION);
     }
     else if(type == DYNAMIC_NO_G)
     {
         this->physModel->initConstraints(zeros, ones, zeros, btVector3(0.0f,1.0f,0.0f), zeros);
-        this->physModel->GetRigidBody()->setDamping(0.5f, 0.5f);
+        this->physModel->GetRigidBody()->setDamping(0.0f, 0.0f);
 
         // Set Restrictive Dynamics Constraints
         this->physModel->GetRigidBody()->setLinearFactor(btVector3(1,0,1));

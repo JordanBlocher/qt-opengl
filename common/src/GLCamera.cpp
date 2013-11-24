@@ -14,7 +14,7 @@ GLCamera::GLCamera(const char* name, QSize size)
     this->focusDistance = 10000.0f;
 
     // Set the default camera angle
-    this->radius  = 25.0f;
+    this->radius  = 15.0f;
     this->azimuth = (4.0f*M_PI)/4.0f;
     this->zenith  = (2.0f*M_PI)/10.0f;
 
@@ -164,7 +164,7 @@ void GLCamera::updateView()
             sin(zenOffset),cos(zenOffset),0,
             0,0,1);
     glm::mat3 rotMat = zMat*xMat;
-    glm::mat4 homRotMat(rotMat[0][0],rotMat[0][1],rotMat[0][2],0,
+    this->homRotMat = glm::mat4(rotMat[0][0],rotMat[0][1],rotMat[0][2],0,
         rotMat[1][0],rotMat[1][1],rotMat[1][2],0,
         rotMat[2][0],rotMat[2][1],rotMat[2][2],0,
         0,0,0,1);
@@ -181,4 +181,9 @@ bool GLCamera::Updated(bool update)
 {
     this->updated = update;
     return this->updated;
+}
+
+glm::mat4 GLCamera::RotMat()
+{
+    return this->homRotMat;
 }

@@ -24,6 +24,7 @@ public:
     bool Updated(bool = true);
     glm::mat4 Projection();
     glm::mat4 View();
+    glm::mat4 RotMat();
 
 
 protected:
@@ -37,6 +38,7 @@ protected:
 
     glm::mat4 projection;
     glm::mat4 view;
+    glm::mat4 homRotMat;
 
     float zenOffset;
     float aziOffset;
