@@ -10,9 +10,9 @@ SoundManager::SoundManager(const char* name)
 	Phonon::createPath(bgmObject, bgmOutput);
 
 	// Add bgm files to sources
-	bgmSources.append(Phonon::MediaSource("RalphieHolyGrail.mp3"));
-	bgmSources.append(Phonon::MediaSource("ZomboyHoedown.mp3"));
-	bgmSources.append(Phonon::MediaSource("KonecRailgun.mp3"));
+	bgmSources.append(Phonon::MediaSource("assets/sound/RalphieHolyGrail.mp3"));
+	bgmSources.append(Phonon::MediaSource("assets/sound/ZomboyHoedown.mp3"));
+	bgmSources.append(Phonon::MediaSource("assets/sound/KonecRailgun.mp3"));
 
 	// Setup audio outputs for sound effects
 	for(int i = 0; i < 5; i++)
@@ -24,7 +24,7 @@ SoundManager::SoundManager(const char* name)
 	}
 
 	// Add sound effect files to sources
-	sources.append(Phonon::MediaSource("hit.mp3"));
+	sources.append(Phonon::MediaSource("assets/sound/hit.mp3"));
 
 	// Connect signals to play sounds
 	QObject::connect(this, SIGNAL(playBgm(int)), this, SLOT(playBgmWorker(int)));
