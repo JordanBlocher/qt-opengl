@@ -68,6 +68,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     keyHeld[4] = keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
 
     this->update = true;
+    this->startPosition = glm::vec4(2.5f, 1.0f, 2.5f, 1.0f);
+    this->endPosition = glm::vec4(-2.5f, 0.0f, -2.5f, 1.0f);
 }
 
 void GLScene::initGame()
@@ -91,8 +93,11 @@ void GLScene::initGame()
     this->entities->push_back(board);
 
     // Ball
-    std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(0, 2, 2)));
-    ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
+    btScalar x = this->startPosition.x;
+    btScalar y = this->startPosition.y;
+    btScalar z = this->startPosition.z;
+    std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(x, y, z)));
+    ball->Create("ball3.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
     world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
@@ -173,34 +178,19 @@ void GLScene::initializeGL()
 
     //Set Lighting
     shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
+    emissive->lights.spot[1].point.position += this->startPosition;
+    emissive->lights.spot[0].point.position += this->startPosition;
+    emissive->lights.point[0].position += this->startPosition;
+    emissive->lights.point[1].position += this->endPosition;
     this->AddToContext(emissive);
 
-#ifdef PHYSICS_DEBUG
-    std::cout << "Initializing Debug Physics Program" << std::endl;
-    //Shaders (draw normals)
-    shared_ptr<GLShader> pvertex(new GLShader("pvertex.glsl", GL_VERTEX_SHADER, "passvshader"));
-    shared_ptr<GLShader> pfragment(new GLShader("pfragment.glsl", GL_FRAGMENT_SHADER, "passfshader"));
-    //Program
-    shared_ptr<GLProgram> pprogram(new GLProgram("passthrough_program"));
-    //Add Shaders
-    pprogram->AddShader(pvertex);
-    pprogram->AddShader(pfragment);
-    //Add Program
-    if( this->AddProgram(pprogram) )
-        this->AddToContext( pprogram );
-    //Share UBO
-    pprogram->SetUBO(vertex_uniform);
-  
-    //Add physics debug class
-    std::shared_ptr<PhysicsDebug> physicsDebug(new PhysicsDebug("physicsDebug"));
-    this->AddToContext(physicsDebug);
+    #ifdef DEBUG_DRAWING
+    this->DebugDrawInit();
+    #endif 
 
-    //Add debug class to world
-    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
-    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
-    world->setDebugDrawer(physicsDebug.get());
-    dynamics->SetWorld(std::move(world));
-#endif
+    #ifdef PHYSICS_DEBUG
+    this->DebugPhysicsInit();
+    #endif
 }
 
 void GLScene::playGame(int)
@@ -231,7 +221,7 @@ void GLScene::paintGL()
         std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->GetPhysicsModel();
         std::shared_ptr<GLModel> gmodel = entities->at(i)->GetGraphicsModel();
         glm::mat4 transform = pmodel->GetTransform();
-
+        btVector3 pos = pmodel->GetRigidBody()->getCenterOfMassPosition();
 
         // Get UBOS
         shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
@@ -245,12 +235,16 @@ void GLScene::paintGL()
 
         // Get Lights
         shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
+        emissive->lights.spot[0].point.position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
+        emissive->lights.spot[1].point.position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
+        emissive->lights.point[2].position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
 
         // Bind MVP
         Matrices matrices;
+        glm::mat4 rot = camera1->RotMat();
         matrices.mvpMatrix = vp * transform * gmodel->Matrix();
         matrices.mvMatrix = transform * gmodel->Matrix();
-        matrices.normalMatrix = glm::transpose(glm::inverse(transform * gmodel->Matrix() * camera1->RotMat() ));
+        matrices.normalMatrix = glm::transpose(glm::inverse(transform * gmodel->Matrix() *rot ));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -267,9 +261,16 @@ void GLScene::paintGL()
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + 16, sptSize, &(emissive->lights.spot[0]));
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + sptSize + 24, sptSize, &(emissive->lights.spot[1]));
+        for(int i=0; i<3; i++)
+        {
+            cout<<"Point "<<i<<" offset "<<baseSize + i* ptSize + 8*(i+1)<<endl;
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + (i+1)*ptSize + 8*(i+1), ptSize, &emissive->lights.point[i]);
+        }
+        for(int i=0; i<2; i++)
+        {
+            cout<<"Spot "<<i<<" offset "<<baseSize + 3*ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 3*ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
+        }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Get Sampler
@@ -286,34 +287,15 @@ void GLScene::paintGL()
         glUseProgram(0);
 
     }
-    
-#ifdef PHYSICS_DEBUG
-    {
-        Matrices matrices;
-        shared_ptr<GLProgram> pprogram = this->Get<GLProgram>("passthrough_program");
-        shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
-        std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
-        std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
-        std::shared_ptr<PhysicsDebug> physicsDebug = this->Get<PhysicsDebug>("physicsDebug");
-        
-        // set the matrices
-        matrices.mvpMatrix = vp;
-        matrices.mvMatrix = camera1->View();
-        matrices.normalMatrix = camera1->View();
-        glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
-        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
-        // now draw and render the debug world
-        glUseProgram(pprogram->getId());
-        world->debugDrawWorld();
-        physicsDebug->loadToBuffer();
-        physicsDebug->draw();
-        glUseProgram(0);
-        
-        dynamics->SetWorld(std::move(world));
-    }
-#endif
+           
+    #ifdef DEBUG_DRAWING
+        this->DebugDraw();
+    #endif 
+
+
+    #ifdef PHYSICS_DEBUG
+        this->DebugPhysicsDraw();
+    #endif
 
 }
 
@@ -326,12 +308,6 @@ void GLScene::idleGL()
         time = chrono::high_resolution_clock::now();
         dt = chrono::duration_cast< std::chrono::duration<float> >(time-this->start_time).count();
         this->start_time = chrono::high_resolution_clock::now();
-
-        // Repair Bug in Bullet Lib
-        //for(int i=0; i<this->entities->size(); i++)
-        //{
-        //    entities->at(i)->GetPhysicsModel()->GetRigidBody()->applyDamping(dt/1.0f);
-        //}
 
         // Get Discrete Dynamics World and update time step
         std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
@@ -418,7 +394,7 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             keyHeld[11] = true;
             break;            
         case (Qt::Key_Escape):
-            emit mainMenu(0);
+            emit mainMenu(1);
             break;
         case(Qt::Key_W):
             keyHeld[0] = true;
@@ -676,9 +652,15 @@ void GLScene::checkGameState()
     // Respawn the ball if it is below the threshold.
     std::shared_ptr<Entity> ball = this->entities->at(1);
 
-    if(ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition().y() < -3.0f)
+    btVector3 pos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
+    if(pos.y() < -3.0f)
     {
-        ball->GetPhysicsModel()->SetPosition(btVector3(0, 2, 2));
+        if(pos.z() - endPosition.z < 0.1 && pos.x() - endPosition.x < 0.1)
+            emit endGame();
+        btScalar x = this->startPosition.x;
+        btScalar y = this->startPosition.y;
+        btScalar z = this->startPosition.z;
+        ball->GetPhysicsModel()->SetPosition(btVector3(x, y, z));
         emit updateScore();
     }
 }
@@ -691,4 +673,170 @@ GLScene::~GLScene()
     dynamics->SetWorld(std::move(world));
 }
 
+void GLScene::DebugDrawInit()
+{
+  
+    //Add little spheres where the spot light and point light are
+    shared_ptr<GLModel> pointLightModel(new GLModel("./redsphere.obj", "pointLightModel", NUM_ATTRIBUTES));
+    if( pointLightModel->CreateVAO() )
+        this->AddToContext(pointLightModel);
+    shared_ptr<GLModel> spotLightModel(new GLModel("./greensphere.obj", "spotLightModel", NUM_ATTRIBUTES));
+    if( spotLightModel->CreateVAO() )
+        this->AddToContext(spotLightModel);
+    shared_ptr<GLModel> spotLightModel2(new GLModel("./greensphere.obj", "spotLightModel2", NUM_ATTRIBUTES));
+    if( spotLightModel2->CreateVAO() )
+        this->AddToContext(spotLightModel2);
 
+    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
+
+  }
+
+void GLScene::DebugPhysicsInit()
+{
+    std::cout << "Initializing Debug Physics Program" << std::endl;
+    //Shaders (draw normals)
+    shared_ptr<GLShader> pvertex(new GLShader("pvertex.glsl", GL_VERTEX_SHADER, "passvshader"));
+    shared_ptr<GLShader> pfragment(new GLShader("pfragment.glsl", GL_FRAGMENT_SHADER, "passfshader"));
+    //Program
+    shared_ptr<GLProgram> pprogram(new GLProgram("passthrough_program"));
+    //Add Shaders
+    pprogram->AddShader(pvertex);
+    pprogram->AddShader(pfragment);
+    //Add Program
+    if( this->AddProgram(pprogram) )
+        this->AddToContext( pprogram );
+    //Share UBO
+    shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+    pprogram->SetUBO(vuniform);
+  
+    //Add physics debug class
+    std::shared_ptr<PhysicsDebug> physicsDebug(new PhysicsDebug("physicsDebug"));
+    this->AddToContext(physicsDebug);
+
+    //Add debug class to world
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+    world->setDebugDrawer(physicsDebug.get());
+    dynamics->SetWorld(std::move(world));
+}
+
+void GLScene::DebugDraw()
+{
+  //Get view & projection matrices
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    glm::mat4 vp = camera1->Projection() * camera1->View();
+    
+    // Get UBOS
+    shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+    shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+    shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
+    shared_ptr<GLUniform> eye = this->Get<GLUniform>("Eye");
+    
+    // Get Programs
+    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
+    shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
+
+    // Get Lights
+    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
+
+    //Get Sampler
+    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+
+    Matrices matrices;
+    for(int i=0; i<3; i++)
+    {
+        //Draw Point light orb
+        if ( keyHeld[6] )
+        {
+            shared_ptr<GLModel> pointLightModel = this->Get<GLModel>("pointLightModel");
+            glm::vec4 v = emissive->lights.point[i].position;
+            glm::mat4 pointMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(v.x, v.y, v.z)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+            pointLightModel->setMatrix(pointMatrix);
+
+            matrices.mvpMatrix = vp * pointLightModel->Matrix();
+            matrices.mvMatrix = pointLightModel->Matrix();
+            matrices.normalMatrix = glm::transpose(glm::inverse(pointLightModel->Matrix()));
+            glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            //Colors Program
+            glUseProgram(cprogram->getId());
+            pointLightModel->Draw(cuniform, cprogram->getId());
+            glUseProgram(0);
+            
+        }
+    }
+    
+    for(int i=0; i<2; i++)
+    {
+        //Draw Spot light orb
+        if ( keyHeld[7] )
+        {
+            shared_ptr<GLModel> spotLightModel = this->Get<GLModel>("spotLightModel");
+            glm::vec4 v = emissive->lights.spot[i].point.position;
+            glm::mat4 spotMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(v.x, v.y, v.z)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+            spotLightModel->setMatrix(spotMatrix);
+
+            matrices.mvpMatrix = vp * spotLightModel->Matrix();
+            matrices.mvMatrix = spotLightModel->Matrix();
+            matrices.normalMatrix = glm::transpose(glm::inverse(spotLightModel->Matrix()));
+            glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            //Colors Program
+            glUseProgram(cprogram->getId());
+            spotLightModel->Draw(cuniform, cprogram->getId());
+            glUseProgram(0);
+        }
+    }   
+}
+
+void GLScene::DebugPhysicsDraw()
+{
+  //Get view & projection matrices
+    shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    glm::mat4 vp = camera1->Projection() * camera1->View();
+
+
+    // Get UBOS
+    shared_ptr<GLUniform> vuniform = this->Get<GLUniform>("GMatrices");
+    shared_ptr<GLUniform> cuniform = this->Get<GLUniform>("GColors");
+    shared_ptr<GLUniform> luniform = this->Get<GLUniform>("GLights");
+    shared_ptr<GLUniform> eye = this->Get<GLUniform>("Eye");
+    
+    // Get Programs
+    shared_ptr<GLProgram> tprogram = this->Get<GLProgram>("texture_program");
+    shared_ptr<GLProgram> cprogram = this->Get<GLProgram>("color_program");
+
+    // Get Lights
+    shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
+
+    //Get Sampler
+    shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
+
+    Matrices matrices;
+    shared_ptr<GLProgram> pprogram = this->Get<GLProgram>("passthrough_program");
+
+    std::shared_ptr<DynamicsWorld> dynamics = this->Get<DynamicsWorld>("dynamics");
+    std::unique_ptr<btDiscreteDynamicsWorld> world = std::move(dynamics->GetWorld());
+    std::shared_ptr<PhysicsDebug> physicsDebug = this->Get<PhysicsDebug>("physicsDebug");
+    
+    // set the matrices
+    matrices.mvpMatrix = vp;
+    matrices.mvMatrix = camera1->View();
+    matrices.normalMatrix = camera1->View();
+    glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
+    glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // now draw and render the debug world
+    glUseProgram(pprogram->getId());
+    world->debugDrawWorld();
+    physicsDebug->loadToBuffer();
+    physicsDebug->draw();
+    glUseProgram(0);
+    
+    dynamics->SetWorld(std::move(world));
+}

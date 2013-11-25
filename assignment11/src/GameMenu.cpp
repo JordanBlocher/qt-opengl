@@ -101,18 +101,30 @@ void GameMenu::setConnections()
 void GameMenu::updateScore()
 {
     glView->p1.score --;
-    emit update();
     if(glView->p1.score <= 0)
     {
+        this->layout->setCurrentIndex(1);
         this->layout->setCurrentIndex(2);
         this->updatePaint();
+        this->show();
     }
+    emit update();
 }
 
+void GameMenu::endGame()
+{
+    glView->p1.winner = true;
+    this->layout->setCurrentIndex(2);
+    this->updatePaint();
+    this->show();
+
+}
 void GameMenu::play()
 {
     this->hide();
     glView->setFocus();
+    glView->p1.score = 5;
+    emit update();
     emit playGame(0);
 }
 

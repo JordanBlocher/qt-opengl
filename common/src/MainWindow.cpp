@@ -31,9 +31,8 @@ MainWindow::MainWindow(QWidget *parent, GLViewport *view, MenuWidget *menu, cons
 
     if(this->name.toStdString() == std::string("Air Hockey"))
             this->scoreBoard(0);
-    if(this->name.toStdString() == std::string("Labrinth"))
+    else if(this->name.toStdString() == std::string("Labyrinth"))
             this->scoreBoard(1);
-
 
     // Create Main Menu
     this->mainMenu = menu;
@@ -65,21 +64,15 @@ void MainWindow::setConnections(int menu)
 {
     if(menu == 1 || menu == 3)
     {
-        // Connections to main menu
         if(menu == 1)
         {
             connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
-            connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
         }
-        
+        connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
-
         connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
         connect(glView, SIGNAL(mainMenu(int)), mainMenu, SLOT(toggle(int)));
-
-        // Connections to scoreboard
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
-        connect(this, SIGNAL(pause()), glView, SLOT(pause()));
         connect(mainMenu, SIGNAL(update()), overlay, SLOT(updatePaint()));
     }
     else if (menu == 2)
@@ -104,6 +97,7 @@ void MainWindow::scoreBoard(int game)
         glView->p2.name = "Player 2";
         glView->p2.score = 0;
         connect( glView, SIGNAL(updateScore(int, int)), mainMenu, SLOT(updateScore(int, int)));
+        overlay->updatePaint();
     }
 
     else if(game == 1)
@@ -111,7 +105,9 @@ void MainWindow::scoreBoard(int game)
         glView->p1.name = "Lives";
         glView->p1.score = 5;
         glView->p2.score = -1;
+        glView->p2.name = "";
         connect( glView, SIGNAL(updateScore()), mainMenu, SLOT(updateScore()));
+        overlay->updatePaint();
     }
 }
 
