@@ -13,6 +13,8 @@ SoundManager::SoundManager(const char* name)
 	bgmSources.append(Phonon::MediaSource("assets/sound/RalphieHolyGrail.mp3"));
 	bgmSources.append(Phonon::MediaSource("assets/sound/ZomboyHoedown.mp3"));
 	bgmSources.append(Phonon::MediaSource("assets/sound/KonecRailgun.mp3"));
+	bgmSources.append(Phonon::MediaSource("assets/sound/RalphieHolyGrail.mp3"));
+
   
 	// Setup audio outputs for sound effects
 	for(int i = 0; i < 5; i++)

@@ -61,11 +61,11 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
 
     soundMan->emitPlayBgm(0);
 
-    this->gameLevels = {"level1.obj","1hardmaze56.obj"};
-    this->balls = {"greensphere.obj","redsphere.obj"};
-    this->startPosition = { glm::vec3(2.5f, 1.0f, 2.5f), glm::vec3(4.8f, 1.0f, -4.0f) };
-    this->endPosition = { glm::vec3(-2.4,-1.6,-2.3),glm::vec3(4.8,-2,4.8) };
-    this->levelCount = 2;
+    this->gameLevels = {"level2.obj","level1.obj","1hardmaze56.obj"};
+    this->balls = {"greensphere.obj","redsphere.obj","greensphere.obj"};
+    this->startPosition = { glm::vec3(-5.0f, 1.0f, 0.25f),glm::vec3(2.5f, 1.0f, 2.5f), glm::vec3(4.8f, 1.0f, -4.0f) };
+    this->endPosition = { glm::vec3(7.5f, -1.5f, -3.0f), glm::vec3(-2.4,-1.6,-2.3),glm::vec3(4.8,-2,4.8) };
+    this->levelCount = 3;
 
     this->levelIdx = 0;
     this->setContextMenuPolicy(Qt::DefaultContextMenu);  
@@ -73,7 +73,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
-    keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
+    keyHeld[4] = keyHeld[6] = true; 
 
     this->update = true;
     this->damping = true;
@@ -284,8 +284,8 @@ void GLScene::paintGL()
         Matrices matrices;
         glm::mat4 rot = camera1->RotMat();
         matrices.mvpMatrix = vp * transform * gmodel->Matrix();
-        matrices.mvMatrix =  transform * gmodel->Matrix();
-        matrices.normalMatrix = glm::transpose(glm::inverse(rot * mvMatrix));
+        matrices.mvMatrix =  camera1->View() * transform * gmodel->Matrix();
+        matrices.normalMatrix = glm::transpose(glm::inverse(matrices.mvMatrix));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -301,7 +301,7 @@ void GLScene::paintGL()
         size_t baseSize = sizeof(emissive->lights.basic);
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
-        cout<< "size "<< ptSize<<" " <<sptSize<<endl;
+        //cout<< "size "<< ptSize<<" " <<sptSize<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         //cout<<"Point  offset "<<baseSize + 8<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
@@ -671,7 +671,7 @@ void GLScene::updateBallGravVector(float dt)
 
 
     // TODO: Send the table rotation data to the camera (OPTIMIZE)
-    camera->setCameraOffset(tableRoll/2.0f, tablePitch/2.0f);
+    camera->setCameraOffset(tableRoll/3.0f, tablePitch/3.0f);
 
     // Pass thhe ball pos into the camera
     btVector3 btBallPos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
@@ -716,8 +716,9 @@ void GLScene::checkGameState()
     btVector3 pos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     if(pos.y() < -1.5f)
     {
+        std::cout << "pos:" << pos.x() << " " << pos.y() << " " << pos.z() <<std::endl;
 
-        if(abs(pos.z() - this->endPosition[levelIdx].z) < 0.6 && abs(pos.x() - this->endPosition[levelIdx].x) < 0.6)
+        if(abs(pos.z() - this->endPosition[levelIdx].z) < 0.9 && abs(pos.x() - this->endPosition[levelIdx].x) < 0.9)
         {
             if(levelIdx == levelCount-1)
             {

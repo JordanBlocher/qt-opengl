@@ -1,0 +1,12 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl Material.001
+Ns 92.156863
+Ka 0.134173 0.512000 0.077178
+Kd 0.134173 0.512000 0.077178
+Ks 1.0000 1.0000 1.0000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd assets/textures/moss.jpg
