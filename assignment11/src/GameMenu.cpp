@@ -111,9 +111,17 @@ void GameMenu::updateScore(int, int)
     emit update();
 }
 
+void GameMenu::forceRepaint()
+{
+    emit update();
+}
+
 void GameMenu::endGame()
 {
-    glView->p1.winner = true;
+    if(glView->p1.score > 0)
+    {   
+        glView->p1.winner = true;
+    }
     this->layout->setCurrentIndex(2);
     this->updatePaint();
     this->show();
@@ -124,6 +132,7 @@ void GameMenu::play()
     this->hide();
     glView->setFocus();
     glView->p1.score = 5;
+    glView->p1.winner = false;
     emit update();
     emit playGame(0);
 }

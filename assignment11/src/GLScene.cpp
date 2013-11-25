@@ -77,6 +77,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
 
     this->update = true;
     this->damping = true;
+        gameTime = 0;
+
 
     connect(this, SIGNAL(dataRcvd(glm::vec3)), this, SLOT(dataWorker(glm::vec3)));
 }
@@ -202,6 +204,7 @@ void GLScene::playGame(int level)
 {
     // Get the nodes that we need
     shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    std::shared_ptr<SoundManager> soundMan = this->Get<SoundManager>("soundMan");  
     std::shared_ptr<Entity> ball = this->entities->at((level*2)+1);
     std::shared_ptr<Entity> maze = this->entities->at(level*2);
 
@@ -233,6 +236,13 @@ void GLScene::playGame(int level)
     // Ensure that the game starts
     this->update = false;
     this->resume();
+
+    // Set up the damn clock thing
+    elapsedTime = 0.0f;
+    gameTime = 0;
+
+    soundMan->emitPlayBgm(levelIdx+1);
+
 }
 
 
@@ -353,6 +363,16 @@ void GLScene::idleGL()
 
         // Maintain game
         checkGameState();
+
+        elapsedTime+=dt;
+
+        if(elapsedTime > 1.0f)
+        {
+            gameTime++;
+            emit forceRepaint();
+            elapsedTime = 0.0f;
+        }
+
     }
 }
 
@@ -693,7 +713,6 @@ void GLScene::checkGameState()
     btVector3 pos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     if(pos.y() < -1.5f)
     {
-        std::cout << "scoreCheck" << pos.x() << ", " << pos.y() << ", " << pos.z() << std::endl;
 
         if(abs(pos.z() - this->endPosition[levelIdx].z) < 0.6 && abs(pos.x() - this->endPosition[levelIdx].x) < 0.6)
         {
@@ -701,14 +720,23 @@ void GLScene::checkGameState()
             {
                 emit endGame();
                 this->pause();
+                gameTime = 0;
             }
             else
             {
                 playGame(levelIdx+1);
+                gameTime = 0;
             }
         }
         else
+        {
+            gameTime = 0;
             emit updateScore(0, 0);
+            if (p1.score == 0)
+            {
+                this->pause();
+            }
+        }
 
         btScalar x = this->startPosition[levelIdx].x;
         btScalar y = this->startPosition[levelIdx].y;

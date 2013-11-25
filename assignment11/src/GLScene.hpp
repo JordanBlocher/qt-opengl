@@ -25,6 +25,7 @@ class GLScene : public GLViewport
  signals:
     void mainMenu(int);
     void dataRcvd(glm::vec3);
+    void forceRepaint();
     void updateScore(int, int);
     void endGame();
 
@@ -65,6 +66,7 @@ class GLScene : public GLViewport
     size_t levelIdx;
     bool damping;
     int levelCount;
+    float elapsedTime; // Not good, sry
 
     float tablePitch, tableRoll;
 

@@ -42,6 +42,10 @@ void MenuWidget::updateScore(int, int)
 {
 }
 
+void MenuWidget::forceRepaint()
+{
+}
+
 void MenuWidget::reset()
 {
     this->updatePaint();

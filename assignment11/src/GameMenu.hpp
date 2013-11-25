@@ -31,6 +31,7 @@ class GameMenu : public MenuWidget
     void updatePaint();
     void toggle(int);
     void updateScore(int, int);
+    void forceRepaint();
     void endGame();
 
  protected: 

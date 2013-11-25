@@ -32,6 +32,7 @@ class MenuWidget : public QWidget
     virtual void updatePaint();
     virtual void toggle(int);
     virtual void updateScore(int, int);
+    virtual void forceRepaint();
 
  protected: 
     virtual void setConnections();

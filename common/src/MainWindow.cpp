@@ -69,6 +69,7 @@ void MainWindow::setConnections(int menu)
             connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
         }
         connect( glView, SIGNAL(updateScore(int, int)), mainMenu, SLOT(updateScore(int, int)));
+        connect( glView, SIGNAL(forceRepaint()), mainMenu, SLOT(forceRepaint()));
         connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
         connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));

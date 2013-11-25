@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QDialog>
 #include <QPalette>
+#include <sstream>
 #include <QDebug>
 
 #define WAIT_MS 300
@@ -92,6 +93,13 @@ void OverlayWidget::paintEvent(QPaintEvent *event)
         painter.drawText(this->width() - 11*glView->p2.name.length(),20,glView->p2.name.c_str());
         painter.drawText(this->width() - 25,40,std::to_string(glView->p2.score).c_str());
     }
+
+    // Time parabox
+    QRectF rectangle3(this->geometry().width()/2, 2.0, 120, this->geometry().height()-10);
+    painter.drawRect(rectangle3);
+    std::stringstream ss;
+    ss << "Time: "<< glView->gameTime;
+    painter.drawText(this->geometry().width()/2, 30, ss.str().c_str());
 }
 
 // Filter events from user

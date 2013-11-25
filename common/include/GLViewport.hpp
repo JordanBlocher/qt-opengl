@@ -47,7 +47,7 @@ Q_OBJECT
     Player p2;
     QColor background;
     QColor font;
-
+    int gameTime;
 
  public slots:
     void quit();
@@ -77,6 +77,7 @@ Q_OBJECT
     void SetScene(const std::shared_ptr<GLNode>);
     void ViewContext();
     bool Contains(const char*);
+
     
     QSize initialSize;
     QTimer timer;
