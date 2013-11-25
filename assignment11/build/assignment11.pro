@@ -67,7 +67,7 @@ libqglcommon.depends = FORCE
 QMAKE_EXTRA_TARGETS += libqglcommon
 PRE_TARGETDEPS += ../../common/lib/libqglcommon.a
 
-QMAKE_CXXFLAGS += -DDEBUG_DRAWING
+#QMAKE_CXXFLAGS += -DDEBUG_DRAWING
 #-DPHYSICS_DEBUG
 CONFIG += debug
 

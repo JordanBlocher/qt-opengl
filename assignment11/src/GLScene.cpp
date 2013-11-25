@@ -263,7 +263,7 @@ void GLScene::paintGL()
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         cout<<"Point  offset "<<baseSize + 8<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
-        for(int i=0; i<2; i++)
+        for(int i=0; i<6; i++)
         {
             cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
             glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
@@ -776,7 +776,7 @@ void GLScene::DebugDraw()
         }
     }
     
-    for(int i=0; i<1; i++)
+    for(int i=0; i<6; i++)
     {
         //Draw Spot light orb
         if ( keyHeld[7] )

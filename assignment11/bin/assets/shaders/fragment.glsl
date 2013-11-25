@@ -46,7 +46,7 @@ layout(std140, binding=3) uniform GLights
 {
     DirectionalLight basic;
     PointLight point[1];
-    SpotLight spot[2];
+    SpotLight spot[6];
 
 }light;
 
@@ -140,6 +140,10 @@ void main(void)
     {
          totalLight += LightSpt(light.spot[0], normal);
          totalLight += LightSpt(light.spot[1], normal);
+         totalLight += LightSpt(light.spot[2], normal);
+         totalLight += LightSpt(light.spot[3], normal);
+         totalLight += LightSpt(light.spot[4], normal);
+         totalLight += LightSpt(light.spot[5], normal);
     }
 
     colout = vec4(totalLight.xyz, 1.0);
