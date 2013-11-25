@@ -3,6 +3,10 @@
 
 #include <GLViewport.hpp>
 #include "SoundManager.hpp"
+#include <glm/glm.hpp>
+#include "TcpListen.hpp"
+
+class TcpListen;
 
 class QKeyEvent;
 class QContextMenuEvent;
@@ -16,16 +20,19 @@ class GLScene : public GLViewport
  public:
     GLScene(int, int, QWidget *parent = 0, int argc = 0, char* argv[] = nullptr);
     ~GLScene();
+    void tcpDataRcvd(glm::vec3);
 
  signals:
     void mainMenu(int);
     void updateScore();
+    void dataRcvd(glm::vec3);
 
  protected slots:
     void idleGL();
     void resume();
     void pause();
     void playGame(int);
+    void dataWorker(glm::vec3);
 
  protected:
     void initGame();
@@ -54,6 +61,7 @@ class GLScene : public GLViewport
     std::chrono::time_point<std::chrono::high_resolution_clock> time;
 
     std::shared_ptr<std::vector<std::shared_ptr<Entity>>> entities;
+    TcpListen *tcpListen;
 };
 
 template <typename T> 

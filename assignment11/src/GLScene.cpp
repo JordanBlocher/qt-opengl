@@ -49,6 +49,10 @@ using namespace std;
 
 GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[]) : GLViewport(width, height, parent, NULL), background(QColor::fromRgbF(0.0, 0.0, 0.2)), font(Qt::white)
 {
+    // Setup tcp listener thread
+    tcpListen = new TcpListen(this);
+    tcpListen->QThread::start();
+
     // Create sound manager
     std::shared_ptr<SoundManager> soundMan(new SoundManager("soundMan"));
     this->AddToContext(soundMan);
@@ -68,6 +72,8 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     keyHeld[4] = keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
 
     this->update = true;
+
+    connect(this, SIGNAL(dataRcvd(glm::vec3)), this, SLOT(dataWorker(glm::vec3)));
 }
 
 void GLScene::initGame()
@@ -691,4 +697,16 @@ GLScene::~GLScene()
     dynamics->SetWorld(std::move(world));
 }
 
+void GLScene::tcpDataRcvd(glm::vec3 orienData)
+{
+    emit dataRcvd(orienData);
+}
+
+void GLScene::dataWorker(glm::vec3 orienData)
+{
+    // Handle new orientation from phone
+    std::cout << orienData.x << " " << orienData.y << " " << orienData.z << std::endl;
+
+    shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+}
 
