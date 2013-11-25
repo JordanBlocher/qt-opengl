@@ -62,8 +62,10 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     soundMan->emitPlayBgm(0);
 
     this->gameLevels = {"level1.obj","1hardmaze56.obj"};
+    this->balls = {"greensphere.obj","redsphere.obj"};
     this->startPosition = { glm::vec3(2.5f, 1.0f, 2.5f), glm::vec3(4.8f, 1.0f, -4.0f) };
-    this->endPosition = { glm::vec3(-2.3,-2,-1.7),glm::vec3(4.8,-2,4.8) };
+    this->endPosition = { glm::vec3(-2.4,-1.6,-2.3),glm::vec3(4.8,-2,4.8) };
+    this->levelCount = 2;
 
     this->levelIdx = 0;
     this->setContextMenuPolicy(Qt::DefaultContextMenu);  
@@ -90,31 +92,29 @@ void GLScene::initGame()
 
     // Add dynamic bodies to World
     // Create entity (scale, mass, friction, restitution, centroid)
-    
-    // Board
-    std::shared_ptr<Entity> board(new Entity(0.1, 0.0f, 0.1f, 1.0f, btVector3(0, 0, 0)));
-    board->Create(this->gameLevels[levelIdx].c_str(), NULL, Entity::BODY::STATIC);
-    world->AddPhysicsBody(board->GetPhysicsModel()->GetRigidBody());
-    board->Constrain(Entity::DYNAMIC_NO_G);
-    world->AddConstraint(board->GetPhysicsModel()->GetConstraint());
-    this->entities->push_back(board);
 
-    // Ball
-    btScalar x = this->startPosition[levelIdx].x;
-    btScalar y = this->startPosition[levelIdx].y;
-    btScalar z = this->startPosition[levelIdx].z;
-    std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(x, y, z)));
-    ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
-    world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
-    ball->Constrain(Entity::DYNAMIC);
-    world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
-    this->entities->push_back(ball);
+    for(int i = 0; i < this->levelCount; i ++)
+    {
+        // Board
+        std::shared_ptr<Entity> board(new Entity(0.1, 0.0f, 0.1f, 1.0f, btVector3(0, 0, 0)));
+        board->Create(this->gameLevels[i].c_str(), NULL, Entity::BODY::STATIC);
+        world->AddPhysicsBody(board->GetPhysicsModel()->GetRigidBody());
+        board->Constrain(Entity::DYNAMIC_NO_G);
+        world->AddConstraint(board->GetPhysicsModel()->GetConstraint());
+        this->entities->push_back(board);
+
+        // Ball
+        std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(0, 0, 0)));
+        ball->Create(this->balls[i].c_str(), NULL, Entity::BODY::SPHERE);
+        world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
+        ball->Constrain(Entity::DYNAMIC);
+        world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
+        this->entities->push_back(ball);
+    }
 
     // Initialize the controls
     this->tablePitch = 0.0f;
     this->tableRoll = 0.0f;
-
-    this->resume();
 }
 
 void GLScene::initializeGL()
@@ -198,11 +198,39 @@ void GLScene::initializeGL()
     #endif
 }
 
-void GLScene::playGame(int)
+void GLScene::playGame(int level)
 {
+    // Get the nodes that we need
     shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
+    std::shared_ptr<Entity> ball = this->entities->at((level*2)+1);
+    std::shared_ptr<Entity> maze = this->entities->at(level*2);
+
+    // Hack
+    this->levelIdx = level;
+
+    // Set up the view
     camera1->SetView(10.0f,0.0f,0.0f);
 
+    // Disable all of the balls and tables that we don't want
+    for(int i = 0; i < levelCount*2; i++)
+    {
+        std::shared_ptr<btRigidBody> gameEnt = entities->at(i)->GetPhysicsModel()->GetRigidBody();
+        gameEnt->setCollisionFlags( gameEnt->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        gameEnt->setLinearVelocity(btVector3(0,0,0));
+        gameEnt->setAngularVelocity(btVector3(0,0,0));
+    }
+
+    // Enable the tables and balls that we do want
+    ball->GetPhysicsModel()->GetRigidBody()->setCollisionFlags(ball->GetPhysicsModel()->GetRigidBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    maze->GetPhysicsModel()->GetRigidBody()->setCollisionFlags(maze->GetPhysicsModel()->GetRigidBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+    // Place the ball at the correct location
+    btScalar x = this->startPosition[level].x;
+    btScalar y = this->startPosition[level].y;
+    btScalar z = this->startPosition[level].z;
+    ball->GetPhysicsModel()->SetPosition(btVector3(x, y, z));
+
+    // Ensure that the game starts
     this->update = false;
     this->resume();
 }
@@ -220,11 +248,11 @@ void GLScene::paintGL()
     shared_ptr<GLCamera> camera1 = this->Get<GLCamera>("camera1");
     glm::mat4 vp = camera1->Projection() * camera1->View();
     
-    for(int i=0; i<this->entities->size(); i++)
+    for(int i=0; i<2; i++)
     {
         // Get Dynamic Models
-        std::shared_ptr<PhysicsModel> pmodel = entities->at(i)->GetPhysicsModel();
-        std::shared_ptr<GLModel> gmodel = entities->at(i)->GetGraphicsModel();
+        std::shared_ptr<PhysicsModel> pmodel = entities->at(i+levelIdx*2)->GetPhysicsModel();
+        std::shared_ptr<GLModel> gmodel = entities->at(i+levelIdx*2)->GetGraphicsModel();
         glm::mat4 transform = pmodel->GetTransform();
         btVector3 pos = pmodel->GetRigidBody()->getCenterOfMassPosition();
 
@@ -265,10 +293,10 @@ void GLScene::paintGL()
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         //cout<<"Point  offset "<<baseSize + 8<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
-        for(int i=0; i<6; i++)
+        for(int j=0; j<6; j++)
         {
             //cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
-            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + j*sptSize + 24 + 8*(j+1), sptSize, &(emissive->lights.spot[j]));
         }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -608,7 +636,7 @@ void GLScene::updateBallGravVector(float dt)
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
 
     // TODO: Apply this to all balls
-    std::shared_ptr<Entity> ball = this->entities->at(1);
+    std::shared_ptr<Entity> ball = this->entities->at((levelIdx*2)+1);
 
     // Compose a rotation matrix for the table
     btMatrix3x3 xMat = btMatrix3x3(1,0,0,
@@ -660,7 +688,7 @@ void GLScene::updateBallGravVector(float dt)
 void GLScene::checkGameState()
 {
     // Respawn the ball if it is below the threshold.
-    std::shared_ptr<Entity> ball = this->entities->at(1);
+    std::shared_ptr<Entity> ball = this->entities->at((levelIdx*2)+1);
 
     btVector3 pos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
     if(pos.y() < -1.5f)
@@ -669,8 +697,15 @@ void GLScene::checkGameState()
 
         if(abs(pos.z() - this->endPosition[levelIdx].z) < 0.6 && abs(pos.x() - this->endPosition[levelIdx].x) < 0.6)
         {
-            emit endGame();
-            this->pause();
+            if(levelIdx == levelCount-1)
+            {
+                emit endGame();
+                this->pause();
+            }
+            else
+            {
+                playGame(levelIdx+1);
+            }
         }
         else
             emit updateScore(0, 0);

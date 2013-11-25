@@ -158,7 +158,10 @@ void GameMenu::paintEvent(QPaintEvent *event)
         painter.setPen(Qt::darkGray);
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
+        {
             painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Won!"));
+            glView->p1.winner = false;
+        }
         else
             painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Lose!"));
     }

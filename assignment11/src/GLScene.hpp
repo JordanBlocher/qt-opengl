@@ -59,10 +59,12 @@ class GLScene : public GLViewport
     QColor background;
     QColor font;
     std::vector<std::string> gameLevels;
+    std::vector<std::string> balls;
     std::vector<glm::vec3> startPosition;
     std::vector<glm::vec3> endPosition;
     size_t levelIdx;
     bool damping;
+    int levelCount;
 
     float tablePitch, tableRoll;
 
