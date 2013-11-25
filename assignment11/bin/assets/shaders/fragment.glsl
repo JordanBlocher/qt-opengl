@@ -105,7 +105,7 @@ vec4 LightSpt(SpotLight sp, vec3 normal)
 {
     vec3 l_toPix = normalize(f_position - sp.point.position.xyz);
     float spotFactor = dot(l_toPix, sp.direction.xyz);
-    if( spotFactor > 0)
+    if( spotFactor > 10)
     {
         vec4 color = LightPt(sp.point, normal) * spotFactor;
         return vec4(color.xyz, 1.0);

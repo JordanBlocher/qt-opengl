@@ -301,6 +301,7 @@ void GLScene::paintGL()
         size_t baseSize = sizeof(emissive->lights.basic);
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
+        cout<< "size "<< ptSize<<" " <<sptSize<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
         //cout<<"Point  offset "<<baseSize + 8<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
