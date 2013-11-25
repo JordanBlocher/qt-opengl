@@ -15,6 +15,7 @@
 #include <QAction>
 #include <QStackedLayout>
 #include <QInputDialog>
+#include <sstream>
 #include <QSpacerItem>
 
 #define WAIT_MS 300
@@ -168,11 +169,20 @@ void GameMenu::paintEvent(QPaintEvent *event)
         painter.setFont(QFont("Arial", 18, QFont::Bold, QFont::SmallCaps));
         if(glView->p1.winner)
         {
-            painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Won!"));
+            painter.drawText(this->geometry().width()/2 - 50, 80, tr("You Won!"));
+            std::stringstream ss;
+            ss << "Time: " << glView->gameTime;
+            painter.drawText(this->geometry().width()/2 - 50, 110, tr(ss.str().c_str()));
             glView->p1.winner = false;
         }
         else
-            painter.drawText(this->geometry().width()/2 - 100, 80, tr("You Lose!"));
+        {
+            painter.drawText(this->geometry().width()/2 - 50, 80, tr("You Lose!"));
+            std::stringstream ss;
+            ss << "Time: " << glView->gameTime;
+            painter.drawText(this->geometry().width()/2 - 50, 110, tr(ss.str().c_str()));
+        }
+
     }
 }
 

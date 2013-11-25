@@ -242,6 +242,7 @@ void GLScene::playGame(int level)
     gameTime = 0;
 
     soundMan->emitPlayBgm(levelIdx+1);
+    soundMan->emitPlayEffect(0);
 
 }
 
@@ -707,6 +708,7 @@ void GLScene::updateBallGravVector(float dt)
 
 void GLScene::checkGameState()
 {
+    std::shared_ptr<SoundManager> soundMan = this->Get<SoundManager>("soundMan");  
     // Respawn the ball if it is below the threshold.
     std::shared_ptr<Entity> ball = this->entities->at((levelIdx*2)+1);
 
@@ -720,17 +722,17 @@ void GLScene::checkGameState()
             {
                 emit endGame();
                 this->pause();
-                gameTime = 0;
             }
             else
             {
                 playGame(levelIdx+1);
-                gameTime = 0;
             }
+            soundMan->emitPlayEffect(2);
+
         }
         else
         {
-            gameTime = 0;
+            soundMan->emitPlayEffect(1);
             emit updateScore(0, 0);
             if (p1.score == 0)
             {

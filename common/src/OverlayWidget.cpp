@@ -95,11 +95,11 @@ void OverlayWidget::paintEvent(QPaintEvent *event)
     }
 
     // Time parabox
-    QRectF rectangle3(this->geometry().width()/2, 2.0, 120, this->geometry().height()-10);
+    QRectF rectangle3(120, 2.0, 120, this->geometry().height()-10);
     painter.drawRect(rectangle3);
     std::stringstream ss;
     ss << "Time: "<< glView->gameTime;
-    painter.drawText(this->geometry().width()/2, 30, ss.str().c_str());
+    painter.drawText(130, 30, ss.str().c_str());
 }
 
 // Filter events from user

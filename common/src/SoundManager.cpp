@@ -24,7 +24,10 @@ SoundManager::SoundManager(const char* name)
 	}
 
 	// Add sound effect files to sources
-	sources.append(Phonon::MediaSource("assets/sound/hit.mp3"));
+	sources.append(Phonon::MediaSource("assets/sound/start.wav"));
+	sources.append(Phonon::MediaSource("assets/sound/fail.wav"));
+	sources.append(Phonon::MediaSource("assets/sound/good.ogg"));
+
 
 	// Connect signals to play sounds
 	QObject::connect(this, SIGNAL(playBgm(int)), this, SLOT(playBgmWorker(int)));
