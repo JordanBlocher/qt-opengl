@@ -284,8 +284,8 @@ void GLScene::paintGL()
         Matrices matrices;
         glm::mat4 rot = camera1->RotMat();
         matrices.mvpMatrix = vp * transform * gmodel->Matrix();
-        matrices.mvMatrix = camera1->View() * transform * gmodel->Matrix();
-        matrices.normalMatrix = glm::transpose(glm::inverse(matrices.mvMatrix));
+        matrices.mvMatrix =  transform * gmodel->Matrix();
+        matrices.normalMatrix = glm::transpose(glm::inverse(rot * mvMatrix));
         glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
