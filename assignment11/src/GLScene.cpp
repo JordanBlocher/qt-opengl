@@ -58,12 +58,14 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     this->AddToContext(soundMan);
 
     // Play first bgm
+
     soundMan->emitPlayBgm(0);
 
+    this->gameLevels = {"level1.obj","1hardmaze56.obj"};
+    this->startPosition = { glm::vec3(2.5f, 1.0f, 2.5f), glm::vec3(4.8f, 1.0f, -4.0f) };
+    this->endPosition = { glm::vec3(-2.3,-2,-1.7),glm::vec3(4.8,-2,4.8) };
 
-    this->gameLevels = {"1hardmaze56.obj"};
     this->levelIdx = 0;
-
     this->setContextMenuPolicy(Qt::DefaultContextMenu);  
 
     for(int index=0; index < 12; index++)
@@ -72,11 +74,9 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
 
     this->update = true;
+    this->damping = true;
 
     connect(this, SIGNAL(dataRcvd(glm::vec3)), this, SLOT(dataWorker(glm::vec3)));
-
-    this->startPosition = glm::vec4(2.5f, 1.0f, 2.5f, 1.0f);
-    this->endPosition = glm::vec4(-2.5f, 0.0f, -2.5f, 1.0f);
 }
 
 void GLScene::initGame()
@@ -100,11 +100,11 @@ void GLScene::initGame()
     this->entities->push_back(board);
 
     // Ball
-    btScalar x = this->startPosition.x;
-    btScalar y = this->startPosition.y;
-    btScalar z = this->startPosition.z;
+    btScalar x = this->startPosition[levelIdx].x;
+    btScalar y = this->startPosition[levelIdx].y;
+    btScalar z = this->startPosition[levelIdx].z;
     std::shared_ptr<Entity> ball(new Entity(0.25, 0.5f, 0.0f, 1.0f, btVector3(x, y, z)));
-    ball->Create("ball3.obj", NULL, Entity::BODY::SPHERE);
+    ball->Create("ball.obj", NULL, Entity::BODY::SPHERE);
     world->AddPhysicsBody(ball->GetPhysicsModel()->GetRigidBody());
     ball->Constrain(Entity::DYNAMIC);
     world->AddConstraint(ball->GetPhysicsModel()->GetConstraint());
@@ -113,6 +113,8 @@ void GLScene::initGame()
     // Initialize the controls
     this->tablePitch = 0.0f;
     this->tableRoll = 0.0f;
+
+    this->resume();
 }
 
 void GLScene::initializeGL()
@@ -261,11 +263,11 @@ void GLScene::paintGL()
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
-        cout<<"Point  offset "<<baseSize + 8<<endl;
+        //cout<<"Point  offset "<<baseSize + 8<<endl;
         glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
         for(int i=0; i<6; i++)
         {
-            cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
+            //cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
             glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
         }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -391,6 +393,14 @@ void GLScene::keyPressEvent(QKeyEvent *event)
             keyHeld[11] = true;
             break;            
         case (Qt::Key_Escape):
+            if(this->update)
+            {
+                this->pause();
+            }
+            else
+            {
+                this->resume();
+            }
             emit mainMenu(1);
             break;
         case(Qt::Key_W):
@@ -611,7 +621,7 @@ void GLScene::updateBallGravVector(float dt)
 
 
     // TODO: Send the table rotation data to the camera (OPTIMIZE)
-    camera->setCameraOffset(tableRoll, tablePitch);
+    camera->setCameraOffset(tableRoll/2.0f, tablePitch/2.0f);
 
     // Pass thhe ball pos into the camera
     btVector3 btBallPos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
@@ -624,22 +634,25 @@ void GLScene::updateBallGravVector(float dt)
 
 
     // Damp the table values
-    if(tablePitch-((dt/0.5f)*tablePitch) < M_PI/10000.0f && tablePitch-((dt/0.5f)*tablePitch) > -M_PI/10000.0f)
+    if (this->damping)
     {
-        tablePitch = 0.0f;
-    }
-    else
-    {
-        tablePitch-=((dt/0.5f)*tablePitch);       
-    }
+        if(tablePitch-((dt/0.5f)*tablePitch) < M_PI/10000.0f && tablePitch-((dt/0.5f)*tablePitch) > -M_PI/10000.0f)
+        {
+            tablePitch = 0.0f;
+        }
+        else
+        {
+            tablePitch-=((dt/0.5f)*tablePitch);       
+        }
 
-    if(tableRoll-((dt/0.5f)*tableRoll) < M_PI/10000.0f && tableRoll-((dt/0.5f)*tableRoll) > -M_PI/10000.0f)
-    {
-        tableRoll = 0.0f;
-    }
-    else
-    {
-        tableRoll-=((dt/0.5f)*tableRoll);       
+        if(tableRoll-((dt/0.5f)*tableRoll) < M_PI/10000.0f && tableRoll-((dt/0.5f)*tableRoll) > -M_PI/10000.0f)
+        {
+            tableRoll = 0.0f;
+        }
+        else
+        {
+            tableRoll-=((dt/0.5f)*tableRoll);       
+        }
     }
 
 }
@@ -650,15 +663,23 @@ void GLScene::checkGameState()
     std::shared_ptr<Entity> ball = this->entities->at(1);
 
     btVector3 pos = ball->GetPhysicsModel()->GetRigidBody()->getCenterOfMassPosition();
-    if(pos.y() < -3.0f)
+    if(pos.y() < -1.5f)
     {
-        if(pos.z() - endPosition.z < 0.1 && pos.x() - endPosition.x < 0.1)
+        std::cout << "scoreCheck" << pos.x() << ", " << pos.y() << ", " << pos.z() << std::endl;
+
+        if(abs(pos.z() - this->endPosition[levelIdx].z) < 0.6 && abs(pos.x() - this->endPosition[levelIdx].x) < 0.6)
+        {
             emit endGame();
-        btScalar x = this->startPosition.x;
-        btScalar y = this->startPosition.y;
-        btScalar z = this->startPosition.z;
+            this->pause();
+        }
+        else
+            emit updateScore(0, 0);
+
+        btScalar x = this->startPosition[levelIdx].x;
+        btScalar y = this->startPosition[levelIdx].y;
+        btScalar z = this->startPosition[levelIdx].z;
         ball->GetPhysicsModel()->SetPosition(btVector3(x, y, z));
-        emit updateScore(0, 0);
+        
     }
 }
 
@@ -677,10 +698,34 @@ void GLScene::tcpDataRcvd(glm::vec3 orienData)
 
 void GLScene::dataWorker(glm::vec3 orienData)
 {
+    // Initialize vars
+    float preZenith, preAzimuth;
+
     // Handle new orientation from phone
     std::cout << orienData.x << " " << orienData.y << " " << orienData.z << std::endl;
 
     shared_ptr<GLCamera> camera = this->Get<GLCamera>("camera1");
+
+    // Normalize the accelerometer data for the camera
+    if(orienData.x > 5.0f)
+        preZenith = 5.0f;
+    else if (orienData.x < -5.0f)
+        preZenith = -5.0f;
+    else preZenith = orienData.x;
+
+    if(orienData.y > 5.0f)
+        preAzimuth = 5.0f;
+    else if (orienData.y < -5.0f)
+        preAzimuth = -5.0f;
+    else preAzimuth = orienData.y;
+
+    tableRoll = -preZenith/5.0f * M_PI/4.0f;
+    tablePitch = -preAzimuth/5.0f * M_PI/4.0f;
+
+    // Turn off damping
+    if(this->damping)
+        this->damping = false;
+
 }
 
 void GLScene::DebugDrawInit()
