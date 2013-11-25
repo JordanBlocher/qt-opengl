@@ -57,7 +57,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     soundMan->emitPlayBgm(0);
 
 
-    this->gameLevels = {"level1.obj"};
+    this->gameLevels = {"1hardmaze56.obj"};
     this->levelIdx = 0;
 
     this->setContextMenuPolicy(Qt::DefaultContextMenu);  

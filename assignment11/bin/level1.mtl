@@ -1,12 +1,12 @@
-# Blender MTL File: 'level1.blend1'
+# Blender MTL File: 'None'
 # Material Count: 1
+
 newmtl Material.001
-Ns 96.078431
+Ns 92.156863
 Ka 0.000000 0.000000 0.000000
-Kd 0.035818 0.100107 0.640000
-Ks 0.125716 0.500000 0.474514
+Kd 0.424576 0.455670 0.512000
+Ks 0.125000 0.121273 0.122923
 Ni 1.000000
 d 1.000000
 illum 2
-
-
+map_Kd assets/textures/metal.jpg
