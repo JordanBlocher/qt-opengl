@@ -65,7 +65,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
-    keyHeld[4] = keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
+    keyHeld[5] = keyHeld[6] = keyHeld[7] = true; 
 
     this->update = true;
     this->startPosition = glm::vec4(2.5f, 1.0f, 2.5f, 1.0f);
@@ -178,10 +178,6 @@ void GLScene::initializeGL()
 
     //Set Lighting
     shared_ptr<GLEmissive> emissive(new GLEmissive("lights"));
-    emissive->lights.spot[1].point.position += this->startPosition;
-    emissive->lights.spot[0].point.position += this->startPosition;
-    emissive->lights.point[0].position += this->startPosition;
-    emissive->lights.point[1].position += this->endPosition;
     this->AddToContext(emissive);
 
     #ifdef DEBUG_DRAWING
@@ -235,9 +231,6 @@ void GLScene::paintGL()
 
         // Get Lights
         shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
-        emissive->lights.spot[0].point.position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
-        emissive->lights.spot[1].point.position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
-        emissive->lights.point[2].position = glm::vec4(pos.x(), pos.z() + 6.0f, pos.y(), 1.0f);
 
         // Bind MVP
         Matrices matrices;
@@ -261,15 +254,12 @@ void GLScene::paintGL()
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
         glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
-        for(int i=0; i<3; i++)
-        {
-            cout<<"Point "<<i<<" offset "<<baseSize + i* ptSize + 8*(i+1)<<endl;
-            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + (i+1)*ptSize + 8*(i+1), ptSize, &emissive->lights.point[i]);
-        }
+        cout<<"Point  offset "<<baseSize + 8<<endl;
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
         for(int i=0; i<2; i++)
         {
-            cout<<"Spot "<<i<<" offset "<<baseSize + 3*ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
-            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 3*ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
+            cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + i*sptSize + 24 + 8*(i+1), sptSize, &(emissive->lights.spot[i]));
         }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -661,7 +651,7 @@ void GLScene::checkGameState()
         btScalar y = this->startPosition.y;
         btScalar z = this->startPosition.z;
         ball->GetPhysicsModel()->SetPosition(btVector3(x, y, z));
-        emit updateScore();
+        emit updateScore(0, 0);
     }
 }
 
@@ -743,7 +733,7 @@ void GLScene::DebugDraw()
     shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
 
     Matrices matrices;
-    for(int i=0; i<3; i++)
+    for(int i=0; i<2; i++)
     {
         //Draw Point light orb
         if ( keyHeld[6] )
@@ -768,7 +758,7 @@ void GLScene::DebugDraw()
         }
     }
     
-    for(int i=0; i<2; i++)
+    for(int i=0; i<1; i++)
     {
         //Draw Spot light orb
         if ( keyHeld[7] )

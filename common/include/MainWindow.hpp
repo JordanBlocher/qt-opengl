@@ -76,7 +76,6 @@ class MainWindow : public QMainWindow
     void scoreBoard(int);
     void aboutCallback();     
     void aboutQtCallback();
-    void updateScore();
     
  private:
     void createActions();

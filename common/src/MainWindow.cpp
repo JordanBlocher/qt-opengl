@@ -68,6 +68,7 @@ void MainWindow::setConnections(int menu)
         {
             connect(mainMenu, SIGNAL(changePaddle(int)), glView, SLOT(changePaddle(int)));
         }
+        connect( glView, SIGNAL(updateScore(int, int)), mainMenu, SLOT(updateScore(int, int)));
         connect(glView, SIGNAL(endGame()), mainMenu, SLOT(endGame()));
         connect(mainMenu, SIGNAL(playGame(int)), glView, SLOT(playGame(int)));
         connect(mainMenu, SIGNAL(resume()), glView, SLOT(resume()));
@@ -96,7 +97,6 @@ void MainWindow::scoreBoard(int game)
         glView->p1.score = 0;
         glView->p2.name = "Player 2";
         glView->p2.score = 0;
-        connect( glView, SIGNAL(updateScore(int, int)), mainMenu, SLOT(updateScore(int, int)));
         overlay->updatePaint();
     }
 
@@ -106,7 +106,6 @@ void MainWindow::scoreBoard(int game)
         glView->p1.score = 5;
         glView->p2.score = -1;
         glView->p2.name = "";
-        connect( glView, SIGNAL(updateScore()), mainMenu, SLOT(updateScore()));
         overlay->updatePaint();
     }
 }
@@ -164,10 +163,6 @@ void MainWindow::changeEvent(QEvent *event)
     if (event->type()==QEvent::ActivationChange)
     {
     }
-}
-
-void MainWindow::updateScore()
-{
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* )

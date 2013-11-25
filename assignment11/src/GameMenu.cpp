@@ -98,7 +98,7 @@ void GameMenu::setConnections()
     connect(this->buttons[4], SIGNAL(clicked()), this, SLOT(reset()));
 }
 
-void GameMenu::updateScore()
+void GameMenu::updateScore(int, int)
 {
     glView->p1.score --;
     if(glView->p1.score <= 0)

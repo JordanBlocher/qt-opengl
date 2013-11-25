@@ -12,25 +12,13 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     this->lights.basic = dir; 
 
     //Pointlights
-    this->lights.point.resize(3);
+    this->lights.point.resize(1);
     BaseLight bpt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
     PointLight pt0 = {glm::vec4(0.0f, 20.0f, 0.0f, 1.0f),
                      bpt0 };
     this->lights.point[0] = pt0;
-    BaseLight bpt1 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-                     0.1f,
-                     0.1f};
-    PointLight pt1 = {glm::vec4(0.0f, 20.0f, 0.0f, 1.0f),
-                     bpt1 };
-    this->lights.point[1] = pt1;
-    BaseLight bpt2 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-                     0.1f,
-                     0.1f};
-    PointLight pt2 = {glm::vec4(0.0f, 20.0f, 0.0f, 1.0f),
-                     bpt2 };
-    this->lights.point[2] = pt2;
 
 
     //Spotlights

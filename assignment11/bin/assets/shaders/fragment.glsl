@@ -45,7 +45,7 @@ struct SpotLight
 layout(std140, binding=3) uniform GLights
 {
     DirectionalLight basic;
-    PointLight point[3];
+    PointLight point[1];
     SpotLight spot[2];
 
 }light;
@@ -135,8 +135,6 @@ void main(void)
     if( eye.toggle.z == 1.0)
     {
          totalLight += LightPt(light.point[0], normal);
-         totalLight += LightPt(light.point[1], normal);
-         totalLight += LightPt(light.point[2], normal);
     }
     if( eye.toggle.w == 1.0)
     {

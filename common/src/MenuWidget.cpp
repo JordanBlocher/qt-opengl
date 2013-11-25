@@ -38,6 +38,10 @@ void MenuWidget::setConnections()
 {
 }
 
+void MenuWidget::updateScore(int, int)
+{
+}
+
 void MenuWidget::reset()
 {
     this->updatePaint();

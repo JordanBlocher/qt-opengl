@@ -30,7 +30,7 @@ class GameMenu : public MenuWidget
  public slots:
     void updatePaint();
     void toggle(int);
-    void updateScore();
+    void updateScore(int, int);
     void endGame();
 
  protected: 
