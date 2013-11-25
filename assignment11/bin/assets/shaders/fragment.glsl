@@ -133,7 +133,9 @@ void main(void)
     if( eye.toggle.y == 1.0)
         totalLight += LightDir(normal);
     if( eye.toggle.z == 1.0)
+    {
          totalLight += LightPt(light.point[0], normal);
+    }
     if( eye.toggle.w == 1.0)
     {
          totalLight += LightSpt(light.spot[0], normal);

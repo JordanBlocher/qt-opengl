@@ -24,8 +24,9 @@ class GLScene : public GLViewport
 
  signals:
     void mainMenu(int);
-    void updateScore();
     void dataRcvd(glm::vec3);
+    void updateScore(int, int);
+    void endGame();
 
  protected slots:
     void idleGL();
@@ -48,6 +49,10 @@ class GLScene : public GLViewport
     void wheelEvent(QWheelEvent*);
     void updateBallGravVector(float dt);
     void checkGameState();
+    void DebugDrawInit();
+    void DebugDraw();
+    void DebugPhysicsInit();
+    void DebugPhysicsDraw();
 
     bool keyHeld[16];// W S A D I K J L R RG LF UP DW NP_8 NP_2 NP_4 NP_6 
     bool update;
@@ -55,6 +60,8 @@ class GLScene : public GLViewport
     QColor font;
     std::vector<std::string> gameLevels;
     size_t levelIdx;
+    glm::vec4 startPosition;
+    glm::vec4 endPosition;
 
     float tablePitch, tableRoll;
 
