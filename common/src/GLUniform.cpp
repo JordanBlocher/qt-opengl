@@ -68,13 +68,13 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
             uniformSize = sizeof(glm::mat3);
         else if(type == GL_INT)
         {
-            uniformSize = 2*sizeof(int);
-            padding += 2*sizeof(int);
+            uniformSize = sizeof(int);
+            padding += 3*sizeof(int);
         }
         else if(type == GL_FLOAT)
         {
-            uniformSize = 2*sizeof(float);
-            padding += 2*sizeof(float);
+            uniformSize = sizeof(float);
+            padding += 3*sizeof(float);
         }
         else 
             uniformSize = 0.0f;
@@ -87,7 +87,7 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
         std::cout << "Uniform <" << unif.name << "> (offset): " << unif.offset <<", (size): " <<unif.size<< ", (index): "<<unif.index<< std::endl;
     }
 
-    GLBufferObject ubo(name.c_str(), dataSize, (GLuint)1, GL_UNIFORM_BUFFER, draw); 
+    GLBufferObject ubo(name.c_str(), dataSize + padding, (GLuint)1, GL_UNIFORM_BUFFER, draw); 
     if( ubo.Status(GL_UNIFORM_BUFFER, dataSize) )
     {
             std::cerr << "[E] Buffer " << name << " not created."<<std::endl;

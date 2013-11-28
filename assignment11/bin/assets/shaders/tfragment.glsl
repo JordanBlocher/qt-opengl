@@ -68,7 +68,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
 
     vec4 tex = texture2D(diffuseTexture, f_uv.xy);
 
-    ambient = source.color * colors.ambient * source.ambientIntensity; 
+    ambient = source.color * mix(colors.ambient, tex, 0.5) * source.ambientIntensity; 
 
     float diffuseFactor = dot(normal, -direction.xyz);
     if (diffuseFactor > 0) 
@@ -80,7 +80,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
         specularFactor = pow(specularFactor, colors.shininess);
         if(specularFactor > 0)
         {
-            specular = source.color * colors.specular* colors.intensity * specularFactor;
+            specular = source.color * mix(colors.specular, tex, 0.5) * colors.intensity * specularFactor;
         }
     }
 
@@ -107,7 +107,7 @@ vec4 LightSpt(SpotLight sp, vec3 normal)
 {
     vec3 l_toPix = normalize(f_position - sp.point.position.xyz);
     float spotFactor = dot(l_toPix, sp.direction.xyz);
-    if( spotFactor > 0)
+    if( spotFactor > 2)
     {
         vec4 color = LightPt(sp.point, normal) * spotFactor;
         return vec4(color.xyz, 1.0);
@@ -123,10 +123,9 @@ out vec4 f_out;
 void main(void)
 {
     vec3 normal = normalize(f_normal);
-
     vec4 totalLight = vec4(0, 0, 0, 0);
-
-    vec4 ambient = light.basic.base.color * colors.ambient * light.basic.base.ambientIntensity; 
+    vec4 tex = texture2D(diffuseTexture, f_uv.xy);
+    vec4 ambient = light.basic.base.color * mix(colors.ambient, tex, 0.5) * light.basic.base.ambientIntensity; 
 
     if( eye.toggle.x == 1.0)
     {
@@ -147,6 +146,8 @@ void main(void)
          totalLight += LightSpt(light.spot[4], normal);
          totalLight += LightSpt(light.spot[5], normal);
     }
+
     f_out = totalLight;
+
 }
 

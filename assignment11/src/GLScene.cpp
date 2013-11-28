@@ -73,7 +73,7 @@ GLScene::GLScene(int width, int height, QWidget *parent, int argc, char* argv[])
     for(int index=0; index < 12; index++)
         this->keyHeld[index] = false;
 
-    keyHeld[4] = keyHeld[6] = true; 
+    keyHeld[5] = keyHeld[7] = true; 
 
     this->update = true;
     this->damping = true;
@@ -281,19 +281,13 @@ void GLScene::paintGL()
         shared_ptr<GLEmissive> emissive = this->Get<GLEmissive>("lights");
 
         // Bind MVP
+        glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         Matrices matrices;
         glm::mat4 rot = camera1->RotMat();
         matrices.mvpMatrix = vp * transform * gmodel->Matrix();
-        matrices.mvMatrix =  transform * gmodel->Matrix();
+        matrices.mvMatrix =  camera1->View() * transform * gmodel->Matrix();
         matrices.normalMatrix = glm::transpose(glm::inverse(matrices.mvMatrix));
-        glBindBuffer(GL_UNIFORM_BUFFER, vuniform->getId());
         glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(matrices), &matrices);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        // Bind Eye Position & toggle
-        glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
-        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera1->getCameraPosition(), 1.0f)));
-        glBufferSubData( GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(glm::vec4(keyHeld[4], keyHeld[5], keyHeld[6], keyHeld[7])));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // Bind Lights
@@ -301,16 +295,20 @@ void GLScene::paintGL()
         size_t baseSize = sizeof(emissive->lights.basic);
         size_t ptSize = sizeof(emissive->lights.point[0]);
         size_t sptSize = sizeof(emissive->lights.spot[0]); 
-        //cout<< "size "<< ptSize<<" " <<sptSize<<endl;
-        glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &emissive->lights.basic);
-        //cout<<"Point  offset "<<baseSize + 8<<endl;
-        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &emissive->lights.point[0]);
-        for(int j=0; j<6; j++)
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, baseSize, &(emissive->lights.basic));
+        glBufferSubData( GL_UNIFORM_BUFFER, baseSize + 8, ptSize, &(emissive->lights.point[0]));
+        for(int j=0; j<1; j++)
         {
-            //cout<<"Spot "<<i<<" offset "<<baseSize + ptSize + i*sptSize + 24 + 8*(i+1)<<endl;
-            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + j*sptSize + 24 + 8*(j+1), sptSize, &(emissive->lights.spot[j]));
+            glBufferSubData( GL_UNIFORM_BUFFER, baseSize + ptSize + j*sptSize + 8*(j+2), sptSize, &(emissive->lights.spot[j]));
         }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+        // Bind Eye Position & toggle
+        glBindBuffer(GL_UNIFORM_BUFFER, eye->getId());
+        glBufferSubData( GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), glm::value_ptr(glm::vec4(camera1->getCameraPosition(), 1.0f)));
+        glBufferSubData( GL_UNIFORM_BUFFER, sizeof(glm::vec4), sizeof(glm::vec4), glm::value_ptr(glm::vec4(float(keyHeld[4]), float(keyHeld[5]), float(keyHeld[6]), float(keyHeld[7]))));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 
         //Get Sampler
         shared_ptr<GLUniform> tuniform = this->Get<GLUniform>("Texture");
@@ -605,19 +603,19 @@ void GLScene::updateKeys(float dt)
     {
         camera->moveCamera(GLCamera::CamDirection::Down);
     }  
-    if(keyHeld[12])
+    if(keyHeld[8])
     {
         emissive->lights.basic.base.ambientIntensity +=0.05f;
     }
-    if(keyHeld[13])
+    if(keyHeld[9])
     {
         emissive->lights.basic.base.ambientIntensity -=0.05f;
     }
-    if(keyHeld[14])
+    if(keyHeld[10])
     {
         emissive->lights.basic.base.diffuseIntensity +=0.05f;
     }
-    if(keyHeld[15])
+    if(keyHeld[11])
     {
         emissive->lights.basic.base.diffuseIntensity -=0.05f;
     }
