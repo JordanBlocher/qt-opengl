@@ -16,7 +16,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bpt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.7f};
-    PointLight pt0 = {glm::vec4(0.0f, 105.0f, 0.0f, 1.0f),
+    PointLight pt0 = {glm::vec4(0.0f, 50.0f, 0.0f, 1.0f),
                      bpt0 };
     this->lights.point[0] = pt0;
 
@@ -25,7 +25,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bspt0 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
-    PointLight spt0 = {glm::vec4(105.0f, -105.0f, 0.0f, 1.0f),
+    PointLight spt0 = {glm::vec4(50.0f, -50.0f, 0.0f, 1.0f),
                       bspt0};
     SpotLight sp0 = {glm::vec4(-1.0, 1.0f, 0.0f, 1.0f),
                       spt0};
@@ -34,7 +34,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bspt1 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
-    PointLight spt1 = {glm::vec4(0.0f, -105.0f, 105.0f, 1.0f),
+    PointLight spt1 = {glm::vec4(0.0f, -50.0f, 50.0f, 1.0f),
                       bspt1};
     SpotLight sp1 = {glm::vec4(0.0f, 1.0f, -1.0f, 1.0f),
                       spt1};
@@ -43,7 +43,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bspt2 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
-    PointLight spt2 = {glm::vec4(0.0f, -105.0f, -105.0f, 1.0f),
+    PointLight spt2 = {glm::vec4(0.0f, -50.0f, -50.0f, 1.0f),
                       bspt2};
     SpotLight sp2 = {glm::vec4(0.0f, 1.0f, 1.0f, 1.0f),
                       spt2};
@@ -52,7 +52,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bspt3 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
-    PointLight spt3 = {glm::vec4(-105.0f, -105.0f, 0.0f, 1.0f),
+    PointLight spt3 = {glm::vec4(-50.0f, -50.0f, 0.0f, 1.0f),
                       bspt3};
     SpotLight sp3 = {glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
                       spt3};
@@ -61,7 +61,7 @@ GLEmissive::GLEmissive(const char* name) : GLNode(name)
     BaseLight bspt4 = {glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
                      0.1f,
                      0.1f};
-    PointLight spt4 = {glm::vec4(210.0f, -105.0f, -105.0f, 1.0f),
+    PointLight spt4 = {glm::vec4(210.0f, -50.0f, -50.0f, 1.0f),
                       bspt4};
     SpotLight sp4 = {glm::vec4(-2.0f, 1.0f, 1.0f, 1.0f),
                       spt4};

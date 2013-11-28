@@ -226,6 +226,7 @@ void GLModel::AddMaterials(aiMaterial** materials, unsigned int numMaterials)
         float shininess = 10.0f;
         float intensity = 1.0f;
         float diffuseBlend = 1.0f;
+        std::cout<<"diffuseBlend "<<diffuseBlend<<std::endl;
         aiString name;
 
         material.Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);

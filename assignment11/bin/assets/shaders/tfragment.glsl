@@ -73,7 +73,7 @@ vec4 LightBasic(BaseLight source, vec4 direction, vec3 normal)
     float diffuseFactor = dot(normal, -direction.xyz);
     if (diffuseFactor > 0) 
     {
-        diffuse = source.color * mix(colors.diffuse, tex, colors.diffuseBlend) * source.diffuseIntensity * diffuseFactor;
+        diffuse = source.color * mix(colors.diffuse, tex, colors.diffuseBlend/1.0) * source.diffuseIntensity * diffuseFactor;
         vec3 v_toEye = normalize(eye.position.xyz - f_position);
         vec3 l_reflect = normalize(reflect(direction.xyz, normal));
         float specularFactor = dot(v_toEye, l_reflect);

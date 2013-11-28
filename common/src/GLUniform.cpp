@@ -39,6 +39,7 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
     this->location = location;
     GLint numUniforms;
     GLuint index;
+    GLint padding = 0;
       
     this->block = glGetUniformBlockIndex(program, this->name.c_str());
     std::cout<<"Block index "<<block<< " and location "<<location<<std::endl;
@@ -66,9 +67,15 @@ bool GLUniform::CreateUBO(GLuint program, GLuint location, GLenum draw)
         else if(type == GL_FLOAT_MAT3)
             uniformSize = sizeof(glm::mat3);
         else if(type == GL_INT)
+        {
             uniformSize = 2*sizeof(int);
+            padding += 2*sizeof(int);
+        }
         else if(type == GL_FLOAT)
+        {
             uniformSize = 2*sizeof(float);
+            padding += 2*sizeof(float);
+        }
         else 
             uniformSize = 0.0f;
 
