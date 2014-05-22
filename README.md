@@ -1,9 +1,5 @@
-cs680unr
+QT-OpenGL
 ========
-
-Projects for CS 680
-
-My attempt at polymorphism to scale.
 
 Dependencies:
 -------------
